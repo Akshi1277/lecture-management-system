@@ -1,17 +1,30 @@
+/* Import Tailwind */
 @import "tailwindcss";
 
+/* Global theme variables */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Brand colors */
+  --brand-primary: #10b981; /* Emerald */
+  --brand-secondary: #3b82f6; /* Slate Blue */
+  --brand-accent: #f59e0b; /* Amber */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+
+  --font-sans: var(--font-geist-sans), "Inter", "Poppins", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 }
 
+/* Dark mode support */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -19,8 +32,24 @@
   }
 }
 
+/* Body defaults */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  padding-top: 72px; /* space for sticky navbar */
+  line-height: 1.6;
+}
+
+/* Utility styles */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: var(--color-brand-primary);
+}
+
+a {
+  transition: color 0.2s ease, background 0.2s ease;
+}
+a:hover {
+  color: var(--color-brand-secondary);
 }
