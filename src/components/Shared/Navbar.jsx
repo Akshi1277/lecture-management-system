@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, BookOpen, Home, LayoutDashboard, LogIn, UserPlus } from "lucide-react";
+import { Menu, X, Calendar, Home, LayoutDashboard, LogIn, UserPlus, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -23,70 +24,158 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-      isScrolled 
-        ? "bg-white/95 backdrop-blur-xl shadow-lg border-b border-slate-200/50" 
-        : "bg-white/80 backdrop-blur-md"
-    }`}>
+// Replace the <motion.nav> className with this:
+<motion.nav 
+  initial={{ y: -100 }}
+  animate={{ y: 0 }}
+  transition={{ duration: 0.5 }}
+  className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+    isScrolled 
+      ? "bg-slate-900/95 backdrop-blur-xl shadow-lg shadow-teal-500/10 border-b border-teal-500/20" 
+      : "bg-transparent border-b border-transparent"  // Added border-transparent for smooth transition
+  }`}
+>
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <BookOpen className="w-6 h-6 text-white" />
-            </div>
+            <motion.div 
+              className="relative p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-lg shadow-teal-500/50"
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Calendar className="w-6 h-6 text-white" />
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-xl opacity-0 group-hover:opacity-20"
+                animate={{
+                  scale: [1, 1.2, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                }}
+              />
+            </motion.div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+              <motion.h1 
+                className="text-2xl font-bold bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent"
+                animate={{
+                  backgroundPosition: ["0%", "100%", "0%"],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+                style={{
+                  backgroundSize: "200% auto"
+                }}
+              >
                 EduSync
-              </h1>
-              <p className="text-xs text-slate-500 -mt-1">Learning Management</p>
+              </motion.h1>
+              <p className="text-xs text-teal-400/80 -mt-1 flex items-center gap-1">
+                <Sparkles size={10} className="animate-pulse" />
+                Lecture Management
+              </p>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
+          <div className="hidden md:flex items-center space-x-2">
+            {navItems.map((item, index) => (
+              <motion.div
                 key={item.href}
-                href={item.href}
-                className="flex items-center space-x-2 text-slate-700 hover:text-blue-600 font-medium transition-colors duration-200 group"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
               >
-                <span className="group-hover:scale-110 transition-transform duration-200">
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </Link>
+                <Link
+                  href={item.href}
+                  className="relative flex items-center space-x-2 text-slate-300 hover:text-teal-400 font-medium transition-colors duration-200 px-4 py-2 rounded-lg group overflow-hidden"
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  />
+                  <motion.span 
+                    className="relative z-10"
+                    whileHover={{ scale: 1.2, rotate: 5 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {item.icon}
+                  </motion.span>
+                  <span className="relative z-10">{item.label}</span>
+                  <motion.div
+                    className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-teal-500 to-emerald-500"
+                    initial={{ width: 0 }}
+                    whileHover={{ width: "100%" }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </Link>
+              </motion.div>
             ))}
           </div>
 
           {/* Mobile Menu Button */}
-          <button
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            className="md:hidden p-2 rounded-lg bg-slate-800/50 hover:bg-teal-500/20 transition-colors border border-teal-500/30"
           >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={isMobileMenuOpen ? 'close' : 'open'}
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {isMobileMenuOpen ? (
+                  <X size={24} className="text-teal-400" />
+                ) : (
+                  <Menu size={24} className="text-teal-400" />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </motion.button>
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 py-4 border-t border-slate-200">
-            <div className="flex flex-col space-y-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center space-x-3 text-slate-700 hover:text-blue-600 font-medium transition-colors duration-200 py-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="md:hidden mt-4 py-4 border-t border-teal-500/20 overflow-hidden"
+            >
+              <div className="flex flex-col space-y-2">
+                {navItems.map((item, index) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Link
+                      href={item.href}
+                      className="flex items-center space-x-3 text-slate-300 hover:text-teal-400 font-medium transition-all duration-200 py-3 px-4 rounded-lg hover:bg-teal-500/10 border border-transparent hover:border-teal-500/30"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <motion.span
+                        whileHover={{ scale: 1.2, rotate: 5 }}
+                      >
+                        {item.icon}
+                      </motion.span>
+                      <span>{item.label}</span>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
