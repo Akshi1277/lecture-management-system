@@ -72,89 +72,115 @@ export default function LandingPage() {
   ];
 
   useEffect(() => {
-    // Hero section animations
-    gsap.from(".hero-badge", {
-      opacity: 0,
-      y: -30,
-      duration: 0.8,
-      ease: "power3.out"
-    });
-    gsap.from(".hero-title", {
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      delay: 0.2,
-      ease: "power3.out"
-    });
-    gsap.from(".hero-description", {
-      opacity: 0,
-      y: 30,
-      duration: 0.8,
-      delay: 0.4,
-      ease: "power3.out"
-    });
-    gsap.from(".hero-buttons", {
-      opacity: 0,
-      y: 20,
-      duration: 0.8,
-      delay: 0.6,
-      ease: "power3.out"
-    });
-    // Stats animation with stagger
-    gsap.from(".stat-card", {
-      scrollTrigger: {
-        trigger: ".stat-card",
-        start: "top 80%",
-      },
-      opacity: 0,
-      y: 30,
-      stagger: 0.15,
-      duration: 0.6,
-      ease: "power2.out"
-    });
-    // Dashboard card float animation
-    gsap.to(".dashboard-card", {
-      y: -20,
-      duration: 2,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut"
-    });
-    // Features section
-    gsap.from(".feature-card", {
-      scrollTrigger: {
-        trigger: ".feature-card",
-        start: "top 85%",
-      },
-      opacity: 0,
-      y: 50,
-      stagger: 0.2,
-      duration: 0.8,
-      ease: "power3.out"
-    });
-    // Testimonials
-    gsap.from(".testimonial-card", {
-      scrollTrigger: {
-        trigger: ".testimonial-card",
-        start: "top 80%",
-      },
-      opacity: 0,
-      scale: 0.9,
-      stagger: 0.2,
-      duration: 0.8,
-      ease: "back.out(1.2)"
-    });
-    // CTA section
-    gsap.from(".cta-content", {
-      scrollTrigger: {
-        trigger: ".cta-content",
-        start: "top 80%",
-      },
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      ease: "power3.out"
-    });
+    // Set a small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      // Hero section animations
+      gsap.from(".hero-badge", {
+        opacity: 0,
+        y: -30,
+        duration: 0.8,
+        ease: "power3.out",
+        clearProps: "all" // Clear inline styles after animation
+      });
+      gsap.from(".hero-title", {
+        opacity: 0,
+        y: 50,
+        duration: 1,
+        delay: 0.2,
+        ease: "power3.out",
+        clearProps: "all"
+      });
+      gsap.from(".hero-description", {
+        opacity: 0,
+        y: 30,
+        duration: 0.8,
+        delay: 0.4,
+        ease: "power3.out",
+        clearProps: "all"
+      });
+      gsap.from(".hero-buttons", {
+        opacity: 0,
+        y: 20,
+        duration: 0.8,
+        delay: 0.6,
+        ease: "power3.out",
+        clearProps: "all"
+      });
+      
+      // Stats animation with stagger
+      gsap.from(".stat-card", {
+        scrollTrigger: {
+          trigger: ".stat-card",
+          start: "top 85%",
+          toggleActions: "play none none none"
+        },
+        opacity: 0,
+        y: 30,
+        stagger: 0.15,
+        duration: 0.6,
+        ease: "power2.out",
+        clearProps: "all"
+      });
+      
+      // Dashboard card float animation - lighter version
+      gsap.to(".dashboard-card", {
+        y: -15,
+        duration: 3,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+      
+      // Features section
+      gsap.from(".feature-card", {
+        scrollTrigger: {
+          trigger: ".feature-card",
+          start: "top 90%",
+          toggleActions: "play none none none"
+        },
+        opacity: 0,
+        y: 40,
+        stagger: 0.15,
+        duration: 0.7,
+        ease: "power2.out",
+        clearProps: "all"
+      });
+      
+      // Testimonials
+      gsap.from(".testimonial-card", {
+        scrollTrigger: {
+          trigger: ".testimonial-card",
+          start: "top 85%",
+          toggleActions: "play none none none"
+        },
+        opacity: 0,
+        scale: 0.95,
+        stagger: 0.15,
+        duration: 0.7,
+        ease: "power2.out",
+        clearProps: "all"
+      });
+      
+      // CTA section
+      gsap.from(".cta-content", {
+        scrollTrigger: {
+          trigger: ".cta-content",
+          start: "top 85%",
+          toggleActions: "play none none none"
+        },
+        opacity: 0,
+        y: 40,
+        duration: 0.8,
+        ease: "power2.out",
+        clearProps: "all"
+      });
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      // Cleanup ScrollTrigger instances
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
   }, []);
 
   const containerVariants = {
