@@ -141,6 +141,10 @@ export default function Dashboard() {
   ];
 
   useEffect(() => {
+     if('scrollRestoration' in history){
+      history.scrollRestoration="manual";
+    }
+    window.scrollTo(0,0);
     // Initialize Lenis smooth scrolling
     const lenis = new Lenis({
       duration: 1.2,
@@ -168,21 +172,21 @@ export default function Dashboard() {
       gsap.from(".dashboard-header", {
         opacity: 0,
         y: -30,
-        duration: 0.8,
+        duration: 1.5,
         ease: "power3.out",
         clearProps: "all"
       });
 
       // Stats cards with smooth stagger
-      gsap.from(".stat-card", {
-        opacity: 0,
-        y: 30,
-        stagger: 0.1,
-        duration: 0.6,
-        ease: "power2.out",
-        delay: 0.2,
-        clearProps: "all"
-      });
+      // gsap.from(".stat-card", {
+      //   opacity: 0,
+      //   y: 30,
+      //   stagger: 0.1,
+      //   duration: 0.6,
+      //   ease: "power2.out",
+      //   delay: 0.2,
+      //   clearProps: "all"
+      // });
 
       // Quick action cards
       gsap.from(".quick-action-card", {
@@ -347,16 +351,16 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-8">
+     {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-2 gap-8">
           {/* Left Column */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-8">
             {/* Quick Actions */}
             <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-teal-500/20 shadow-lg">
               <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
                 <span className="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">Quick Actions</span>
               </h3>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 {quickActions.map((action, index) => (
                   <motion.button
                     key={index}
@@ -413,8 +417,86 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
-          </div>
 
+            {/* Course Overview - New Section */}
+            <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-teal-500/20 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">
+                  Active Courses
+                </h3>
+                <BookOpen className="w-5 h-5 text-teal-400" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <motion.div
+                  whileHover={{ scale: 1.03, y: -3 }}
+                  className="p-5 rounded-xl bg-gradient-to-br from-teal-500/10 to-emerald-600/10 border border-teal-500/30 hover:border-teal-400/50 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="p-2 bg-teal-500/20 rounded-lg">
+                      <BookOpen className="w-5 h-5 text-teal-400" />
+                    </div>
+                    <span className="text-xs px-2 py-1 bg-teal-500/20 text-teal-300 rounded-full">Active</span>
+                  </div>
+                  <h4 className="text-white font-semibold mb-1">Data Structures</h4>
+                  <p className="text-sm text-slate-400 mb-3">156 students enrolled</p>
+                  <div className="w-full bg-slate-700/50 rounded-full h-1.5">
+                    <div className="bg-gradient-to-r from-teal-500 to-emerald-600 h-1.5 rounded-full" style={{width: '75%'}}></div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.03, y: -3 }}
+                  className="p-5 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-600/10 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="p-2 bg-blue-500/20 rounded-lg">
+                      <BookOpen className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full">Active</span>
+                  </div>
+                  <h4 className="text-white font-semibold mb-1">Machine Learning</h4>
+                  <p className="text-sm text-slate-400 mb-3">98 students enrolled</p>
+                  <div className="w-full bg-slate-700/50 rounded-full h-1.5">
+                    <div className="bg-gradient-to-r from-blue-500 to-cyan-600 h-1.5 rounded-full" style={{width: '60%'}}></div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.03, y: -3 }}
+                  className="p-5 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-600/10 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="p-2 bg-purple-500/20 rounded-lg">
+                      <BookOpen className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <span className="text-xs px-2 py-1 bg-purple-500/20 text-purple-300 rounded-full">Active</span>
+                  </div>
+                  <h4 className="text-white font-semibold mb-1">Web Development</h4>
+                  <p className="text-sm text-slate-400 mb-3">203 students enrolled</p>
+                  <div className="w-full bg-slate-700/50 rounded-full h-1.5">
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-600 h-1.5 rounded-full" style={{width: '85%'}}></div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.03, y: -3 }}
+                  className="p-5 rounded-xl bg-gradient-to-br from-orange-500/10 to-amber-600/10 border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="p-2 bg-orange-500/20 rounded-lg">
+                      <BookOpen className="w-5 h-5 text-orange-400" />
+                    </div>
+                    <span className="text-xs px-2 py-1 bg-orange-500/20 text-orange-300 rounded-full">Active</span>
+                  </div>
+                  <h4 className="text-white font-semibold mb-1">Database Systems</h4>
+                  <p className="text-sm text-slate-400 mb-3">134 students enrolled</p>
+                  <div className="w-full bg-slate-700/50 rounded-full h-1.5">
+                    <div className="bg-gradient-to-r from-orange-500 to-amber-600 h-1.5 rounded-full" style={{width: '70%'}}></div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </div>
           {/* Right Column */}
           <div className="space-y-8">
             {/* Upcoming Events */}

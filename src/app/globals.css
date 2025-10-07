@@ -116,3 +116,8 @@ img, picture, video, canvas, svg {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #0d9488, #059669);
 }
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url("/public/fonts/Satoshi-Variable.ttf");
+}
