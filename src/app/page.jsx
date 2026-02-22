@@ -3,185 +3,58 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, CheckCircle, Calendar, ClipboardCheck, FileText, Bell, BarChart3, Users, Sparkles, Zap, Clock } from "lucide-react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-// Register ScrollTrigger plugin
-gsap.registerPlugin(ScrollTrigger);
+const stats = [
+  { icon: <Users size={24} />, number: "50+", label: "Academic Departments" },
+  { icon: <Clock size={24} />, number: "10k+", label: "Lecture Hours Tracked" },
+  { icon: <BarChart3 size={24} />, number: "95%", label: "Attendance Accuracy" },
+  { icon: <Zap size={24} />, number: "15k+", label: "Student Users" }
+];
 
-export default function LandingPage() {
-  const features = [
-    {
-      icon: <Calendar className="w-8 h-8" />,
-      title: "Smart Lecture Scheduling",
-      description: "AI-powered scheduling system that prevents conflicts and optimizes lecture timetables automatically with real-time updates."
-    },
-    {
-      icon: <ClipboardCheck className="w-8 h-8" />,
-      title: "Digital Attendance Tracking",
-      description: "Seamless attendance management with QR code scanning, real-time tracking, and automated reporting for faculty."
-    },
-    {
-      icon: <FileText className="w-8 h-8" />,
-      title: "Lecture Resource Sharing",
-      description: "Centralized platform for sharing lecture notes, presentations, assignments, and study materials instantly."
-    },
-    {
-      icon: <Bell className="w-8 h-8" />,
-      title: "Instant Notifications",
-      description: "Real-time alerts for schedule changes, lecture cancellations, and important announcements to all stakeholders."
-    },
-    {
-      icon: <BarChart3 className="w-8 h-8" />,
-      title: "Analytics & Reports",
-      description: "Comprehensive attendance analytics, lecture statistics, and performance insights for administrators and faculty."
-    },
-    {
-      icon: <Users className="w-8 h-8" />,
-      title: "Multi-Role Access",
-      description: "Role-based dashboards for students, teachers, and administrators with secure authentication and data protection."
-    }
-  ];
+const features = [
+  {
+    icon: <Calendar />,
+    title: "Smart Scheduling",
+    description: "Intelligent conflict resolution and automated timetable generation for various academic departments."
+  },
+  {
+    icon: <ClipboardCheck />,
+    title: "Digital Attendance",
+    description: "Seamless real-time attendance tracking with secure verification and automated reporting."
+  },
+  {
+    icon: <FileText />,
+    title: "Resource Hub",
+    description: "Centralized repository for lecture notes, assignments, and study materials accessible to students."
+  }
+];
 
-  const stats = [
-    { number: "100%", label: "Digital Scheduling", icon: <Sparkles className="w-5 h-5" /> },
-    { number: "Real-time", label: "Attendance Tracking", icon: <Zap className="w-5 h-5" /> },
-    { number: "Zero", label: "Scheduling Conflicts", icon: <CheckCircle className="w-5 h-5" /> },
-    { number: "24/7", label: "Access Available", icon: <Clock className="w-5 h-5" /> }
-  ];
+const testimonials = [
+  {
+    name: "Dr. Sarah Johnson",
+    role: "Department Head",
+    content: "EduSync has transformed how we manage our faculty schedules. The automated conflict resolution is a lifesaver.",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+  },
+  {
+    name: "Prof. Michael Chen",
+    role: "Senior Lecturer",
+    content: "The digital attendance feature saves me 10 minutes every lecture. Students love the ease of access to notes.",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael"
+  },
+  {
+    name: "Emma Wilson",
+    role: "Student Rep",
+    content: "Having my schedule and resources in one place makes academic life so much more organized.",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma"
+  }
+];
 
-  const testimonials = [
-    {
-      name: "Prof. Hina Mehmood",
-      role: "Assistant Professor, IT Department",
-      content: "EduSync has completely transformed how we manage lectures. No more manual scheduling conflicts or attendance registers - everything is automated and efficient.",
-      avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop"
-    },
-    {
-      name: "Akshat Gupta",
-      role: "Student, BSc IT",
-      content: "As a student, I love having instant access to my lecture schedule, attendance records, and study materials all in one place. The notifications keep me updated on any changes.",
-      avatar: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop"
-    },
-    {
-      name: "Dr. Khan Ashfaq Ahmad",
-      role: "Principal",
-      content: "The analytics and automated reporting have given us unprecedented insights into lecture attendance patterns and resource utilization across departments.",
-      avatar: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop"
-    }
-  ];
-
+export default function Home() {
   useEffect(() => {
-    // Set a small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      // Hero section animations
-      gsap.from(".hero-badge", {
-        opacity: 0,
-        y: -30,
-        duration: 0.8,
-        ease: "power3.out",
-        clearProps: "all" // Clear inline styles after animation
-      });
-      gsap.from(".hero-title", {
-        opacity: 0,
-        y: 50,
-        duration: 1,
-        delay: 0.2,
-        ease: "power3.out",
-        clearProps: "all"
-      });
-      gsap.from(".hero-description", {
-        opacity: 0,
-        y: 30,
-        duration: 0.8,
-        delay: 0.4,
-        ease: "power3.out",
-        clearProps: "all"
-      });
-      gsap.from(".hero-buttons", {
-        opacity: 0,
-        y: 20,
-        duration: 0.8,
-        delay: 0.6,
-        ease: "power3.out",
-        clearProps: "all"
-      });
-      
-      // Stats animation with stagger
-      gsap.from(".stat-card", {
-        scrollTrigger: {
-          trigger: ".stat-card",
-          start: "top 85%",
-          toggleActions: "play none none none"
-        },
-        opacity: 0,
-        y: 30,
-        stagger: 0.15,
-        duration: 0.6,
-        ease: "power2.out",
-        clearProps: "all"
-      });
-      
-      // Dashboard card float animation - lighter version
-      gsap.to(".dashboard-card", {
-        y: -15,
-        duration: 3,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut"
-      });
-      
-      // Features section
-      gsap.from(".feature-card", {
-        scrollTrigger: {
-          trigger: ".feature-card",
-          start: "top 90%",
-          toggleActions: "play none none none"
-        },
-        opacity: 0,
-        y: 40,
-        stagger: 0.15,
-        duration: 0.7,
-        ease: "power2.out",
-        clearProps: "all"
-      });
-      
-      // Testimonials
-      gsap.from(".testimonial-card", {
-        scrollTrigger: {
-          trigger: ".testimonial-card",
-          start: "top 85%",
-          toggleActions: "play none none none"
-        },
-        opacity: 0,
-        scale: 0.95,
-        stagger: 0.15,
-        duration: 0.7,
-        ease: "power2.out",
-        clearProps: "all"
-      });
-      
-      // CTA section
-      gsap.from(".cta-content", {
-        scrollTrigger: {
-          trigger: ".cta-content",
-          start: "top 85%",
-          toggleActions: "play none none none"
-        },
-        opacity: 0,
-        y: 40,
-        duration: 0.8,
-        ease: "power2.out",
-        clearProps: "all"
-      });
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-      // Cleanup ScrollTrigger instances
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
+    // Standard page load logic if needed
   }, []);
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -253,10 +126,10 @@ export default function LandingPage() {
                   <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
                   Smart Lecture Management Solution
                 </div>
-                
+
                 <h1 className="hero-title text-5xl lg:text-7xl font-bold leading-tight">
                   <span className="text-white">Digitize Your</span>
-                  <motion.span 
+                  <motion.span
                     className="block bg-gradient-to-r from-teal-400 via-emerald-400 to-orange-400 bg-clip-text text-transparent"
                     animate={{
                       backgroundPosition: ["0%", "100%", "0%"],
@@ -273,9 +146,9 @@ export default function LandingPage() {
                     Lecture Management
                   </motion.span>
                 </h1>
-                
+
                 <p className="hero-description text-xl text-slate-300 leading-relaxed max-w-2xl">
-                  EduSync streamlines lecture scheduling, attendance tracking, and resource sharing for educational institutions - eliminating manual processes and scheduling conflicts.
+                  EduSync streamlines lecture scheduling, attendance tracking, and resource sharing for our academic community - eliminating manual processes and scheduling conflicts.
                 </p>
               </div>
 
@@ -326,13 +199,13 @@ export default function LandingPage() {
             <div className="relative">
               <div className="dashboard-card relative z-10 bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-teal-500/20">
                 <div className="space-y-6">
-                  <motion.div 
+                  <motion.div
                     className="flex items-center space-x-4"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 }}
                   >
-                    <motion.div 
+                    <motion.div
                       className="w-14 h-14 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/50"
                       animate={{
                         rotate: [0, 5, -5, 0],
@@ -350,8 +223,8 @@ export default function LandingPage() {
                       <p className="text-sm text-teal-400">Lecture Management</p>
                     </div>
                   </motion.div>
-                  
-                  <motion.div 
+
+                  <motion.div
                     className="space-y-3"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -359,7 +232,7 @@ export default function LandingPage() {
                   >
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-slate-300">Attendance Rate</span>
-                      <motion.span 
+                      <motion.span
                         className="text-sm font-medium text-teal-400"
                         animate={{ scale: [1, 1.1, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
@@ -368,7 +241,7 @@ export default function LandingPage() {
                       </motion.span>
                     </div>
                     <div className="relative w-full bg-slate-700/50 rounded-full h-3 overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         className="absolute inset-0 bg-gradient-to-r from-teal-500 via-emerald-500 to-orange-500 h-3 rounded-full"
                         initial={{ width: 0 }}
                         animate={{ width: "92%" }}
@@ -387,8 +260,8 @@ export default function LandingPage() {
                       />
                     </div>
                   </motion.div>
-                  
-                  <motion.div 
+
+                  <motion.div
                     className="grid grid-cols-3 gap-4 text-center pt-4"
                     variants={containerVariants}
                     initial="hidden"
@@ -399,13 +272,13 @@ export default function LandingPage() {
                       { value: "45", label: "Students" },
                       { value: "12", label: "Resources" }
                     ].map((item, idx) => (
-                      <motion.div 
+                      <motion.div
                         key={idx}
                         variants={itemVariants}
                         whileHover={{ scale: 1.1 }}
                         className="p-3 bg-white/5 rounded-lg backdrop-blur-sm border border-white/10"
                       >
-                        <motion.div 
+                        <motion.div
                           className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent"
                           animate={{ scale: [1, 1.05, 1] }}
                           transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
@@ -418,7 +291,7 @@ export default function LandingPage() {
                   </motion.div>
                 </div>
               </div>
-              
+
               {/* Floating orbs */}
               <motion.div
                 animate={{
@@ -459,14 +332,14 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="text-center space-y-4 mb-16"
           >
-            <motion.h2 
+            <motion.h2
               className="text-4xl lg:text-6xl font-bold"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
               <span className="text-white">Complete Lecture Management</span>
-              <motion.span 
+              <motion.span
                 className="block bg-gradient-to-r from-teal-400 to-orange-400 bg-clip-text text-transparent"
                 animate={{
                   backgroundPosition: ["0%", "100%", "0%"],
@@ -483,7 +356,7 @@ export default function LandingPage() {
                 In One Platform
               </motion.span>
             </motion.h2>
-            <motion.p 
+            <motion.p
               className="text-xl text-slate-300 max-w-3xl mx-auto"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -498,8 +371,8 @@ export default function LandingPage() {
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                whileHover={{ 
-                  y: -10, 
+                whileHover={{
+                  y: -10,
                   scale: 1.02,
                   transition: { duration: 0.3 }
                 }}
@@ -510,11 +383,11 @@ export default function LandingPage() {
                   className="absolute inset-0 bg-gradient-to-br from-teal-500/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   initial={false}
                 />
-                
+
                 <div className="relative z-10">
-                  <motion.div 
+                  <motion.div
                     className="w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-teal-500/50"
-                    whileHover={{ 
+                    whileHover={{
                       rotate: [0, -10, 10, -10, 0],
                       scale: 1.1
                     }}
@@ -558,7 +431,7 @@ export default function LandingPage() {
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
-                whileHover={{ 
+                whileHover={{
                   y: -10,
                   scale: 1.03
                 }}
@@ -579,7 +452,7 @@ export default function LandingPage() {
                 />
 
                 <div className="relative z-10">
-                  <motion.div 
+                  <motion.div
                     className="flex items-center space-x-4 mb-6"
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -597,7 +470,7 @@ export default function LandingPage() {
                       <p className="text-sm text-teal-400">{testimonial.role}</p>
                     </div>
                   </motion.div>
-                  <motion.p 
+                  <motion.p
                     className="text-slate-300 leading-relaxed italic"
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
@@ -629,10 +502,10 @@ export default function LandingPage() {
             backgroundSize: "200% 200%"
           }}
         />
-        
+
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
           <div className="cta-content space-y-8">
-            <motion.h2 
+            <motion.h2
               className="text-4xl lg:text-6xl font-bold text-white"
               animate={{
                 scale: [1, 1.02, 1],
@@ -645,14 +518,14 @@ export default function LandingPage() {
             >
               Ready to Modernize Your Lecture Management?
             </motion.h2>
-            <motion.p 
+            <motion.p
               className="text-xl text-teal-200"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
               viewport={{ once: true }}
             >
-              Join institutions that have eliminated scheduling conflicts and manual attendance tracking.
+              Streamlining academic life by eliminating scheduling conflicts and manual attendance tracking today.
             </motion.p>
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -662,7 +535,7 @@ export default function LandingPage() {
                 href="/home"
                 className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-teal-500/50 transition-all duration-300 group"
               >
-                Start Your Free Trial
+                Access the Portal
                 <motion.div
                   animate={{
                     x: [0, 5, 0],

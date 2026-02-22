@@ -80,7 +80,7 @@ export default function Footer() {
             className="space-y-4"
           >
             <div className="flex items-center space-x-3">
-              <motion.div 
+              <motion.div
                 className="p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-lg shadow-teal-500/50"
                 whileHover={{ scale: 1.1, rotate: 5 }}
               >
@@ -122,7 +122,7 @@ export default function Footer() {
             <h4 className="text-lg font-bold mb-4 text-white">Quick Links</h4>
             <ul className="space-y-2">
               {quickLinks.map((link, index) => (
-                <motion.li 
+                <motion.li
                   key={index}
                   whileHover={{ x: 5 }}
                   transition={{ duration: 0.2 }}
@@ -151,7 +151,7 @@ export default function Footer() {
             <h4 className="text-lg font-bold mb-4 text-white">Contact Us</h4>
             <ul className="space-y-3">
               {contactInfo.map((info, index) => (
-                <motion.li 
+                <motion.li
                   key={index}
                   className="flex items-center space-x-3 text-slate-400 text-sm group"
                   whileHover={{ x: 5 }}
@@ -174,9 +174,9 @@ export default function Footer() {
             transition={{ duration: 0.5, delay: 0.3 }}
             viewport={{ once: true }}
           >
-            <h4 className="text-lg font-bold mb-4 text-white">Stay Updated</h4>
+            <h4 className="text-lg font-bold mb-4 text-white">Institutional Support</h4>
             <p className="text-slate-400 text-sm mb-4">
-              Subscribe to get the latest updates and features.
+              Connect with our support team for any academic or technical queries.
             </p>
             <div className="flex flex-col space-y-2">
               <input
@@ -189,7 +189,7 @@ export default function Footer() {
                 whileTap={{ scale: 0.98 }}
                 className="px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-teal-500/50 transition-all duration-300 text-sm"
               >
-                Subscribe
+                Submit Query
               </motion.button>
             </div>
           </motion.div>
@@ -205,7 +205,7 @@ export default function Footer() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-slate-400 text-sm flex items-center">
-              © {new Date().getFullYear()} EduSync. Made with 
+              © {new Date().getFullYear()} EduSync. Made with
               <motion.span
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
