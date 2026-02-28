@@ -11,14 +11,19 @@ const userSchema = mongoose.Schema({
         enum: ['admin', 'teacher', 'student'],
         default: 'student'
     },
-    department: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Department'
-    },
+    department: [{
+        type: String,
+        enum: ['IT', 'CS']
+    }],
+    subjects: [String],
     batch: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Batch'
     },
+    isMentor: {
+        type: Boolean,
+        default: false
+    }
 }, {
     timestamps: true
 });

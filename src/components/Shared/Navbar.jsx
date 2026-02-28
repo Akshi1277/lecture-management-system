@@ -33,8 +33,7 @@ export default function Navbar() {
     ...(userInfo ? [
       { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     ] : [
-      { href: "/login", label: "Login", icon: <LogIn size={18} /> },
-      { href: "/register", label: "Register", icon: <UserPlus size={18} /> },
+      { href: "/login", label: "Access Portal", icon: <LogIn size={18} /> },
     ]),
   ];
 

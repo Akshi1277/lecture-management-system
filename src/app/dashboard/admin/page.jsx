@@ -28,7 +28,7 @@ export default function AdminDashboard() {
 
     const stats = [
         { title: "Active Lectures", value: lectures.length, icon: <Activity />, color: "text-orange-400" },
-        { title: "Departments", value: "8", icon: <BookOpen />, color: "text-teal-400" },
+        { title: "Departments", value: "2", icon: <BookOpen />, color: "text-teal-400" },
         { title: "Active Users", value: "240", icon: <Users />, color: "text-blue-400" },
     ];
 

@@ -28,7 +28,7 @@ export default function ExamSchedulerForm({ onClose }) {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
                 const [resCourses, resBatches, resTeachers] = await Promise.all([
-                    axios.get('http://localhost:5000/api/courses', config),
+                    axios.get('http://localhost:5000/api/hierarchy/courses', config),
                     axios.get('http://localhost:5000/api/hierarchy/batches', config),
                     axios.get('http://localhost:5000/api/users/teachers', config)
                 ]);

@@ -15,14 +15,11 @@ const suggestSubstitutes = asyncHandler(async (req, res) => {
     }
 
     const { startTime, endTime, teacher: originalTeacher } = lecture;
-    const departmentId = lecture.course.department;
-
-    // 1. Find all teachers in the same department
+    // 1. Find all teachers
     const potentialSubstitutes = await User.find({
         role: 'teacher',
-        department: departmentId,
         _id: { $ne: originalTeacher } // Exclude the original teacher
-    }).select('name email');
+    }).select('name email subjects');
 
     // 2. Filter out teachers who have a conflicting lecture
     const availableSubstitutes = [];

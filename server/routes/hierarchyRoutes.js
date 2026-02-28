@@ -20,6 +20,6 @@ router.route('/courses')
 
 router.route('/batches')
     .post(protect, admin, createBatch)
-    .get(protect, getBatches);
+    .get(getBatches);
 
 module.exports = router;

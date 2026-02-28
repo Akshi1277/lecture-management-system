@@ -72,7 +72,7 @@ export default function AttendanceMarker({ lecture, onClose }) {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-white tracking-tight">{lecture.title}</h2>
-                    <p className="text-slate-500 text-sm">Course: {lecture.course?.name}</p>
+                    <p className="text-slate-500 text-sm">Subject: {lecture.subject || 'N/A'}</p>
                 </div>
                 <div className="text-right">
                     <span className="inline-flex items-center px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-full text-xs font-bold">
@@ -98,8 +98,8 @@ export default function AttendanceMarker({ lecture, onClose }) {
                         key={student._id}
                         onClick={() => handleToggle(student._id)}
                         className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${attendanceData[student._id] === 'present'
-                                ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40'
-                                : 'bg-red-500/5 border-red-500/20 hover:border-red-500/40'
+                            ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40'
+                            : 'bg-red-500/5 border-red-500/20 hover:border-red-500/40'
                             }`}
                     >
                         <div className="flex items-center space-x-4">

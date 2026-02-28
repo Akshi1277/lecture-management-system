@@ -72,7 +72,14 @@ export default function Dashboard() {
           {[
             { title: "Active Lectures", value: lectures.length, icon: <BookOpen className="text-teal-400" />, border: "border-teal-500/20" },
             { title: "User Role", value: user?.role?.toUpperCase(), icon: <Users className="text-blue-400" />, border: "border-blue-500/20" },
-            { title: "Department", value: user?.department || "N/A", icon: <FileText className="text-orange-400" />, border: "border-orange-500/20" },
+            {
+              title: "Department",
+              value: Array.isArray(user?.department)
+                ? user.department.map(d => d.name || d).join(', ')
+                : (user?.department?.name || user?.department || "N/A"),
+              icon: <FileText className="text-orange-400" />,
+              border: "border-orange-500/20"
+            },
             { title: "Engagement", value: "94%", icon: <TrendingUp className="text-purple-400" />, border: "border-purple-500/20" }
           ].map((stat, i) => (
             <div key={i} className={`bg-slate-800/50 backdrop-blur-xl p-6 rounded-2xl border ${stat.border}`}>
@@ -118,10 +125,24 @@ export default function Dashboard() {
                   <div key={i} className="p-4 rounded-xl border border-slate-700 bg-slate-900/40">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-semibold text-white">{l.title}</h4>
-                      <span className="text-xs px-2 py-1 bg-teal-500/20 text-teal-400 rounded-full">{l.status}</span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-[10px] px-2 py-0.5 bg-teal-500/20 text-teal-400 rounded-full font-bold uppercase tracking-widest">{l.status}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest ${l.type === 'Lab' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                          {l.type}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-500 flex items-center mb-1"><Clock className="w-3 h-3 mr-2" /> {new Date(l.startTime).toLocaleString()}</p>
-                    <p className="text-xs text-teal-400 flex items-center"><Users className="w-3 h-3 mr-2" /> Prof: {l.teacher?.name || "Internal"}</p>
+                    <div className="space-y-1 mt-3">
+                      <p className="text-xs text-slate-400 flex items-center font-bold">
+                        <BookOpen className="w-3 h-3 mr-2 text-teal-400" /> {l.subject} • {l.batch?.name}
+                      </p>
+                      <p className="text-xs text-slate-500 flex items-center">
+                        <Clock className="w-3 h-3 mr-2 text-slate-400" /> {new Date(l.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {new Date(l.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      <p className="text-xs text-teal-400/80 flex items-center font-medium">
+                        <Users className="w-3 h-3 mr-2 text-teal-500" /> {l.teacher?.name || "Internal"}
+                      </p>
+                    </div>
                   </div>
                 ))}
                 {lectures.length === 0 && <p className="text-center text-slate-500 italic py-4">No lectures scheduled.</p>}

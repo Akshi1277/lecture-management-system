@@ -111,6 +111,23 @@ export default function TeacherDashboard() {
                                 <p className="text-xs text-slate-500">Broadcast to all students</p>
                             </div>
                         </button>
+                        {userInfo?.isMentor && (
+                            <button
+                                onClick={() => dispatch(setActiveModal('manageUsers'))}
+                                className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex items-center space-x-4 hover:border-blue-500/50 transition-all sm:col-span-2 shadow-2xl shadow-blue-500/5"
+                            >
+                                <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
+                                    <Users />
+                                </div>
+                                <div className="text-left">
+                                    <div className="flex items-center space-x-2">
+                                        <p className="font-bold uppercase tracking-tight">Enroll Students</p>
+                                        <span className="px-2 py-[2px] bg-blue-500/20 text-blue-400 text-[8px] font-black rounded uppercase">Mentor Privilege</span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-1">Register new students directly into the system</p>
+                                </div>
+                            </button>
+                        )}
                     </div>
                 </div>
 

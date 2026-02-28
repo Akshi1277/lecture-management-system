@@ -15,7 +15,7 @@ const createLecture = asyncHandler(async (req, res) => {
         throw new Error(error.details[0].message);
     }
 
-    const { title, course, teacher, startTime, endTime, classroom, batch, division, type } = req.body;
+    const { title, course, subject, teacher, startTime, endTime, classroom, batch, division, type } = req.body;
 
     // Check for conflicts
     // 1. Teacher busy
@@ -53,6 +53,7 @@ const createLecture = asyncHandler(async (req, res) => {
     const lecture = await Lecture.create({
         title,
         course,
+        subject,
         teacher,
         startTime,
         endTime,

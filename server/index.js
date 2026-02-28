@@ -31,7 +31,7 @@ app.use('/api/', limiter);
 
 app.use('/api/users', userRoutes);
 app.use('/api', coreRoutes);
-app.use('/api', hierarchyRoutes);
+app.use('/api/hierarchy', hierarchyRoutes);
 
 // Error Middleware
 app.use(notFound);

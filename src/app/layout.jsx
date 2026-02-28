@@ -27,7 +27,6 @@ function ConditionalNavbar() {
   // Hide navbar on auth and dashboard pages
   if (
     navpathName === '/login' ||
-    navpathName === '/register' ||
     navpathName === '/demo' ||
     navpathName.startsWith('/dashboard')
   ) {
@@ -41,7 +40,6 @@ function ConditionalFooter() {
   // Hide footer on auth and dashboard pages
   if (
     footerpathName === '/login' ||
-    footerpathName === '/register' ||
     footerpathName === '/demo' ||
     footerpathName.startsWith('/dashboard')
   ) {

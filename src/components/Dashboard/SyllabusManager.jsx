@@ -21,7 +21,7 @@ export default function SyllabusManager({ courseId, onClose }) {
                 setUnits(res.data);
 
                 // Also fetch course name
-                const resCourse = await axios.get(`http://localhost:5000/api/courses`, config);
+                const resCourse = await axios.get(`http://localhost:5000/api/hierarchy/courses`, config);
                 const foundCourse = resCourse.data.find(c => c._id === courseId);
                 setCourse(foundCourse);
 

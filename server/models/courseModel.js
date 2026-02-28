@@ -11,8 +11,8 @@ const courseSchema = mongoose.Schema({
         unique: true
     },
     department: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Department',
+        type: String,
+        enum: ['IT', 'CS'],
         required: true
     },
     credits: {

@@ -166,10 +166,10 @@ export default function Home() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  href="/register"
+                  href="/login"
                   className="btn-secondary inline-flex items-center justify-center"
                 >
-                  Access Portal
+                  Enter Portal
                 </Link>
               </motion.div>
             </div>
@@ -342,10 +342,10 @@ export default function Home() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  href="/register"
+                  href="/login"
                   className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-teal-500/50 transition-all duration-300 group"
                 >
-                  Access Portal
+                  Enter Academic Portal
                   <motion.div
                     animate={{
                       x: [0, 5, 0],

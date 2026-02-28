@@ -39,7 +39,7 @@ const createCourse = asyncHandler(async (req, res) => {
 // @route   GET /api/courses
 // @access  Private
 const getCourses = asyncHandler(async (req, res) => {
-    const courses = await Course.find({}).populate('department', 'name text');
+    const courses = await Course.find({});
     res.json(courses);
 });
 
@@ -56,7 +56,7 @@ const createBatch = asyncHandler(async (req, res) => {
 // @route   GET /api/batches
 // @access  Private
 const getBatches = asyncHandler(async (req, res) => {
-    const batches = await Batch.find({}).populate('department', 'name code');
+    const batches = await Batch.find({});
     res.json(batches);
 });
 

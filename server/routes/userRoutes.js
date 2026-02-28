@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { authUser, registerUser, getTeachers, getStudents, getStudentsByBatch } = require('../controllers/userController');
+const { authUser, registerUser, getTeachers, getStudents, getStudentsByBatch, getSubjects } = require('../controllers/userController');
 const { protect, admin, teacher } = require('../middleware/authMiddleware');
 
-router.post('/', registerUser);
+router.post('/', protect, registerUser);
 router.post('/login', authUser);
 router.get('/teachers', protect, admin, getTeachers);
 router.get('/students', protect, teacher, getStudents);
 router.get('/batch/:batchId', protect, teacher, getStudentsByBatch);
+router.get('/subjects', protect, getSubjects);
 
 module.exports = router;

@@ -8,6 +8,9 @@ const lectureSchema = mongoose.Schema({
     course: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
+    },
+    subject: {
+        type: String,
         required: true
     },
     teacher: {

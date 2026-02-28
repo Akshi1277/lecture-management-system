@@ -7,8 +7,8 @@ const batchSchema = mongoose.Schema({
         // e.g. "FYCS", "SYIT", "TYBMM"
     },
     department: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Department',
+        type: String,
+        enum: ['IT', 'CS'],
         required: true
     },
     year: {

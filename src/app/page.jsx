@@ -158,22 +158,11 @@ export default function Home() {
                   whileTap={{ scale: 0.95 }}
                 >
                   <Link
-                    href="/home"
+                    href="/login"
                     className="btn-primary inline-flex items-center justify-center group"
                   >
-                    Get Started Today
+                    Access Academic Portal
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    href="/login"
-                    className="btn-secondary inline-flex items-center justify-center"
-                  >
-                    Sign In
                   </Link>
                 </motion.div>
               </div>
@@ -532,10 +521,10 @@ export default function Home() {
               whileTap={{ scale: 0.95 }}
             >
               <Link
-                href="/home"
+                href="/login"
                 className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-teal-500/50 transition-all duration-300 group"
               >
-                Access the Portal
+                Access Portal
                 <motion.div
                   animate={{
                     x: [0, 5, 0],

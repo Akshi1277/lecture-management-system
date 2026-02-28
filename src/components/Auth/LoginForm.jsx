@@ -2,37 +2,23 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  Calendar,
   Mail,
   Lock,
-  User as UserIcon,
   Eye,
   EyeOff,
   Sparkles,
-  ArrowRight,
-  CheckCircle,
-  Users,
-  BookOpen,
   AlertCircle
 } from "lucide-react";
-import { login, register, clearError } from "@/redux/slices/authSlice";
-import axios from "axios";
+import { login, clearError } from "@/redux/slices/authSlice";
 
 export default function LoginForm() {
-  const [activeTab, setActiveTab] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
-    password: "",
-    confirmPassword: "",
-    role: "student",
-    department: "",
-    batch: ""
+    password: ""
   });
-  const [batches, setBatches] = useState([]);
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -42,23 +28,12 @@ export default function LoginForm() {
     if (userInfo) {
       router.push("/dashboard");
     }
-    const fetchBatches = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/hierarchy/batches');
-        setBatches(res.data);
-      } catch (err) { console.error(err); }
-    };
-    if (activeTab === "signup") fetchBatches();
     return () => dispatch(clearError());
-  }, [userInfo, router, dispatch, activeTab]);
+  }, [userInfo, router, dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (activeTab === "login") {
-      dispatch(login({ email: formData.email, password: formData.password }));
-    } else {
-      dispatch(register(formData));
-    }
+    dispatch(login({ email: formData.email, password: formData.password }));
   };
 
   const handleChange = (e) => {
@@ -84,21 +59,14 @@ export default function LoginForm() {
               World Class Management
             </div>
             <h1 className="text-4xl font-black text-white tracking-tight mb-2">EduSync</h1>
-            <p className="text-slate-400 font-medium">Elevating academic logistics</p>
+            <p className="text-slate-400 font-medium lowercase tracking-wider opacity-80">Elevating academic logistics</p>
           </div>
 
           <div className="p-8 pt-4">
             <div className="flex p-1 bg-slate-950/50 rounded-2xl mb-8 border border-slate-800">
-              {["login", "signup"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => { setActiveTab(tab); dispatch(clearError()); }}
-                  className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${activeTab === tab ? "bg-slate-800 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
-                    }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
+              <div className="flex-1 py-3 text-sm font-bold rounded-xl bg-slate-800 text-white shadow-lg text-center">
+                User Login
+              </div>
             </div>
 
             {error && (
@@ -113,73 +81,6 @@ export default function LoginForm() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <AnimatePresence mode="wait">
-                {activeTab === "signup" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-6 overflow-hidden"
-                  >
-                    <div className="relative group">
-                      <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-teal-400 transition-colors" />
-                      <input
-                        type="text"
-                        name="name"
-                        placeholder="Full Name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all font-medium"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="relative group">
-                        <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-teal-400 transition-colors" />
-                        <select
-                          name="role"
-                          value={formData.role}
-                          onChange={handleChange}
-                          className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-4 pl-12 pr-4 text-white appearance-none focus:outline-none focus:border-teal-500/50 transition-all font-medium"
-                        >
-                          <option value="student">Student</option>
-                          <option value="teacher">Teacher</option>
-                        </select>
-                      </div>
-                      <div className="relative group">
-                        {formData.role === 'student' ? (
-                          <>
-                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-teal-400 transition-colors" />
-                            <select
-                              name="batch"
-                              value={formData.batch}
-                              onChange={handleChange}
-                              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-4 pl-12 pr-4 text-white appearance-none focus:outline-none focus:border-teal-500/50 transition-all font-medium"
-                              required
-                            >
-                              <option value="">Select Batch</option>
-                              {batches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
-                            </select>
-                          </>
-                        ) : (
-                          <>
-                            <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-teal-400 transition-colors" />
-                            <input
-                              type="text"
-                              name="department"
-                              placeholder="Dept ID"
-                              value={formData.department}
-                              onChange={handleChange}
-                              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-teal-500/50 transition-all font-medium"
-                            />
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-teal-400 transition-colors" />
                 <input
@@ -216,20 +117,15 @@ export default function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-black py-4 rounded-2xl transition-all flex items-center justify-center disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-black py-4 rounded-2xl transition-all shadow-xl shadow-emerald-500/10 active:scale-[0.98] disabled:opacity-50"
               >
-                {loading ? "Processing..." : (activeTab === "login" ? "Sign In" : "Create Account")}
+                {loading ? "Verifying..." : "Sign In"}
               </button>
             </form>
 
             <div className="mt-8 text-center pt-8 border-t border-slate-800/50">
-              <p className="text-slate-500 text-sm font-medium">
-                <button
-                  onClick={() => { setActiveTab(activeTab === "login" ? "signup" : "login"); dispatch(clearError()); }}
-                  className="text-teal-400 hover:text-teal-300 ml-2 font-bold underline transition-colors"
-                >
-                  {activeTab === "login" ? "Join EduSync" : "Login here"}
-                </button>
+              <p className="text-slate-500 text-[13px] font-medium max-w-[280px] mx-auto leading-relaxed">
+                Accounts are managed by your administrator. Contact your department for access.
               </p>
             </div>
           </div>
