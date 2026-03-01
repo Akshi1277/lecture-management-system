@@ -20,7 +20,7 @@ export default function BatchManager() {
     const fetchData = async () => {
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const batchRes = await axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches', config);
+            const batchRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, config);
                 setBatches(batchRes.data);
         } catch (error) {
             console.error(error);
@@ -31,7 +31,7 @@ export default function BatchManager() {
         e.preventDefault();
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.post('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches', newBatch, config);
+            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, newBatch, config);
                 dispatch(addToast({ type: 'success', message: 'Batch Created Successfully' }));
             setNewBatch({ ...newBatch, name: "" });
             fetchData();

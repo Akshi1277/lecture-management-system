@@ -32,7 +32,7 @@ export default function StudentDashboard() {
     const fetchAttendance = async () => {
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const res = await axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/my-stats', config);
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/my-stats`, config);
                 setStats(res.data);
         } catch (error) { console.error(error); }
     };

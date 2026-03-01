@@ -16,7 +16,7 @@ export default function FacultyLoadChart() {
         const fetchLoad = async () => {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const res = await axios.get("${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/faculty-load", config);
+                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/faculty-load`, config);
                 setData(res.data);
                 setLoading(false);
             } catch (error) {

@@ -52,7 +52,7 @@ export default function AttendanceMarker({ lecture, onClose }) {
                     status
                 }))
             };
-            await axios.post('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance', payload, config);
+            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance`, payload, config);
                 dispatch(addToast({ type: 'success', message: 'Attendance marked successfully!' }));
             onClose();
         } catch (error) {

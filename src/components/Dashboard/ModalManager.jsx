@@ -116,8 +116,8 @@ function AssignLectureForm({ onClose }) {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
                 const [resTeachers, resBatches] = await Promise.all([
-                    axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/teachers', config),
-                        axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches', config)
+                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/teachers`, config),
+                        axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, config)
                 ]);
                 setTeachers(resTeachers.data);
                 setBatches(resBatches.data);
@@ -415,8 +415,8 @@ function EnrollUserForm({ onClose }) {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
                 const [resBatches, resSubjects] = await Promise.all([
-                    axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches', config),
-                        axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/subjects', config)
+                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, config),
+                        axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/subjects`, config)
                 ]);
                 setBatches(resBatches.data);
                 setExistingSubjects(resSubjects.data);
@@ -479,7 +479,7 @@ function EnrollUserForm({ onClose }) {
             bulkFormData.append('batchId', formData.batch);
 
             try {
-                const res = await axios.post('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/bulk', bulkFormData, {
+                const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/bulk`, bulkFormData, {
                     headers: {
                     ...config.headers,
                     'Content-Type': 'multipart/form-data'
@@ -510,7 +510,7 @@ function EnrollUserForm({ onClose }) {
     }
 
     try {
-        await axios.post('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users', payload, config);
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users`, payload, config);
             dispatch(addToast({ type: 'success', message: `${formData.name} enrolled! Credentials sent via email.` }));
         onClose();
     } catch (err) {
