@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const classroomSchema = mongoose.Schema({
     name: {
@@ -31,4 +31,5 @@ const classroomSchema = mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('Classroom', classroomSchema);
+const Classroom = mongoose.model('Classroom', classroomSchema);
+export default Classroom;

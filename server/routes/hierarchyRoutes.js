@@ -1,14 +1,15 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from 'express';
+import {
     createDepartment,
     getDepartments,
     createCourse,
     getCourses,
     createBatch,
     getBatches
-} = require('../controllers/hierarchyController');
-const { protect, admin } = require('../middleware/authMiddleware');
+} from '../controllers/hierarchyController.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
 
 router.route('/departments')
     .post(protect, admin, createDepartment)
@@ -22,4 +23,4 @@ router.route('/batches')
     .post(protect, admin, createBatch)
     .get(getBatches);
 
-module.exports = router;
+export default router;

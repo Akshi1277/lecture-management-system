@@ -1,13 +1,13 @@
-const mongoose = require('mongoose');
-const asyncHandler = require('express-async-handler');
-const Attendance = require('../models/attendanceModel');
-const Lecture = require('../models/lectureModel');
-const User = require('../models/userModel');
+import mongoose from 'mongoose';
+import asyncHandler from 'express-async-handler';
+import Attendance from '../models/attendanceModel.js';
+import Lecture from '../models/lectureModel.js';
+import User from '../models/userModel.js';
 
 // @desc    Mark attendance for a lecture (Teacher only)
 // @route   POST /api/attendance
 // @access  Private/Teacher
-const markAttendance = asyncHandler(async (req, res) => {
+export const markAttendance = asyncHandler(async (req, res) => {
     const { lectureId, students } = req.body; // students: [{ studentId, status }]
 
     const lecture = await Lecture.findById(lectureId);
@@ -45,7 +45,7 @@ const markAttendance = asyncHandler(async (req, res) => {
 // @desc    Get attendance stats for a specific course and batch
 // @route   GET /api/attendance/stats/:courseId/:batchId
 // @access  Private/Teacher
-const getAttendanceStats = asyncHandler(async (req, res) => {
+export const getAttendanceStats = asyncHandler(async (req, res) => {
     const { courseId, batchId } = req.params;
 
     // Aggregate to calculate percentages
@@ -82,7 +82,7 @@ const getAttendanceStats = asyncHandler(async (req, res) => {
 // @desc    Get attendance for a specific lecture
 // @route   GET /api/attendance/lecture/:lectureId
 // @access  Private
-const getAttendanceByLecture = asyncHandler(async (req, res) => {
+export const getAttendanceByLecture = asyncHandler(async (req, res) => {
     const attendance = await Attendance.findOne({ lecture: req.params.lectureId })
         .populate('students.student', 'name email');
 
@@ -97,7 +97,7 @@ const getAttendanceByLecture = asyncHandler(async (req, res) => {
 // @desc    Get students with < 75% attendance for a teacher's courses
 // @route   GET /api/attendance/low-attendance
 // @access  Private/Teacher
-const getLowAttendanceStudents = asyncHandler(async (req, res) => {
+export const getLowAttendanceStudents = asyncHandler(async (req, res) => {
     // Find all lectures by this teacher
     const teacherId = req.user._id;
 
@@ -134,7 +134,7 @@ const getLowAttendanceStudents = asyncHandler(async (req, res) => {
 // @desc    Get faculty load stats (Total lectures per teacher)
 // @route   GET /api/attendance/faculty-load
 // @access  Private/Admin
-const getFacultyLoad = asyncHandler(async (req, res) => {
+export const getFacultyLoad = asyncHandler(async (req, res) => {
     const stats = await Lecture.aggregate([
         {
             $group: {
@@ -164,7 +164,7 @@ const getFacultyLoad = asyncHandler(async (req, res) => {
 // @desc    Get logged in student attendance stats
 // @route   GET /api/attendance/my-stats
 // @access  Private
-const getMyAttendanceStats = asyncHandler(async (req, res) => {
+export const getMyAttendanceStats = asyncHandler(async (req, res) => {
     const stats = await Attendance.aggregate([
         { $unwind: '$students' },
         { $match: { 'students.student': req.user._id } },
@@ -195,5 +195,3 @@ const getMyAttendanceStats = asyncHandler(async (req, res) => {
     ]);
     res.json(stats[0] || { totalLectures: 0, presentLectures: 0, absentLectures: 0, percentage: 0 });
 });
-
-module.exports = { markAttendance, getAttendanceStats, getAttendanceByLecture, getLowAttendanceStudents, getFacultyLoad, getMyAttendanceStats };

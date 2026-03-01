@@ -1,9 +1,9 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
-const userSchema = Joi.object({
+export const userSchema = Joi.object({
     name: Joi.string().required().min(3).max(50),
     email: Joi.string().required().email(),
-    password: Joi.string().required().min(6),
+    password: Joi.string().min(6).optional(),
     role: Joi.string().valid('teacher', 'student').default('student'),
     department: Joi.alternatives().try(
         Joi.array().items(Joi.string().valid('IT', 'CS')),
@@ -14,7 +14,7 @@ const userSchema = Joi.object({
     isMentor: Joi.boolean().default(false)
 });
 
-const lectureSchema = Joi.object({
+export const lectureSchema = Joi.object({
     title: Joi.string().required().min(3).max(100),
     course: Joi.string().hex().length(24).optional(),
     subject: Joi.string().required(),
@@ -27,14 +27,8 @@ const lectureSchema = Joi.object({
     classroom: Joi.string().required()
 });
 
-const departmentSchema = Joi.object({
+export const departmentSchema = Joi.object({
     name: Joi.string().required().min(2).max(100),
     code: Joi.string().required().uppercase().min(2).max(10),
     description: Joi.string().max(500)
 });
-
-module.exports = {
-    userSchema,
-    lectureSchema,
-    departmentSchema
-};

@@ -1,11 +1,11 @@
-const asyncHandler = require('express-async-handler');
-const Exam = require('../models/examModel');
-const Lecture = require('../models/lectureModel');
+import asyncHandler from 'express-async-handler';
+import Exam from '../models/examModel.js';
+import Lecture from '../models/lectureModel.js';
 
 // @desc    Schedule new exam
 // @route   POST /api/exams
 // @access  Private/Admin
-const createExam = asyncHandler(async (req, res) => {
+export const createExam = asyncHandler(async (req, res) => {
     const { course, batch, title, type, startTime, endTime, classroom, supervisor } = req.body;
 
     // 1. Check for conflicts with existing lectures
@@ -53,12 +53,10 @@ const createExam = asyncHandler(async (req, res) => {
 // @desc    Get all exams
 // @route   GET /api/exams
 // @access  Private
-const getExams = asyncHandler(async (req, res) => {
+export const getExams = asyncHandler(async (req, res) => {
     const exams = await Exam.find({})
         .populate('course', 'name code')
         .populate('batch', 'name')
         .populate('supervisor', 'name email');
     res.json(exams);
 });
-
-module.exports = { createExam, getExams };

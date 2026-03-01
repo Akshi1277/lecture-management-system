@@ -1,10 +1,10 @@
-const asyncHandler = require('express-async-handler');
-const Course = require('../models/courseModel');
+import asyncHandler from 'express-async-handler';
+import Course from '../models/courseModel.js';
 
 // @desc    Add syllabus unit to course
 // @route   POST /api/courses/:id/syllabus
 // @access  Private/Admin
-const addSyllabusUnit = asyncHandler(async (req, res) => {
+export const addSyllabusUnit = asyncHandler(async (req, res) => {
     const { unitNumber, title, description } = req.body;
     const course = await Course.findById(req.params.id);
 
@@ -21,7 +21,7 @@ const addSyllabusUnit = asyncHandler(async (req, res) => {
 // @desc    Update syllabus completion status
 // @route   PUT /api/courses/:id/syllabus/:unitId
 // @access  Private/Teacher
-const updateSyllabusProgress = asyncHandler(async (req, res) => {
+export const updateSyllabusProgress = asyncHandler(async (req, res) => {
     const { isCompleted } = req.body;
     const course = await Course.findById(req.params.id);
 
@@ -44,7 +44,7 @@ const updateSyllabusProgress = asyncHandler(async (req, res) => {
 // @desc    Get syllabus status for a course
 // @route   GET /api/courses/:id/syllabus
 // @access  Private
-const getSyllabusStatus = asyncHandler(async (req, res) => {
+export const getSyllabusStatus = asyncHandler(async (req, res) => {
     const course = await Course.findById(req.params.id);
     if (course) {
         res.json(course.syllabus);
@@ -53,5 +53,3 @@ const getSyllabusStatus = asyncHandler(async (req, res) => {
         throw new Error('Course not found');
     }
 });
-
-module.exports = { addSyllabusUnit, updateSyllabusProgress, getSyllabusStatus };

@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const User = require('./models/userModel');
-const connectDB = require('./config/db');
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import User from './models/userModel.js';
+import connectDB from './config/db.js';
 
 // Load env vars
 dotenv.config();

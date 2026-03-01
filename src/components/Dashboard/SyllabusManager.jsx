@@ -17,11 +17,11 @@ export default function SyllabusManager({ courseId, onClose }) {
         const fetchSyllabus = async () => {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const res = await axios.get(`http://localhost:5000/api/courses/${courseId}/syllabus`, config);
+                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/courses/${courseId}/syllabus`, config);
                 setUnits(res.data);
 
                 // Also fetch course name
-                const resCourse = await axios.get(`http://localhost:5000/api/hierarchy/courses`, config);
+                const resCourse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/courses`, config);
                 const foundCourse = resCourse.data.find(c => c._id === courseId);
                 setCourse(foundCourse);
 
@@ -37,7 +37,7 @@ export default function SyllabusManager({ courseId, onClose }) {
     const toggleUnit = async (unitId, currentStatus) => {
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.put(`http://localhost:5000/api/courses/${courseId}/syllabus/${unitId}`, { isCompleted: !currentStatus }, config);
+            await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/courses/${courseId}/syllabus/${unitId}`, { isCompleted: !currentStatus }, config);
             setUnits(prev => prev.map(u => u._id === unitId ? { ...u, isCompleted: !currentStatus } : u));
             dispatch(addToast({ type: 'success', message: 'Syllabus progress updated!' }));
         } catch (error) {
@@ -49,7 +49,7 @@ export default function SyllabusManager({ courseId, onClose }) {
         e.preventDefault();
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const res = await axios.post(`http://localhost:5000/api/courses/${courseId}/syllabus`, newUnit, config);
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/courses/${courseId}/syllabus`, newUnit, config);
             setUnits(res.data.syllabus);
             setNewUnit({ unitNumber: "", title: "", description: "" });
             dispatch(addToast({ type: 'success', message: 'Unit added to syllabus!' }));

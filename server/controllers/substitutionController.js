@@ -1,12 +1,12 @@
-const asyncHandler = require('express-async-handler');
-const Lecture = require('../models/lectureModel');
-const User = require('../models/userModel');
-const Course = require('../models/courseModel');
+import asyncHandler from 'express-async-handler';
+import Lecture from '../models/lectureModel.js';
+import User from '../models/userModel.js';
+import Course from '../models/courseModel.js';
 
 // @desc    Suggest substitutes for a lecture slot
 // @route   GET /api/lectures/substitutes/:lectureId
 // @access  Private/Admin
-const suggestSubstitutes = asyncHandler(async (req, res) => {
+export const suggestSubstitutes = asyncHandler(async (req, res) => {
     const lecture = await Lecture.findById(req.params.lectureId).populate('course');
 
     if (!lecture) {
@@ -40,5 +40,3 @@ const suggestSubstitutes = asyncHandler(async (req, res) => {
 
     res.json(availableSubstitutes);
 });
-
-module.exports = { suggestSubstitutes };

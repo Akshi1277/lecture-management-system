@@ -1,9 +1,8 @@
 "use client";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Users, BookOpen, Clock, CheckCircle, AlertCircle, Info, ShieldCheck } from "lucide-react";
+import { X, Calendar, Users, BookOpen, Clock, CheckCircle, AlertCircle, Info, ShieldCheck, ShieldCheck as ShieldCheckIcon, FileText, AlertTriangle, Upload, FileSpreadsheet, Download, ArrowRight, Plus } from "lucide-react";
 import { setActiveModal, removeToast, addToast } from "@/redux/slices/uiSlice";
-import { Plus } from "lucide-react";
 import { createLecture } from "@/redux/slices/lectureSlice";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -13,6 +12,7 @@ import ResourceUploadForm from "./ResourceUploadForm";
 import SubstitutionFinder from "./SubstitutionFinder";
 import SyllabusManager from "./SyllabusManager";
 import ExamSchedulerForm from "./ExamSchedulerForm";
+import GlobalSettings from "./GlobalSettings";
 
 export default function ModalManager() {
     const { activeModal, activeModalData, toasts } = useSelector((state) => state.ui);
@@ -29,6 +29,7 @@ export default function ModalManager() {
         findSubstitute: <SubstitutionFinder lecture={activeModalData} onClose={closeModal} />,
         viewSyllabus: <SyllabusManager courseId={activeModalData} onClose={closeModal} />,
         scheduleExam: <ExamSchedulerForm onClose={closeModal} />,
+        settings: <GlobalSettings onClose={closeModal} />,
     };
 
     return (
@@ -47,14 +48,14 @@ export default function ModalManager() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className={`relative w-full ${activeModal === 'manageBatches' ? 'max-w-2xl' : activeModal === 'assignLecture' ? 'max-w-5xl' : 'max-w-lg'} bg-slate-900 border border-slate-800 rounded-[32px] overflow-hidden shadow-2xl transition-all duration-300`}
+                            className={`relative w-full ${activeModal === 'manageBatches' ? 'max-w-2xl' : activeModal === 'assignLecture' ? 'max-w-5xl' : 'max-w-lg'} max-h-[90vh] flex flex-col bg-slate-900 border border-slate-800 rounded-[32px] overflow-hidden shadow-2xl transition-all duration-300`}
                         >
-                            <div className="absolute top-6 right-6">
-                                <button onClick={closeModal} className="p-2 hover:bg-slate-800 rounded-xl transition-all text-slate-400 hover:text-white">
-                                    <X className="w-6 h-6" />
+                            <div className="absolute top-6 right-8 z-20">
+                                <button onClick={closeModal} className="p-2 bg-slate-900/50 backdrop-blur-md hover:bg-slate-800 rounded-xl transition-all text-slate-400 hover:text-white border border-slate-800">
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
-                            <div className="p-10">
+                            <div className="p-10 overflow-y-auto custom-scrollbar flex-1">
                                 {modals[activeModal]}
                             </div>
                         </motion.div>
@@ -115,8 +116,8 @@ function AssignLectureForm({ onClose }) {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
                 const [resTeachers, resBatches] = await Promise.all([
-                    axios.get('http://localhost:5000/api/users/teachers', config),
-                    axios.get('http://localhost:5000/api/hierarchy/batches', config)
+                    axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/teachers', config),
+                        axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches', config)
                 ]);
                 setTeachers(resTeachers.data);
                 setBatches(resBatches.data);
@@ -386,21 +387,25 @@ function AssignLectureForm({ onClose }) {
 }
 
 
+
 function EnrollUserForm({ onClose }) {
+    const [regMethod, setRegMethod] = useState("individual"); // 'individual' or 'bulk'
     const [formData, setFormData] = useState({
         name: "",
         email: "",
-        password: "",
         role: "student",
         department: [],
         subjects: [],
         batch: "",
         isMentor: false
     });
+    const [file, setFile] = useState(null);
     const [batches, setBatches] = useState([]);
     const [existingSubjects, setExistingSubjects] = useState([]);
     const [subjectInput, setSubjectInput] = useState("");
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+
     const departments = ['IT', 'CS'];
     const dispatch = useDispatch();
     const { userInfo } = useSelector(state => state.auth);
@@ -410,8 +415,8 @@ function EnrollUserForm({ onClose }) {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
                 const [resBatches, resSubjects] = await Promise.all([
-                    axios.get('http://localhost:5000/api/hierarchy/batches', config),
-                    axios.get('http://localhost:5000/api/users/subjects', config)
+                    axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches', config),
+                        axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/subjects', config)
                 ]);
                 setBatches(resBatches.data);
                 setExistingSubjects(resSubjects.data);
@@ -453,222 +458,341 @@ function EnrollUserForm({ onClose }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsProcessing(true);
 
-        // Clean the payload: remove batch if not student, ensure department is array for teacher
-        const payload = { ...formData };
-        if (payload.role !== 'student') {
-            delete payload.batch;
-        }
-        if (payload.role !== 'teacher') {
-            delete payload.subjects;
-        }
-        if (payload.role === 'student' && !payload.batch) {
-            dispatch(addToast({ type: 'error', message: 'Please select a batch for the student' }));
-            return;
-        }
+        const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
 
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.post('http://localhost:5000/api/users', payload, config);
-            dispatch(addToast({ type: 'success', message: `${formData.name} enrolled!` }));
+        if (regMethod === "bulk") {
+            if (!file) {
+                dispatch(addToast({ type: 'error', message: 'Please select an Excel file' }));
+                setIsProcessing(false);
+                return;
+            }
+            if (!formData.batch) {
+                dispatch(addToast({ type: 'error', message: 'Please select a batch for bulk registration' }));
+                setIsProcessing(false);
+                return;
+            }
+
+            const bulkFormData = new FormData();
+            bulkFormData.append('file', file);
+            bulkFormData.append('batchId', formData.batch);
+
+            try {
+                const res = await axios.post('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/bulk', bulkFormData, {
+                    headers: {
+                    ...config.headers,
+                    'Content-Type': 'multipart/form-data'
+                }
+                });
+            dispatch(addToast({ type: 'success', message: res.data.message }));
             onClose();
         } catch (err) {
-            dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Enrollment failed' }));
+            dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Bulk registration failed' }));
+        } finally {
+            setIsProcessing(false);
         }
-    };
+        return;
+    }
 
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center space-x-4 mb-4">
-                <div className="p-3 bg-blue-500 rounded-2xl">
+    // Individual registration
+    const payload = { ...formData };
+    if (payload.role !== 'student') {
+        delete payload.batch;
+    }
+    if (payload.role !== 'teacher') {
+        delete payload.subjects;
+    }
+    if (payload.role === 'student' && !payload.batch) {
+        dispatch(addToast({ type: 'error', message: 'Please select a batch for the student' }));
+        setIsProcessing(false);
+        return;
+    }
+
+    try {
+        await axios.post('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users', payload, config);
+            dispatch(addToast({ type: 'success', message: `${formData.name} enrolled! Credentials sent via email.` }));
+        onClose();
+    } catch (err) {
+        dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Enrollment failed' }));
+    } finally {
+        setIsProcessing(false);
+    }
+};
+
+const downloadTemplate = () => {
+    const csvContent = "data:text/csv;charset=utf-8,FullName,Email\nJohn Doe,john@university.edu\nJane Smith,jane@university.edu";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "student_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+return (
+    <div className="space-y-6">
+        <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+                <div className="p-3 bg-blue-500 rounded-2xl shadow-lg shadow-blue-500/20">
                     <Users className="text-white w-6 h-6" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-white leading-none">Enroll User</h2>
-                    <p className="text-slate-400 text-sm mt-1">Registration</p>
+                    <h2 className="text-2xl font-black text-white leading-none tracking-tight italic">Enroll User</h2>
+                    <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest mt-1">Registration Portal</p>
                 </div>
             </div>
+        </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <input
-                    type="text"
-                    placeholder="Name"
-                    className="w-full bg-slate-800 border-none rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                />
-                <input
-                    type="email"
-                    placeholder="Email"
-                    className="w-full bg-slate-800 border-none rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    className="w-full bg-slate-800 border-none rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                />
-                <div className="grid grid-cols-2 gap-4">
-                    <select
-                        value={formData.role}
-                        disabled={userInfo?.role !== 'admin'}
-                        onChange={(e) => {
-                            const newRole = e.target.value;
-                            setFormData({
-                                ...formData,
-                                role: newRole,
-                                department: [], // Reset department to empty array
-                                subjects: [], // Reset subjects
-                                batch: "",
-                                isMentor: false
-                            });
-                        }}
-                        className="w-full bg-slate-800 border-none rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 appearance-none"
-                    >
-                        <option value="student">Student</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="admin">Admin</option>
-                    </select>
+        {/* Registration Method Tabs */}
+        <div className="flex p-1 bg-slate-950/50 rounded-2xl border border-slate-800">
+            {["individual", "bulk"].map((method) => (
+                <button
+                    key={method}
+                    onClick={() => {
+                        setRegMethod(method);
+                        setFormData({ ...formData, role: method === 'bulk' ? 'student' : formData.role });
+                    }}
+                    className={`flex-1 py-3 text-xs font-black rounded-xl uppercase tracking-wider transition-all duration-300 ${regMethod === method ? "bg-slate-800 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"}`}
+                >
+                    {method} Registration
+                </button>
+            ))}
+        </div>
 
-                    {formData.role === 'student' ? (
-                        <select
-                            value={formData.batch}
-                            onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
-                            className="w-full bg-slate-800 border-none rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 appearance-none"
-                            required
-                        >
-                            <option value="">Select Batch</option>
-                            {batches.map(b => <option key={b._id} value={b._id}>{b.name} ({b.department})</option>)}
-                        </select>
-                    ) : (
-                        formData.role === 'admin' ? (
-                            <div className="w-full bg-slate-800 border-none rounded-2xl p-4 text-slate-400 text-sm flex items-center justify-between">
-                                <span>{Array.isArray(formData.department) && formData.department.length > 0 ? `${formData.department.length} Depts Selected` : 'Select Depts'}</span>
-                                <BookOpen className="w-4 h-4" />
-                            </div>
-                        ) : (
-                            <div className="w-full bg-slate-800 border-none rounded-2xl p-4 text-slate-400 text-sm flex items-center justify-between">
-                                <span>{formData.subjects.length > 0 ? `${formData.subjects.length} Subjects` : 'Enter Subjects'}</span>
-                                <Plus className="w-4 h-4" />
-                            </div>
-                        )
-                    )}
-                </div>
-
-                {formData.role === 'teacher' && (
+        <form onSubmit={handleSubmit} className="space-y-6">
+            {regMethod === "individual" ? (
+                <>
                     <div className="space-y-4">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Add Subject (e.g. Java, Python)"
-                                value={subjectInput}
-                                onChange={handleSubjectInput}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        addSubject(subjectInput);
-                                    }
-                                }}
-                                onBlur={() => setTimeout(() => setShowSuggestions(false), 100)} // Hide suggestions after a short delay
-                                onFocus={() => setShowSuggestions(true)} // Show suggestions when input is focused
-                                className="w-full bg-slate-800 border border-slate-700/50 rounded-2xl p-4 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none"
-                            />
-                            {showSuggestions && subjectInput && (
-                                <div className="absolute z-10 w-full mt-2 bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl max-h-40 overflow-y-auto">
-                                    {existingSubjects
-                                        .filter(s => s.toLowerCase().includes(subjectInput.toLowerCase()) && !formData.subjects.includes(s))
-                                        .map(s => (
-                                            <button
-                                                key={s}
-                                                type="button"
-                                                onClick={() => addSubject(s)}
-                                                className="w-full px-4 py-3 text-left text-white hover:bg-slate-700 transition-colors text-sm font-medium"
-                                            >
-                                                {s}
-                                            </button>
-                                        ))
-                                    }
-                                    <button
-                                        type="button"
-                                        onClick={() => addSubject(subjectInput)}
-                                        className="w-full px-4 py-3 text-left text-blue-400 hover:bg-slate-700 transition-colors text-sm font-black italic"
-                                    >
-                                        + Add "{subjectInput}"
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                        <input
+                            type="text"
+                            placeholder="Full Name"
+                            className="w-full bg-slate-800 border border-slate-700/50 rounded-2xl p-4 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                        />
+                        <input
+                            type="email"
+                            placeholder="University Email"
+                            className="w-full bg-slate-800 border border-slate-700/50 rounded-2xl p-4 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            required
+                        />
+                    </div>
 
-                        {formData.subjects.length > 0 && (
-                            <div className="flex flex-wrap gap-2 px-1">
-                                {formData.subjects.map(s => (
-                                    <span key={s} className="flex items-center space-x-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
-                                        <span>{s}</span>
-                                        <button type="button" onClick={() => removeSubject(s)} className="p-0.5 hover:bg-blue-500/20 rounded-md transition-colors">
-                                            <X className="w-3 h-3" />
-                                        </button>
-                                    </span>
-                                ))}
+                    <div className="grid grid-cols-2 gap-4">
+                        <select
+                            value={formData.role}
+                            disabled={userInfo?.role !== 'admin'}
+                            onChange={(e) => {
+                                const newRole = e.target.value;
+                                setFormData({
+                                    ...formData,
+                                    role: newRole,
+                                    department: [],
+                                    subjects: [],
+                                    batch: "",
+                                    isMentor: false
+                                });
+                            }}
+                            className="w-full bg-slate-800 border border-slate-700/50 rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 appearance-none font-medium outline-none"
+                        >
+                            <option value="student">Student Account</option>
+                            <option value="teacher">Faculty Account</option>
+                            <option value="admin">System Admin</option>
+                        </select>
+
+                        {formData.role === 'student' ? (
+                            <select
+                                value={formData.batch}
+                                onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                                className="w-full bg-slate-800 border border-slate-700/50 rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 appearance-none outline-none font-medium"
+                                required
+                            >
+                                <option value="">Select Batch</option>
+                                {batches.map(b => <option key={b._id} value={b._id}>{b.name} ({b.department})</option>)}
+                            </select>
+                        ) : (
+                            <div className="w-full bg-slate-800 border border-slate-700/50 rounded-2xl p-4 text-slate-500 text-sm flex items-center justify-between font-medium">
+                                <span>{formData.role === 'admin' ? 'Select Depts' : 'Add Subjects'}</span>
+                                {formData.role === 'admin' ? <BookOpen className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
                             </div>
                         )}
                     </div>
-                )}
 
-                {formData.role === 'admin' && (
-                    <div className="bg-slate-800/50 p-4 rounded-2xl space-y-3">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2">Select Departments</p>
-                        <div className="flex flex-wrap gap-2">
-                            {departments.map((dept) => (
-                                <button
-                                    key={dept}
-                                    type="button"
-                                    onClick={() => handleDeptToggle(dept)}
-                                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${Array.isArray(formData.department) && formData.department.includes(dept)
-                                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
-                                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                                        }`}
-                                >
-                                    {dept}
-                                </button>
-                            ))}
+                    {formData.role === 'teacher' && (
+                        <div className="space-y-4">
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Add Subject (e.g. Java, Python)"
+                                    value={subjectInput}
+                                    onChange={handleSubjectInput}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSubject(subjectInput); } }}
+                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
+                                    onFocus={() => setShowSuggestions(true)}
+                                    className="w-full bg-slate-800 border border-slate-700/50 rounded-2xl p-4 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+                                />
+                                {showSuggestions && subjectInput && (
+                                    <div className="absolute z-10 w-full mt-2 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar">
+                                        {existingSubjects.filter(s => s.toLowerCase().includes(subjectInput.toLowerCase()) && !formData.subjects.includes(s)).map(s => (
+                                            <button key={s} type="button" onClick={() => addSubject(s)} className="w-full px-4 py-3 text-left text-slate-300 hover:bg-slate-800 transition-colors text-xs font-bold uppercase tracking-tight">
+                                                {s}
+                                            </button>
+                                        ))}
+                                        <button type="button" onClick={() => addSubject(subjectInput)} className="w-full px-4 py-3 text-left text-blue-400 hover:bg-slate-800 transition-colors text-xs font-black italic">
+                                            + Create "{subjectInput}"
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            {formData.subjects.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.subjects.map(s => (
+                                        <span key={s} className="flex items-center space-x-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                                            <span>{s}</span>
+                                            <button type="button" onClick={() => removeSubject(s)} className="p-0.5 hover:bg-blue-500/20 rounded-md transition-colors">
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
+                    )}
+
+                    {formData.role === 'admin' && (
+                        <div className="bg-slate-800/40 p-5 rounded-3xl border border-slate-800/50 space-y-4">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Select Jurisdiction</p>
+                            <div className="flex flex-wrap gap-3">
+                                {departments.map((dept) => (
+                                    <button
+                                        key={dept}
+                                        type="button"
+                                        onClick={() => handleDeptToggle(dept)}
+                                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${Array.isArray(formData.department) && formData.department.includes(dept) ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800 hover:border-slate-700'}`}
+                                    >
+                                        {dept} Dept
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.role === 'teacher' && userInfo?.role === 'admin' && (
+                        <div className="flex items-center justify-between p-5 bg-slate-900/60 rounded-3xl border border-slate-800">
+                            <div className="flex items-center space-x-4">
+                                <div className={`p-2.5 rounded-xl ${formData.isMentor ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+                                    <ShieldCheck className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-white italic">Assign as Mentor</p>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Privileged Academic Management</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, isMentor: !formData.isMentor })}
+                                className={`w-14 h-7 rounded-full relative transition-colors ${formData.isMentor ? 'bg-amber-500' : 'bg-slate-800'}`}
+                            >
+                                <motion.div animate={{ x: formData.isMentor ? 32 : 4 }} className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg" />
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="p-4 bg-teal-500/5 border border-teal-500/10 rounded-2xl flex items-start space-x-3">
+                        <AlertTriangle className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
+                        <p className="text-[10px] text-teal-400 font-bold uppercase leading-relaxed tracking-tight">Credentials will be auto-generated and dispatched via encrypted email notification.</p>
                     </div>
-                )}
-
-                {formData.role === 'teacher' && userInfo?.role === 'admin' && (
-                    <div className="flex items-center justify-between p-4 bg-slate-800/80 rounded-2xl border border-slate-700">
-                        <div className="flex items-center space-x-3">
-                            <div className={`p-2 rounded-lg ${formData.isMentor ? 'bg-amber-500/20 text-amber-500' : 'bg-slate-700 text-slate-500'}`}>
-                                <ShieldCheck className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-white">Assign as Mentor</p>
-                                <p className="text-[10px] text-slate-500">Can register students & manage batches</p>
-                            </div>
+                </>
+            ) : (
+                <div className="space-y-6">
+                    <div className="p-8 bg-slate-900/50 border border-slate-800 border-dashed rounded-[32px] text-center space-y-4">
+                        <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto text-blue-400">
+                            <Upload className="w-8 h-8" />
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => setFormData({ ...formData, isMentor: !formData.isMentor })}
-                            className={`w-12 h-6 rounded-full relative transition-colors ${formData.isMentor ? 'bg-amber-500' : 'bg-slate-700'}`}
+                        <div>
+                            <h3 className="text-lg font-black text-white italic">Upload Payload</h3>
+                            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Excel (xlsx) or CSV format</p>
+                        </div>
+                        <input
+                            type="file"
+                            id="bulkUpload"
+                            className="hidden"
+                            accept=".xlsx, .xls, .csv"
+                            onChange={(e) => setFile(e.target.files[0])}
+                        />
+                        <label
+                            htmlFor="bulkUpload"
+                            className="inline-flex items-center space-x-2 px-6 py-3 bg-slate-800 text-white font-bold rounded-xl cursor-pointer hover:bg-slate-700 transition-all border border-slate-700"
                         >
-                            <motion.div
-                                animate={{ x: formData.isMentor ? 26 : 4 }}
-                                className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm"
-                            />
-                        </button>
+                            <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                            <span>{file ? file.name : "Select Document"}</span>
+                        </label>
                     </div>
-                )}
 
-                <button type="submit" className="w-full py-4 bg-blue-500 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all">
-                    Register User
-                </button>
-            </form>
-        </div>
-    );
+                    <div className="grid grid-cols-1 gap-4">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Batch for Enrollment</label>
+                        <select
+                            value={formData.batch}
+                            onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                            className="w-full bg-slate-800 border border-slate-700/50 rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 appearance-none font-medium outline-none"
+                            required
+                        >
+                            <option value="">Select Destination Batch</option>
+                            {batches.map(b => <option key={b._id} value={b._id}>{b.name} ({b.department})</option>)}
+                        </select>
+                    </div>
+
+                    <div className="bg-slate-950/50 border border-slate-800 p-6 rounded-[24px] space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <Download className="w-4 h-4 text-teal-400" />
+                                <span className="text-xs font-black text-slate-300 uppercase italic">Document Template</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={downloadTemplate}
+                                className="text-[10px] text-teal-400 font-black uppercase hover:underline"
+                            >
+                                Download Sample
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                                <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Col 1</p>
+                                <p className="text-xs font-bold text-white">FullName</p>
+                            </div>
+                            <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                                <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Col 2</p>
+                                <p className="text-xs font-bold text-white">Email</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <button
+                type="submit"
+                disabled={isProcessing}
+                className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-[24px] shadow-xl shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-3 disabled:opacity-50 uppercase tracking-widest text-xs"
+            >
+                {isProcessing ? (
+                    <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Processing Enrollment...</span>
+                    </>
+                ) : (
+                    <>
+                        <span>{regMethod === 'individual' ? 'Initialize Registration' : 'Execute Bulk Enrollment'}</span>
+                        <ArrowRight className="w-4 h-4" />
+                    </>
+                )}
+            </button>
+        </form>
+    </div>
+);
 }

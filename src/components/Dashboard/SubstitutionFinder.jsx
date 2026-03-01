@@ -17,7 +17,7 @@ export default function SubstitutionFinder({ lecture, onClose }) {
         const fetchSubs = async () => {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const res = await axios.get(`http://localhost:5000/api/lectures/substitutes/${lecture._id}`, config);
+                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/lectures/substitutes/${lecture._id}`, config);
                 setSubstitutes(res.data);
                 setLoading(false);
             } catch (error) {
@@ -34,7 +34,7 @@ export default function SubstitutionFinder({ lecture, onClose }) {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
             // Simple update for now: just change the teacher. 
             // In a more complex system, we'd mark it as 'Substituted'
-            await axios.put(`http://localhost:5000/api/lectures/${lecture._id}`, { teacher: selectedSub }, config);
+            await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/lectures/${lecture._id}`, { teacher: selectedSub }, config);
             dispatch(addToast({ type: 'success', message: 'Teacher substituted successfully!' }));
             dispatch(fetchLectures()); // Refresh global list
             onClose();

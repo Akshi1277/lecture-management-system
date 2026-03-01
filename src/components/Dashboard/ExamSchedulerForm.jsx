@@ -28,9 +28,9 @@ export default function ExamSchedulerForm({ onClose }) {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
                 const [resCourses, resBatches, resTeachers] = await Promise.all([
-                    axios.get('http://localhost:5000/api/hierarchy/courses', config),
-                    axios.get('http://localhost:5000/api/hierarchy/batches', config),
-                    axios.get('http://localhost:5000/api/users/teachers', config)
+                    axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/courses', config),
+                        axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches', config),
+                            axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/teachers', config)
                 ]);
                 setCourses(resCourses.data);
                 setBatches(resBatches.data);
@@ -46,8 +46,8 @@ export default function ExamSchedulerForm({ onClose }) {
         e.preventDefault();
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.post('http://localhost:5000/api/exams', formData, config);
-            dispatch(addToast({ type: 'success', message: 'Exam scheduled successfully!' }));
+            await axios.post('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/exams', formData, config);
+                dispatch(addToast({ type: 'success', message: 'Exam scheduled successfully!' }));
             onClose();
         } catch (error) {
             dispatch(addToast({ type: 'error', message: error.response?.data?.message || 'Scheduling failed' }));

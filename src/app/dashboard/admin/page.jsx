@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
     Users,
@@ -20,27 +20,46 @@ import FacultyLoadChart from "@/components/Dashboard/FacultyLoadChart";
 export default function AdminDashboard() {
     const { userInfo } = useSelector((state) => state.auth);
     const { list: lectures, loading } = useSelector((state) => state.lecture);
+    const [dashboardData, setDashboardData] = useState(null);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if (userInfo) dispatch(fetchLectures());
+        if (userInfo) {
+            dispatch(fetchLectures());
+            fetchDashboardStats();
+        }
     }, [userInfo, dispatch]);
+
+    const fetchDashboardStats = async () => {
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/dashboard/admin`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setDashboardData(data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const stats = [
         { title: "Active Lectures", value: lectures.length, icon: <Activity />, color: "text-orange-400" },
-        { title: "Departments", value: "2", icon: <BookOpen />, color: "text-teal-400" },
-        { title: "Active Users", value: "240", icon: <Users />, color: "text-blue-400" },
+        { title: "Departments", value: dashboardData?.stats?.departments || "...", icon: <BookOpen />, color: "text-teal-400" },
+        { title: "Total Users", value: dashboardData?.stats?.totalUsers || "...", icon: <Users />, color: "text-blue-400" },
     ];
 
     return (
         <div className="space-y-10">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Admin Command Center</h1>
+                    <h1 className="text-3xl font-bold text-white tracking-tight italic">Admin Command Center</h1>
                     <p className="text-slate-400 mt-1">Institutional Oversight & Logistics</p>
                 </div>
                 <div className="flex space-x-3">
-                    <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm transition-all flex items-center text-slate-300">
+                    <button
+                        onClick={() => dispatch(setActiveModal('settings'))}
+                        className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm transition-all flex items-center text-slate-300 font-bold active:scale-95 shadow-xl shadow-slate-950/20"
+                    >
                         <Settings className="w-4 h-4 mr-2" /> Global Settings
                     </button>
                 </div>

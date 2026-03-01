@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
+import jwt from 'jsonwebtoken';
+import User from '../models/userModel.js';
 
-const protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -21,7 +21,7 @@ const protect = async (req, res, next) => {
     }
 };
 
-const admin = (req, res, next) => {
+export const admin = (req, res, next) => {
     if (req.user && req.user.role === 'admin') {
         next();
     } else {
@@ -29,12 +29,10 @@ const admin = (req, res, next) => {
     }
 };
 
-const teacher = (req, res, next) => {
+export const teacher = (req, res, next) => {
     if (req.user && (req.user.role === 'teacher' || req.user.role === 'admin')) {
         next();
     } else {
         res.status(401).json({ message: 'Not authorized as a teacher' });
     }
 };
-
-module.exports = { protect, admin, teacher };

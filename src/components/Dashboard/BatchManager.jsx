@@ -20,8 +20,8 @@ export default function BatchManager() {
     const fetchData = async () => {
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const batchRes = await axios.get('http://localhost:5000/api/hierarchy/batches', config);
-            setBatches(batchRes.data);
+            const batchRes = await axios.get('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches', config);
+                setBatches(batchRes.data);
         } catch (error) {
             console.error(error);
         }
@@ -31,8 +31,8 @@ export default function BatchManager() {
         e.preventDefault();
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.post('http://localhost:5000/api/hierarchy/batches', newBatch, config);
-            dispatch(addToast({ type: 'success', message: 'Batch Created Successfully' }));
+            await axios.post('${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches', newBatch, config);
+                dispatch(addToast({ type: 'success', message: 'Batch Created Successfully' }));
             setNewBatch({ ...newBatch, name: "" });
             fetchData();
         } catch (error) {
@@ -102,8 +102,8 @@ export default function BatchManager() {
                                             type="button"
                                             onClick={() => setNewBatch({ ...newBatch, department: d })}
                                             className={`flex-1 py-3 rounded-2xl text-xs font-bold transition-all border ${newBatch.department === d
-                                                    ? 'bg-teal-500 border-teal-400 text-slate-950 shadow-lg shadow-teal-500/20'
-                                                    : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
+                                                ? 'bg-teal-500 border-teal-400 text-slate-950 shadow-lg shadow-teal-500/20'
+                                                : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
                                                 }`}
                                         >
                                             {d}

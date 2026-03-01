@@ -1,11 +1,19 @@
-const express = require('express');
+import express from 'express';
+import { createLecture, getLectures, getMyLectures, uploadResource, updateLecture } from '../controllers/lectureController.js';
+import { suggestSubstitutes } from '../controllers/substitutionController.js';
+import { addSyllabusUnit, updateSyllabusProgress, getSyllabusStatus } from '../controllers/courseController.js';
+import { createExam, getExams } from '../controllers/examController.js';
+import {
+    markAttendance,
+    getAttendanceByLecture,
+    getAttendanceStats,
+    getLowAttendanceStudents,
+    getFacultyLoad,
+    getMyAttendanceStats
+} from '../controllers/attendanceController.js';
+import { protect, admin, teacher } from '../middleware/authMiddleware.js';
+
 const router = express.Router();
-const { createLecture, getLectures, getMyLectures, uploadResource, updateLecture } = require('../controllers/lectureController');
-const { suggestSubstitutes } = require('../controllers/substitutionController');
-const { addSyllabusUnit, updateSyllabusProgress, getSyllabusStatus } = require('../controllers/courseController');
-const { createExam, getExams } = require('../controllers/examController');
-const { markAttendance, getAttendanceByLecture, getAttendanceStats, getLowAttendanceStudents, getFacultyLoad, getMyAttendanceStats } = require('../controllers/attendanceController');
-const { protect, admin, teacher } = require('../middleware/authMiddleware');
 
 // Lecture Routes
 router.route('/lectures')
@@ -36,4 +44,4 @@ router.route('/exams')
     .post(protect, admin, createExam)
     .get(protect, getExams);
 
-module.exports = router;
+export default router;

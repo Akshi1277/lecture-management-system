@@ -1,25 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Calendar,
-  FileText,
-  Users,
-  TrendingUp,
-  Clock,
-  BookOpen,
-  Award,
-  BarChart3,
-  Plus,
-  CheckCircle,
-  Download,
-  MessageSquare
-} from "lucide-react";
+import { Plus, Users, BookOpen, TrendingUp, Clock, FileText, CheckCircle, Calendar, BarChart3, Download } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { setActiveModal } from "@/redux/slices/uiSlice";
 
 export default function Dashboard() {
+  const dispatch = useDispatch();
   const [user, setUser] = useState(null);
   const [lectures, setLectures] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+
+  const handleAction = (modalId) => {
+    dispatch(setActiveModal(modalId));
+  };
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
@@ -33,12 +29,22 @@ export default function Dashboard() {
 
   const fetchData = async (userInfo) => {
     try {
-      const endpoint = userInfo.role === "admin" ? "/api/lectures" : "/api/lectures/my";
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
-        headers: { Authorization: `Bearer ${userInfo.token}` }
-      });
-      const data = await res.json();
-      if (res.ok) setLectures(data);
+      if (userInfo.role === "admin") {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/dashboard/admin`, {
+          headers: { Authorization: `Bearer ${userInfo.token}` }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setDashboardData(data);
+          setLectures(data.todayLectures || []);
+        }
+      } else {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/lectures/my`, {
+          headers: { Authorization: `Bearer ${userInfo.token}` }
+        });
+        const data = await res.json();
+        if (res.ok) setLectures(data);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -70,26 +76,51 @@ export default function Dashboard() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
-            { title: "Active Lectures", value: lectures.length, icon: <BookOpen className="text-teal-400" />, border: "border-teal-500/20" },
-            { title: "User Role", value: user?.role?.toUpperCase(), icon: <Users className="text-blue-400" />, border: "border-blue-500/20" },
             {
-              title: "Department",
-              value: Array.isArray(user?.department)
-                ? user.department.map(d => d.name || d).join(', ')
-                : (user?.department?.name || user?.department || "N/A"),
+              title: user?.role === "admin" ? "Total Students" : "Active Lectures",
+              value: user?.role === "admin" ? (dashboardData?.stats?.students || 0) : lectures.length,
+              icon: user?.role === "admin" ? <Users className="text-teal-400" /> : <BookOpen className="text-teal-400" />,
+              border: "border-teal-500/20"
+            },
+            {
+              title: user?.role === "admin" ? "Total Teachers" : "User Role",
+              value: user?.role === "admin" ? (dashboardData?.stats?.teachers || 0) : user?.role?.toUpperCase(),
+              icon: <Users className="text-blue-400" />,
+              border: "border-blue-500/20"
+            },
+            {
+              title: user?.role === "admin" ? "Total Courses" : "Department",
+              value: user?.role === "admin"
+                ? (dashboardData?.stats?.courses || 0)
+                : (Array.isArray(user?.department)
+                  ? user.department.map(d => d.name || d).join(', ')
+                  : (user?.department?.name || user?.department || "N/A")),
               icon: <FileText className="text-orange-400" />,
               border: "border-orange-500/20"
             },
-            { title: "Engagement", value: "94%", icon: <TrendingUp className="text-purple-400" />, border: "border-purple-500/20" }
+            {
+              title: user?.role === "admin" ? "Attendance Rate" : "Engagement",
+              value: user?.role === "admin" ? `${dashboardData?.attendanceTrend || 0}%` : "94%",
+              icon: <TrendingUp className="text-purple-400" />,
+            }
           ].map((stat, i) => (
             <div key={i} className={`bg-slate-800/50 backdrop-blur-xl p-6 rounded-2xl border ${stat.border}`}>
               <div className="flex items-center justify-between">
                 <div>{stat.icon}</div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-white">{stat.value}</div>
+                  <div className="text-2xl font-bold text-white tracking-tight">{stat.value}</div>
                   <div className="text-sm text-slate-400">{stat.title}</div>
                 </div>
               </div>
+              {stat.title === "Attendance Rate" && (
+                <div className="mt-4 h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: stat.value }}
+                    className="h-full bg-teal-500"
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -101,30 +132,36 @@ export default function Dashboard() {
               <h3 className="text-xl font-bold text-white mb-6">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-4">
                 {(user?.role === "admin" ? [
-                  { title: "Assign Lecture", icon: <Plus />, color: "bg-teal-500" },
-                  { title: "Manage Users", icon: <Users />, color: "bg-blue-500" }
+                  { title: "Schedule Lecture", icon: <Plus />, color: "bg-teal-500", modalId: "assignLecture" },
+                  { title: "Enroll User", icon: <Users />, color: "bg-blue-500", modalId: "manageUsers" }
                 ] : user?.role === "teacher" ? [
-                  { title: "Mark Attendance", icon: <CheckCircle />, color: "bg-emerald-500" },
-                  { title: "Update Schedule", icon: <Calendar />, color: "bg-teal-500" }
+                  { title: "Mark Attendance", icon: <CheckCircle />, color: "bg-emerald-500", modalId: "markAttendance" },
+                  { title: "Update Schedule", icon: <Calendar />, color: "bg-teal-500", modalId: "assignLecture" }
                 ] : [
-                  { title: "View Attendance", icon: <BarChart3 />, color: "bg-teal-500" },
-                  { title: "Learning Resources", icon: <Download />, color: "bg-blue-500" }
+                  { title: "View Attendance", icon: <BarChart3 />, color: "bg-teal-500", modalId: null },
+                  { title: "Learning Resources", icon: <Download />, color: "bg-blue-500", modalId: null }
                 ]).map((action, i) => (
-                  <button key={i} className="flex flex-col items-center p-6 rounded-xl bg-slate-800/80 border border-slate-700 hover:border-teal-400 transition-all">
-                    <div className={`p-3 rounded-lg ${action.color} text-white mb-3`}>{action.icon}</div>
-                    <span className="text-sm text-slate-300">{action.title}</span>
+                  <button
+                    key={i}
+                    onClick={() => action.modalId && handleAction(action.modalId)}
+                    className="flex flex-col items-center p-6 rounded-xl bg-slate-800/80 border border-slate-700 hover:border-teal-400 hover:bg-slate-800 transition-all group"
+                  >
+                    <div className={`p-3 rounded-lg ${action.color} text-white mb-3 group-hover:scale-110 transition-transform`}>{action.icon}</div>
+                    <span className="text-sm text-slate-300 font-medium">{action.title}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="bg-slate-800/50 backdrop-blur-xl p-8 rounded-2xl border border-teal-500/20">
-              <h3 className="text-xl font-bold text-white mb-6">Scheduled Lectures</h3>
+              <h3 className="text-xl font-bold text-white mb-6">
+                {user?.role === "admin" ? "Today's Schedule" : "Scheduled Lectures"}
+              </h3>
               <div className="space-y-4">
                 {lectures.map((l, i) => (
-                  <div key={i} className="p-4 rounded-xl border border-slate-700 bg-slate-900/40">
+                  <div key={i} className="p-4 rounded-xl border border-slate-700 bg-slate-900/40 hover:border-teal-500/50 transition-colors group">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-semibold text-white">{l.title}</h4>
+                      <h4 className="font-semibold text-white group-hover:text-teal-400 transition-colors">{l.title}</h4>
                       <div className="flex flex-col items-end gap-1">
                         <span className="text-[10px] px-2 py-0.5 bg-teal-500/20 text-teal-400 rounded-full font-bold uppercase tracking-widest">{l.status}</span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest ${l.type === 'Lab' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
@@ -134,7 +171,7 @@ export default function Dashboard() {
                     </div>
                     <div className="space-y-1 mt-3">
                       <p className="text-xs text-slate-400 flex items-center font-bold">
-                        <BookOpen className="w-3 h-3 mr-2 text-teal-400" /> {l.subject} • {l.batch?.name}
+                        <BookOpen className="w-3 h-3 mr-2 text-teal-400" /> {l.subject} • {l.batch?.name || "All Batches"}
                       </p>
                       <p className="text-xs text-slate-500 flex items-center">
                         <Clock className="w-3 h-3 mr-2 text-slate-400" /> {new Date(l.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {new Date(l.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -145,7 +182,11 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
-                {lectures.length === 0 && <p className="text-center text-slate-500 italic py-4">No lectures scheduled.</p>}
+                {lectures.length === 0 && (
+                  <p className="text-center text-slate-500 italic py-8 border-2 border-dashed border-slate-800 rounded-xl">
+                    No lectures scheduled for {user?.role === "admin" ? "today" : "now"}.
+                  </p>
+                )}
               </div>
             </div>
           </div>

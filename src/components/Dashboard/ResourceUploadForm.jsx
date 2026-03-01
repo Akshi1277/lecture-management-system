@@ -14,7 +14,7 @@ export default function ResourceUploadForm({ lecture, onClose }) {
         e.preventDefault();
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.post(`http://localhost:5000/api/lectures/${lecture._id}/resources`, formData, config);
+            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/lectures/${lecture._id}/resources`, formData, config);
             dispatch(addToast({ type: 'success', message: 'Resource shared with students!' }));
             onClose();
         } catch (error) {

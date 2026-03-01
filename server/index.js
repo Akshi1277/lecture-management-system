@@ -1,20 +1,19 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const userRoutes = require('./routes/userRoutes');
-const coreRoutes = require('./routes/coreRoutes');
-
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const { errorHandler, notFound } = require('./middleware/errorMiddleware');
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import connectDB from './config/db.js';
+import userRoutes from './routes/userRoutes.js';
+import coreRoutes from './routes/coreRoutes.js';
+import hierarchyRoutes from './routes/hierarchyRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 
 dotenv.config();
 connectDB();
 
 const app = express();
-
-const hierarchyRoutes = require('./routes/hierarchyRoutes');
 
 // Security Middleware
 app.use(helmet());
@@ -32,14 +31,15 @@ app.use('/api/', limiter);
 app.use('/api/users', userRoutes);
 app.use('/api', coreRoutes);
 app.use('/api/hierarchy', hierarchyRoutes);
-
-// Error Middleware
-app.use(notFound);
-app.use(errorHandler);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');
 });
+
+// Error Middleware
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

@@ -1,13 +1,13 @@
-const asyncHandler = require('express-async-handler');
-const Lecture = require('../models/lectureModel');
-const Batch = require('../models/batchModel');
-const Classroom = require('../models/classroomModel');
-const { lectureSchema } = require('../utils/validators');
+import asyncHandler from 'express-async-handler';
+import Lecture from '../models/lectureModel.js';
+import Batch from '../models/batchModel.js';
+import Classroom from '../models/classroomModel.js';
+import { lectureSchema } from '../utils/validators.js';
 
 // @desc    Create new lecture (Admin only)
 // @route   POST /api/lectures
 // @access  Private/Admin
-const createLecture = asyncHandler(async (req, res) => {
+export const createLecture = asyncHandler(async (req, res) => {
     // Basic validation from Joi (still kept simple)
     const { error } = lectureSchema.validate(req.body);
     if (error) {
@@ -74,7 +74,7 @@ const createLecture = asyncHandler(async (req, res) => {
 // @desc    Get all lectures
 // @route   GET /api/lectures
 // @access  Private
-const getLectures = asyncHandler(async (req, res) => {
+export const getLectures = asyncHandler(async (req, res) => {
     const lectures = await Lecture.find({})
         .populate('teacher', 'name email')
         .populate('course', 'name code')
@@ -85,7 +85,7 @@ const getLectures = asyncHandler(async (req, res) => {
 // @desc    Get lectures for logged in teacher/student
 // @route   GET /api/lectures/my
 // @access  Private
-const getMyLectures = asyncHandler(async (req, res) => {
+export const getMyLectures = asyncHandler(async (req, res) => {
     const query = req.user.role === 'teacher' ? { teacher: req.user._id } : {};
     const lectures = await Lecture.find(query)
         .populate('teacher', 'name email')
@@ -97,7 +97,7 @@ const getMyLectures = asyncHandler(async (req, res) => {
 // @desc    Add resource to lecture
 // @route   POST /api/lectures/:id/resources
 // @access  Private/Teacher
-const uploadResource = asyncHandler(async (req, res) => {
+export const uploadResource = asyncHandler(async (req, res) => {
     const { name, url } = req.body;
     const lecture = await Lecture.findById(req.params.id);
 
@@ -114,7 +114,7 @@ const uploadResource = asyncHandler(async (req, res) => {
 // @desc    Update lecture
 // @route   PUT /api/lectures/:id
 // @access  Private/Admin
-const updateLecture = asyncHandler(async (req, res) => {
+export const updateLecture = asyncHandler(async (req, res) => {
     const lecture = await Lecture.findById(req.params.id);
 
     if (lecture) {
@@ -132,5 +132,3 @@ const updateLecture = asyncHandler(async (req, res) => {
         throw new Error('Lecture not found');
     }
 });
-
-module.exports = { createLecture, getLectures, getMyLectures, uploadResource, updateLecture };
