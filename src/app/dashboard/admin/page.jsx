@@ -1,23 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-    Users,
-    BookOpen,
-    Plus,
-    Settings,
-    Activity,
-    ArrowUpRight,
-    Clock,
-    UserPlus,
-    FileText
-} from "lucide-react";
+import { Clock, Users, ArrowUpRight, UserPlus, BookOpen, Layers, Settings, Plus, FileText,Activity, AlertTriangle, PlayCircle, ShieldAlert } from "lucide-react";
 import { motion } from "framer-motion";
 import { setActiveModal } from "@/redux/slices/uiSlice";
 import { fetchLectures } from "@/redux/slices/lectureSlice";
 import FacultyLoadChart from "@/components/Dashboard/FacultyLoadChart";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
+    const router = useRouter();
     const { userInfo } = useSelector((state) => state.auth);
     const { list: lectures, loading } = useSelector((state) => state.lecture);
     const [dashboardData, setDashboardData] = useState(null);
@@ -44,8 +36,8 @@ export default function AdminDashboard() {
 
     const stats = [
         { title: "Active Lectures", value: lectures.length, icon: <Activity />, color: "text-orange-400" },
-        { title: "Departments", value: dashboardData?.stats?.departments || "...", icon: <BookOpen />, color: "text-teal-400" },
-        { title: "Total Users", value: dashboardData?.stats?.totalUsers || "...", icon: <Users />, color: "text-blue-400" },
+        { title: "Departments", value: dashboardData?.stats?.departments ?? "...", icon: <BookOpen />, color: "text-teal-400" },
+        { title: "Total Users", value: dashboardData?.stats?.totalUsers ?? "...", icon: <Users />, color: "text-blue-400" },
     ];
 
     return (
@@ -57,10 +49,10 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex space-x-3">
                     <button
-                        onClick={() => dispatch(setActiveModal('settings'))}
+                        onClick={() => router.push('/dashboard/settings')}
                         className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm transition-all flex items-center text-slate-300 font-bold active:scale-95 shadow-xl shadow-slate-950/20"
                     >
-                        <Settings className="w-4 h-4 mr-2" /> Global Settings
+                        <Settings className="w-4 h-4 mr-2 text-teal-400" /> Preferences
                     </button>
                 </div>
             </div>
@@ -90,7 +82,7 @@ export default function AdminDashboard() {
                     <h3 className="text-xl font-bold text-white mb-2">Logistical Controls</h3>
                     <div className="grid sm:grid-cols-2 gap-4">
                         <button
-                            onClick={() => dispatch(setActiveModal('assignLecture'))}
+                            onClick={() => router.push('/dashboard/admin/schedule')}
                             className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-teal-500/50 transition-all group"
                         >
                             <div className="p-4 bg-teal-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
@@ -119,16 +111,17 @@ export default function AdminDashboard() {
                             <span className="font-bold text-sm">Manage Batches</span>
                             <span className="text-[10px] text-slate-500 mt-1">FY, SY, TY Groups</span>
                         </button>
-                        <button
-                            onClick={() => dispatch(setActiveModal('scheduleExam'))}
-                            className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-rose-500/50 transition-all group"
+                       <button
+                            onClick={() => dispatch(setActiveModal('blockRoom'))}
+                            className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-red-500/50 transition-all group "
                         >
-                            <div className="p-4 bg-rose-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                                <FileText className="text-rose-400 w-6 h-6" />
+                            <div className="p-4 bg-red-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                                <ShieldAlert className="text-red-500 w-6 h-6" />
                             </div>
-                            <span className="font-bold text-sm">Schedule Exam</span>
-                            <span className="text-[10px] text-slate-500 mt-1">Practicals, Vivas, Finals</span>
+                            <span className="font-bold text-sm text-red-500">Lockdown Venue</span>
+                            <span className="text-[10px] text-slate-500 mt-1">Override schedules for Exams</span>
                         </button>
+                     
                     </div>
                 </div>
 
@@ -155,7 +148,6 @@ export default function AdminDashboard() {
                                         >
                                             Find Substitute
                                         </button>
-                                        <p className="text-[10px] text-slate-600">{l.course?.code}</p>
                                     </div>
                                 </div>
                             ))

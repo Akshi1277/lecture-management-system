@@ -6,9 +6,8 @@ const attendanceSchema = mongoose.Schema({
         ref: 'Lecture',
         required: true
     },
-    course: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course',
+    subject: {
+        type: String,
         required: true
     },
     batch: {
@@ -37,8 +36,7 @@ const attendanceSchema = mongoose.Schema({
     timestamps: true
 });
 
-// Index for faster queries on specific student's attendance in a course
-attendanceSchema.index({ 'students.student': 1, course: 1 });
+attendanceSchema.index({ 'students.student': 1 });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 export default Attendance;

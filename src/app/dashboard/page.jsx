@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import AdminDashboard from "./admin/page";
 import TeacherDashboard from "./teacher/page";
@@ -6,8 +7,13 @@ import StudentDashboard from "./student/page";
 
 export default function DashboardSummary() {
   const { userInfo } = useSelector((state) => state.auth);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  if (!userInfo) return null;
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted || !userInfo) return null;
 
   // Render the appropriate dashboard based on user role
   switch (userInfo.role) {

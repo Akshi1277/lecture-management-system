@@ -8,13 +8,17 @@ import {
   Lock,
   Eye,
   EyeOff,
+  AlertCircle,
+  Loader2,
   Sparkles,
-  AlertCircle
+  ChevronLeft
 } from "lucide-react";
 import { login, clearError } from "@/redux/slices/authSlice";
+import { addToast } from "@/redux/slices/uiSlice";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [hasShownToast, setHasShownToast] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -25,11 +29,16 @@ export default function LoginForm() {
   const { userInfo, loading, error } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (userInfo) {
+    if (userInfo && !hasShownToast) {
+      setHasShownToast(true);
+      dispatch(addToast({
+        type: 'success',
+        message: `Welcome back, ${userInfo?.name || 'User'}! Redirecting to dashboard...`
+      }));
       router.push("/dashboard");
     }
     return () => dispatch(clearError());
-  }, [userInfo, router, dispatch]);
+  }, [userInfo, router, dispatch, hasShownToast]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -41,8 +50,8 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden font-sans">
-      <div className="absolute inset-0">
+    <div className="min-h-screen bg-transparent flex items-center justify-center p-6 relative overflow-hidden font-sans">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-teal-500/10 blur-[120px] rounded-full animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
       </div>
@@ -53,13 +62,24 @@ export default function LoginForm() {
         className="w-full max-w-[480px] relative z-10"
       >
         <div className="bg-slate-900/40 backdrop-blur-2xl border border-slate-800 rounded-[32px] overflow-hidden shadow-2xl">
-          <div className="p-8 pb-4 text-center">
-            <div className="inline-flex items-center px-3 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-full text-xs font-medium mb-6">
-              <Sparkles className="w-3 h-3 mr-2" />
-              World Class Management
+          <div className="p-8 pb-4">
+            {/* Back Button */}
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center space-x-2 text-slate-500 hover:text-teal-400 transition-all group mb-4"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Back to Gateway</span>
+            </button>
+
+            <div className="text-center">
+              <div className="inline-flex items-center px-3 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-full text-xs font-medium mb-6">
+                <Sparkles className="w-3 h-3 mr-2" />
+                World Class Management
+              </div>
+              <h1 className="text-4xl font-black text-white tracking-tight mb-2">EduSync</h1>
+              <p className="text-slate-400 font-medium lowercase tracking-wider opacity-80 italic text-sm">Elevating academic logistics</p>
             </div>
-            <h1 className="text-4xl font-black text-white tracking-tight mb-2">EduSync</h1>
-            <p className="text-slate-400 font-medium lowercase tracking-wider opacity-80">Elevating academic logistics</p>
           </div>
 
           <div className="p-8 pt-4">
@@ -108,18 +128,35 @@ export default function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+
+              <div className="flex justify-end px-1">
+                <button
+                  type="button"
+                  onClick={() => router.push("/forgot-password")}
+                  className="text-xs font-bold text-teal-400 hover:text-teal-300 transition-colors uppercase tracking-widest"
+                >
+                  Forgot Password?
                 </button>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-black py-4 rounded-2xl transition-all shadow-xl shadow-emerald-500/10 active:scale-[0.98] disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-black py-4 rounded-2xl transition-all shadow-xl shadow-emerald-500/10 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center space-x-2"
               >
-                {loading ? "Verifying..." : "Sign In"}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Verifying Identity...</span>
+                  </>
+                ) : (
+                  <span>Sign In</span>
+                )}
               </button>
             </form>
 
@@ -134,3 +171,4 @@ export default function LoginForm() {
     </div>
   );
 }
+

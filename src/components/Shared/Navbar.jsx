@@ -4,14 +4,18 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/slices/authSlice";
-import { useRouter } from "next/navigation";
-import { Menu, X, Calendar, Home, LayoutDashboard, LogIn, UserPlus, Sparkles, LogOut } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { 
+    Menu, X, Calendar, Home, LayoutDashboard, 
+    LogIn, LogOut 
+} from "lucide-react";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname();
   const { userInfo } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -29,189 +33,145 @@ export default function Navbar() {
   };
 
   const navItems = [
-    { href: "/", label: "Home", icon: <Home size={18} /> },
-    ...(userInfo ? [
-      { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
-    ] : [
-      { href: "/login", label: "Access Portal", icon: <LogIn size={18} /> },
-    ]),
+    { href: "/", label: "Home", icon: <Home className="w-4 h-4" /> },
+    { href: "/#features", label: "Features", icon: null },
   ];
 
   return (
     <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled
-        ? "bg-slate-900/95 backdrop-blur-xl shadow-lg shadow-teal-500/10 border-b border-teal-500/20"
-        : "bg-transparent border-b border-transparent"
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 font-sans ${isScrolled
+        ? "py-4 bg-slate-950/90 backdrop-blur-xl shadow-2xl"
+        : "py-6 bg-transparent"
         }`}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center">
+          
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <motion.div
-              className="relative p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-lg shadow-teal-500/50"
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Calendar className="w-6 h-6 text-white" />
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-xl opacity-0 group-hover:opacity-20"
-                animate={{
-                  scale: [1, 1.2, 1],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                }}
-              />
-            </motion.div>
+            <div className="p-2 bg-teal-500 rounded-lg text-slate-950 group-hover:bg-teal-400 transition-colors">
+              <Calendar className="w-5 h-5" />
+            </div>
             <div>
-              <motion.h1
-                className="text-2xl font-bold bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent"
-                animate={{
-                  backgroundPosition: ["0%", "100%", "0%"],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-                style={{
-                  backgroundSize: "200% auto"
-                }}
-              >
-                EduSync
-              </motion.h1>
-              <p className="text-xs text-teal-400/80 -mt-1 flex items-center gap-1">
-                <Sparkles size={10} className="animate-pulse" />
-                Lecture Management
-              </p>
+              <h1 className="text-xl font-bold text-white tracking-tight">EduSync</h1>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-2">
-            {navItems.map((item, index) => (
-              <motion.div
+          {/* Desktop Links */}
+          <div className="hidden md:flex items-center space-x-6">
+            {!userInfo && navItems.map((item) => (
+              <Link
                 key={item.href}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                href={item.href}
+                className={`text-sm font-medium transition-colors flex items-center space-x-2 ${
+                  pathname === item.href ? 'text-teal-400' : 'text-slate-400 hover:text-white'
+                }`}
               >
-                <Link
-                  href={item.href}
-                  className="relative flex items-center space-x-2 text-slate-300 hover:text-teal-400 font-medium transition-colors duration-200 px-4 py-2 rounded-lg group overflow-hidden"
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  />
-                  <motion.span
-                    className="relative z-10"
-                    whileHover={{ scale: 1.2, rotate: 5 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {item.icon}
-                  </motion.span>
-                  <span className="relative z-10">{item.label}</span>
-                  <motion.div
-                    className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-teal-500 to-emerald-500"
-                    initial={{ width: 0 }}
-                    whileHover={{ width: "100%" }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </Link>
-              </motion.div>
+                {item.icon && <span>{item.icon}</span>}
+                <span>{item.label}</span>
+              </Link>
             ))}
 
             {userInfo && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-900 font-black rounded-xl hover:shadow-lg hover:shadow-teal-500/20 transition-all active:scale-95 ml-4"
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-slate-400 hover:text-teal-400 transition-colors flex items-center space-x-2"
               >
-                <LogOut size={16} />
-                <span>Logout</span>
-              </motion.button>
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Dashboard</span>
+              </Link>
+            )}
+
+            <div className="h-6 w-px bg-slate-800" />
+
+            {userInfo ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
+            ) : (
+                <Link
+                  href="/login"
+                  className="flex items-center space-x-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 text-sm font-semibold rounded-lg transition-all shadow-lg shadow-teal-500/20 active:scale-95"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Access Portal</span>
+                </Link>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
+          {/* Mobile Toggle */}
+          <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-slate-800/50 hover:bg-teal-500/20 transition-colors border border-teal-500/30"
+            className="md:hidden p-2 text-slate-400 hover:text-white"
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={isMobileMenuOpen ? 'close' : 'open'}
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                {isMobileMenuOpen ? (
-                  <X size={24} className="text-teal-400" />
-                ) : (
-                  <Menu size={24} className="text-teal-400" />
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </motion.button>
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="md:hidden mt-4 py-4 border-t border-teal-500/20 overflow-hidden"
-            >
-              <div className="flex flex-col space-y-2">
-                {navItems.map((item, index) => (
-                  <motion.div
-                    key={item.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Link
-                      href={item.href}
-                      className="flex items-center space-x-3 text-slate-300 hover:text-teal-400 font-medium transition-all duration-200 py-3 px-4 rounded-lg hover:bg-teal-500/10 border border-transparent hover:border-teal-500/30"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <motion.span
-                        whileHover={{ scale: 1.2, rotate: 5 }}
-                      >
-                        {item.icon}
-                      </motion.span>
-                      <span>{item.label}</span>
-                    </Link>
-                  </motion.div>
-                ))}
-
-                {userInfo && (
-                  <motion.button
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    onClick={handleLogout}
-                    className="flex items-center space-x-3 text-rose-400 hover:text-rose-300 font-medium transition-all duration-200 py-3 px-4 rounded-lg hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30 w-full"
-                  >
-                    <LogOut size={18} />
-                    <span>Logout Session</span>
-                  </motion.button>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden absolute top-full left-0 w-full bg-slate-900 border-b border-slate-800 overflow-hidden"
+          >
+            <div className="p-6 space-y-4">
+              {!userInfo && navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center space-x-3 text-slate-300 font-medium p-3 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  {item.icon && <span>{item.icon}</span>}
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+
+              {userInfo && (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center space-x-3 text-slate-300 font-medium p-3 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <LayoutDashboard className="w-5 h-5" />
+                  <span>Dashboard</span>
+                </Link>
+              )}
+
+              <hr className="border-slate-800 my-2" />
+
+              {userInfo ? (
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center space-x-3 text-slate-300 font-medium p-3 rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Sign Out</span>
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center space-x-2 p-3 bg-teal-500 text-slate-950 font-semibold rounded-lg"
+                >
+                  <LogIn className="w-5 h-5" />
+                  <span>Access Portal</span>
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 }

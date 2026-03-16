@@ -1,6 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import Department from '../models/departmentModel.js';
-import Course from '../models/courseModel.js';
+
 import Batch from '../models/batchModel.js';
 import { departmentSchema } from '../utils/validators.js';
 
@@ -26,22 +26,7 @@ export const getDepartments = asyncHandler(async (req, res) => {
     res.json(departments);
 });
 
-// @desc    Create new course
-// @route   POST /api/courses
-// @access  Private/Admin
-export const createCourse = asyncHandler(async (req, res) => {
-    const { name, code, department, credits, semester } = req.body;
-    const course = await Course.create({ name, code, department, credits, semester });
-    res.status(201).json(course);
-});
 
-// @desc    Get all courses
-// @route   GET /api/courses
-// @access  Private
-export const getCourses = asyncHandler(async (req, res) => {
-    const courses = await Course.find({});
-    res.json(courses);
-});
 
 // @desc    Create new batch
 // @route   POST /api/batches

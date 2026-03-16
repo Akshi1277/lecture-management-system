@@ -2,546 +2,283 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, CheckCircle, Calendar, ClipboardCheck, FileText, Bell, BarChart3, Users, Sparkles, Zap, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { 
+  ArrowRight, Calendar, Users, 
+  BarChart3, CheckCircle2,
+  BellRing, ShieldCheck, Clock,
+  FileSpreadsheet, Megaphone,
+  BookOpenCheck, PieChart,
+  UserCheck, History
+} from "lucide-react";
+import GridBackground from "@/components/Shared/GridBackground";
 
-const stats = [
-  { icon: <Users size={24} />, number: "50+", label: "Academic Departments" },
-  { icon: <Clock size={24} />, number: "10k+", label: "Lecture Hours Tracked" },
-  { icon: <BarChart3 size={24} />, number: "95%", label: "Attendance Accuracy" },
-  { icon: <Zap size={24} />, number: "15k+", label: "Student Users" }
-];
-
-const features = [
+const mainFeatures = [
   {
-    icon: <Calendar />,
-    title: "Smart Scheduling",
-    description: "Intelligent conflict resolution and automated timetable generation for various academic departments."
+    title: "Intelligent Scheduling",
+    description: "Detect and resolve faculty conflicts and room double-bookings automatically.",
+    icon: <Calendar className="w-6 h-6 text-teal-400" />
   },
   {
-    icon: <ClipboardCheck />,
-    title: "Digital Attendance",
-    description: "Seamless real-time attendance tracking with secure verification and automated reporting."
+    title: "Weighted Attendance",
+    description: "Configurable participation logic (e.g., Lab sessions weighted 4x standard lectures).",
+    icon: <BarChart3 className="w-6 h-6 text-teal-400" />
   },
   {
-    icon: <FileText />,
-    title: "Resource Hub",
-    description: "Centralized repository for lecture notes, assignments, and study materials accessible to students."
+    title: "Parental Notifications",
+    description: "Automatic email alerts to guardians when student attendance falls below your threshold.",
+    icon: <BellRing className="w-6 h-6 text-teal-400" />
+  },
+  {
+    title: "Bulk Management",
+    description: "Register hundreds of students instantly via Excel imports with automated credential emails.",
+    icon: <FileSpreadsheet className="w-6 h-6 text-teal-400" />
+  },
+  {
+    title: "Resource Repository",
+    description: "Centralized hub for sharing lecture notes, PDFs, and study materials with students.",
+    icon: <BookOpenCheck className="w-6 h-6 text-teal-400" />
+  },
+  {
+    title: "Institutional Notices",
+    description: "Broadcast important announcements and digitize the campus notice board.",
+    icon: <Megaphone className="w-6 h-6 text-teal-400" />
   }
 ];
 
-const testimonials = [
+const portals = [
   {
-    name: "Dr. Sarah Johnson",
-    role: "Department Head",
-    content: "EduSync has transformed how we manage our faculty schedules. The automated conflict resolution is a lifesaver.",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+    role: "Administrators",
+    features: ["Faculty Substitution Engine", "Room & Resource Planning", "Bulk User Control", "System-wide Settings"],
+    icon: <ShieldCheck className="w-8 h-8" />
   },
   {
-    name: "Prof. Michael Chen",
-    role: "Senior Lecturer",
-    content: "The digital attendance feature saves me 10 minutes every lecture. Students love the ease of access to notes.",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael"
+    role: "Faculty",
+    features: ["Digital Attendance Marking", "Lecture History", "Student Performance Reports", "Resource Uploads"],
+    icon: <UserCheck className="w-8 h-8" />
   },
   {
-    name: "Emma Wilson",
-    role: "Student Rep",
-    content: "Having my schedule and resources in one place makes academic life so much more organized.",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma"
+    role: "Students",
+    features: ["Subject-wise Attendance", "Personal Schedule", "Notice Access", "Downloadable Resources"],
+    icon: <Users className="w-8 h-8" />
   }
 ];
 
 export default function Home() {
+  const { userInfo } = useSelector((state) => state.auth);
+  const router = useRouter();
+
   useEffect(() => {
-    // Standard page load logic if needed
-  }, []);
-
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+    if (userInfo) {
+      router.push("/dashboard");
     }
-  };
+  }, [userInfo, router]);
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1
-    }
-  };
+  if (userInfo) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-teal-900 to-emerald-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 90, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute top-0 left-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1.2, 1, 1.2],
-            rotate: [90, 0, 90],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute bottom-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            y: [0, -50, 0],
-            x: [0, 50, 0],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-1/2 left-1/2 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"
-        />
-      </div>
+    <div className="min-h-screen text-slate-200 selection:bg-teal-500/30 font-sans relative">
+      <GridBackground />
 
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32">
-        <div className="relative max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="space-y-6">
-                <div className="hero-badge inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-teal-500/30 text-teal-300 rounded-full text-sm font-medium backdrop-blur-sm">
-                  <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
-                  Smart Lecture Management Solution
-                </div>
+      <section className="relative z-10 pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 max-w-7xl mx-auto">
+        <div className="flex flex-col items-center text-center space-y-8">
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-slate-900/50 border border-slate-800 rounded-full text-sm font-medium text-teal-400 backdrop-blur-sm"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Institutional Grade Lecture Management</span>
+          </motion.div>
 
-                <h1 className="hero-title text-5xl lg:text-7xl font-bold leading-tight">
-                  <span className="text-white">Digitize Your</span>
-                  <motion.span
-                    className="block bg-gradient-to-r from-teal-400 via-emerald-400 to-orange-400 bg-clip-text text-transparent"
-                    animate={{
-                      backgroundPosition: ["0%", "100%", "0%"],
-                    }}
-                    transition={{
-                      duration: 5,
-                      repeat: Infinity,
-                      ease: "linear"
-                    }}
-                    style={{
-                      backgroundSize: "200% auto"
-                    }}
-                  >
-                    Lecture Management
-                  </motion.span>
-                </h1>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-5xl lg:text-7xl font-bold tracking-tight text-white max-w-5xl"
+          >
+            Your Academic Workflow, <br className="hidden lg:block"/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-400">
+              Synchronized & Simplified.
+            </span>
+          </motion.h1>
 
-                <p className="hero-description text-xl text-slate-300 leading-relaxed max-w-2xl">
-                  EduSync streamlines lecture scheduling, attendance tracking, and resource sharing for our academic community - eliminating manual processes and scheduling conflicts.
-                </p>
-              </div>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="max-w-3xl text-lg lg:text-xl text-slate-400 leading-relaxed"
+          >
+            EduSync is the central nervous system for your institution's lectures. 
+            Automate the tedious logistics so your faculty can focus on what matters: teaching.
+          </motion.p>
 
-              <div className="hero-buttons flex flex-col sm:flex-row gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    href="/login"
-                    className="btn-primary inline-flex items-center justify-center group"
-                  >
-                    Access Academic Portal
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </motion.div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-8">
-                {stats.map((stat, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    className="stat-card text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:border-teal-500/50 transition-all duration-300"
-                  >
-                    <div className="flex justify-center mb-2 text-teal-400">
-                      {stat.icon}
-                    </div>
-                    <div className="text-2xl font-bold text-white">{stat.number}</div>
-                    <div className="text-sm text-slate-400">{stat.label}</div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="dashboard-card relative z-10 bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-teal-500/20">
-                <div className="space-y-6">
-                  <motion.div
-                    className="flex items-center space-x-4"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <motion.div
-                      className="w-14 h-14 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/50"
-                      animate={{
-                        rotate: [0, 5, -5, 0],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    >
-                      <Calendar className="w-7 h-7 text-white" />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-semibold text-white text-lg">Today's Schedule</h3>
-                      <p className="text-sm text-teal-400">Lecture Management</p>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="space-y-3"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.7 }}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-300">Attendance Rate</span>
-                      <motion.span
-                        className="text-sm font-medium text-teal-400"
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        92%
-                      </motion.span>
-                    </div>
-                    <div className="relative w-full bg-slate-700/50 rounded-full h-3 overflow-hidden">
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-teal-500 via-emerald-500 to-orange-500 h-3 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: "92%" }}
-                        transition={{ duration: 1.5, delay: 0.8, ease: "easeOut" }}
-                      />
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                        animate={{
-                          x: ["-100%", "200%"],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "linear"
-                        }}
-                      />
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="grid grid-cols-3 gap-4 text-center pt-4"
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {[
-                      { value: "6", label: "Lectures" },
-                      { value: "45", label: "Students" },
-                      { value: "12", label: "Resources" }
-                    ].map((item, idx) => (
-                      <motion.div
-                        key={idx}
-                        variants={itemVariants}
-                        whileHover={{ scale: 1.1 }}
-                        className="p-3 bg-white/5 rounded-lg backdrop-blur-sm border border-white/10"
-                      >
-                        <motion.div
-                          className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent"
-                          animate={{ scale: [1, 1.05, 1] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
-                        >
-                          {item.value}
-                        </motion.div>
-                        <div className="text-xs text-slate-400">{item.label}</div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </div>
-              </div>
-
-              {/* Floating orbs */}
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 180, 360],
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-                className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-teal-500/30 to-emerald-500/30 rounded-full blur-2xl"
-              />
-              <motion.div
-                animate={{
-                  scale: [1.2, 1, 1.2],
-                  rotate: [360, 180, 0],
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-                className="absolute -bottom-8 -left-8 w-40 h-40 bg-gradient-to-br from-orange-500/30 to-pink-500/30 rounded-full blur-2xl"
-              />
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="pt-4 flex flex-col sm:flex-row items-center gap-4"
+          >
+            <Link 
+              href="/login" 
+              className="px-8 py-4 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-teal-500/20 transition-all flex items-center space-x-2 group"
+            >
+              <span>Access Academic Portal</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+        
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-gradient-to-b from-transparent to-slate-950/50">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center space-y-4 mb-16"
-          >
-            <motion.h2
-              className="text-4xl lg:text-6xl font-bold"
+      {/* Role Portals Section */}
+      <section className="relative z-10 py-24 px-6 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8">
+          {portals.map((portal, idx) => (
+            <motion.div
+              key={idx}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-slate-800 hover:border-teal-500/20 transition-all group"
             >
-              <span className="text-white">Complete Lecture Management</span>
-              <motion.span
-                className="block bg-gradient-to-r from-teal-400 to-orange-400 bg-clip-text text-transparent"
-                animate={{
-                  backgroundPosition: ["0%", "100%", "0%"],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-                style={{
-                  backgroundSize: "200% auto"
-                }}
-              >
-                In One Platform
-              </motion.span>
-            </motion.h2>
-            <motion.p
-              className="text-xl text-slate-300 max-w-3xl mx-auto"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              viewport={{ once: true }}
-            >
-              Automate lecture scheduling, track attendance digitally, and share resources seamlessly - eliminating manual inefficiencies in academic institutions.
-            </motion.p>
-          </motion.div>
+              <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-teal-400 mb-8 group-hover:scale-110 transition-transform">
+                {portal.icon}
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-6 italic tracking-tight">{portal.role}</h3>
+              <ul className="space-y-4">
+                {portal.features.map((f, i) => (
+                  <li key={i} className="flex items-center space-x-3 text-slate-400 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                whileHover={{
-                  y: -10,
-                  scale: 1.02,
-                  transition: { duration: 0.3 }
-                }}
-                className="feature-card group relative p-8 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl border border-teal-500/20 hover:border-teal-500/50 transition-all duration-500 overflow-hidden"
-              >
-                {/* Animated gradient background on hover */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-br from-teal-500/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  initial={false}
-                />
-
-                <div className="relative z-10">
-                  <motion.div
-                    className="w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-teal-500/50"
-                    whileHover={{
-                      rotate: [0, -10, 10, -10, 0],
-                      scale: 1.1
-                    }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {feature.icon}
-                  </motion.div>
-                  <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                  <p className="text-slate-400 leading-relaxed">{feature.description}</p>
+      {/* Feature Grid */}
+      <section className="relative z-10 py-24 bg-slate-950 border-y border-slate-900" id="features">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">Powerful Features for a Modern Campus</h2>
+              <p className="text-slate-400 text-lg">Integrated tools that handle everything from the first enrollment to the final attendance report.</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mainFeatures.map((feature, idx) => (
+              <div key={idx} className="p-10 rounded-[2rem] bg-slate-900/30 border border-slate-800 hover:border-teal-500/30 transition-all group">
+                <div className="w-12 h-12 rounded-xl bg-slate-950 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  {feature.icon}
                 </div>
-
-                {/* Decorative corner element */}
-                <motion.div
-                  className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-teal-500/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                />
-              </motion.div>
+                <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{feature.description}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-20 relative">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center space-y-4 mb-16"
-          >
-            <h2 className="text-4xl lg:text-5xl font-bold text-white">
-              Trusted by Faculty & Students
-            </h2>
-            <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-              See how EduSync is transforming lecture management in educational institutions.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                whileHover={{
-                  y: -10,
-                  scale: 1.03
-                }}
-                className="testimonial-card group relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-8 border border-teal-500/20 hover:border-teal-500/50 transition-all duration-500 overflow-hidden"
-              >
-                {/* Animated shine effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-teal-500/10 to-transparent"
-                  animate={{
-                    x: ["-100%", "100%"],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatDelay: 2,
-                    ease: "linear"
-                  }}
-                />
-
-                <div className="relative z-10">
-                  <motion.div
-                    className="flex items-center space-x-4 mb-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                  >
-                    <motion.img
-                      src={testimonial.avatar}
-                      alt={testimonial.name}
-                      className="w-14 h-14 rounded-full object-cover border-2 border-teal-500/50"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                    />
-                    <div>
-                      <h4 className="font-semibold text-white">{testimonial.name}</h4>
-                      <p className="text-sm text-teal-400">{testimonial.role}</p>
-                    </div>
-                  </motion.div>
-                  <motion.p
-                    className="text-slate-300 leading-relaxed italic"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ delay: index * 0.1 + 0.2 }}
-                    viewport={{ once: true }}
-                  >
-                    "{testimonial.content}"
-                  </motion.p>
-                </div>
-              </motion.div>
-            ))}
+      {/* Analytics Dashboard Teaser */}
+      <section className="relative z-10 py-32 px-6 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h2 className="text-3xl lg:text-5xl font-bold text-white">Data-Driven Administration</h2>
+              <p className="text-lg text-slate-400 leading-relaxed">
+                Gain deep insights into institutional performance. Monitor subject-wise attendance trends, track student engagement, and identify issues before they impact academic results.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-6">
+               <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-teal-400">
+                    <PieChart className="w-5 h-5" />
+                    <span className="font-bold text-sm uppercase tracking-widest">Real-time</span>
+                  </div>
+                  <p className="text-slate-500 text-sm italic">Instant analytics generation.</p>
+               </div>
+               <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-emerald-400">
+                    <History className="w-5 h-5" />
+                    <span className="font-bold text-sm uppercase tracking-widest">Historical</span>
+                  </div>
+                  <p className="text-slate-500 text-sm italic">Audit trails for every lecture.</p>
+               </div>
+            </div>
           </div>
+
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl p-8 shadow-2xl relative overflow-hidden group"
+          >
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="w-24 h-4 bg-slate-800 rounded" />
+                <div className="w-12 h-4 bg-teal-500/20 rounded" />
+              </div>
+              <div className="h-48 rounded-2xl bg-slate-950/50 border border-slate-800 flex items-end p-4 space-x-3">
+                 {[40, 90, 60, 100, 70, 85, 45, 95].map((h, i) => (
+                   <motion.div 
+                    key={i} 
+                    initial={{ height: 0 }}
+                    whileInView={{ height: `${h}%` }}
+                    transition={{ delay: i * 0.05, duration: 1 }}
+                    className={`flex-1 rounded-t-lg ${i === 3 ? 'bg-teal-500' : 'bg-slate-800'}`} 
+                   />
+                 ))}
+              </div>
+              <div className="space-y-4">
+                 <div className="flex items-center justify-between">
+                    <div className="w-32 h-3 bg-slate-800 rounded" />
+                    <div className="w-16 h-3 bg-slate-800 rounded" />
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <div className="w-24 h-3 bg-slate-800 rounded" />
+                    <div className="w-20 h-3 bg-slate-800 rounded" />
+                 </div>
+              </div>
+            </div>
+            {/* Hover overlay teaser */}
+            <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="px-6 py-2 bg-white text-slate-950 rounded-full font-bold text-sm shadow-xl">Insight View</span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 relative overflow-hidden">
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-teal-600/20 to-orange-600/20"
-          animate={{
-            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          style={{
-            backgroundSize: "200% 200%"
-          }}
-        />
-
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-          <div className="cta-content space-y-8">
-            <motion.h2
-              className="text-4xl lg:text-6xl font-bold text-white"
-              animate={{
-                scale: [1, 1.02, 1],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
+      <section className="relative z-10 py-32 px-6">
+        <div className="max-w-5xl mx-auto py-20 px-12 rounded-[4rem] text-center space-y-8 bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 relative overflow-hidden shadow-3xl">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-teal-500/50 to-transparent" />
+          
+          <div className="relative z-10">
+            <h2 className="text-4xl lg:text-6xl font-black text-white italic tracking-tighter mb-6">
+              ELEVATE ACADEMIA <br /> <span className="text-teal-500">TOGETHER.</span>
+            </h2>
+            <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+              Deployment takes minutes. Institutional excellence lasts forever.
+            </p>
+            <Link 
+              href="/login" 
+              className="inline-flex items-center px-12 py-5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black rounded-2xl transition-all shadow-xl shadow-teal-500/20 active:scale-95 uppercase tracking-widest text-xs"
             >
-              Ready to Modernize Your Lecture Management?
-            </motion.h2>
-            <motion.p
-              className="text-xl text-teal-200"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              viewport={{ once: true }}
-            >
-              Streamlining academic life by eliminating scheduling conflicts and manual attendance tracking today.
-            </motion.p>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Link
-                href="/login"
-                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-teal-500/50 transition-all duration-300 group"
-              >
-                Access Portal
-                <motion.div
-                  animate={{
-                    x: [0, 5, 0],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </motion.div>
-              </Link>
-            </motion.div>
+              Start Managed Session
+            </Link>
           </div>
         </div>
       </section>
+
     </div>
   );
 }

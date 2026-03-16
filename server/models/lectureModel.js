@@ -5,10 +5,6 @@ const lectureSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    course: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course',
-    },
     subject: {
         type: String,
         required: true
@@ -47,14 +43,27 @@ const lectureSchema = mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Scheduled', 'Completed', 'Cancelled', 'Ongoing'],
+        enum: ['Scheduled', 'Completed', 'Cancelled', 'Ongoing', 'Relocated'],
         default: 'Scheduled'
+    },
+    relocatedTo: {
+        type: String
+    },
+    conflictReason: {
+        type: String
     },
     resources: [{
         name: String,
         url: String,
         type: { type: String, default: 'PDF' }
-    }]
+    }],
+    isSubstitutionRequested: {
+        type: Boolean,
+        default: false
+    },
+    substitutionReason: {
+        type: String
+    }
 }, {
     timestamps: true
 });

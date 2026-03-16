@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Users, BookOpen, TrendingUp, Clock, FileText, CheckCircle, Calendar, BarChart3, Download } from "lucide-react";
+import { Plus, Users, BookOpen, TrendingUp, Clock, FileText, CheckCircle, Calendar, BarChart3, Download, Award } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { setActiveModal } from "@/redux/slices/uiSlice";
 
@@ -89,9 +89,9 @@ export default function Dashboard() {
               border: "border-blue-500/20"
             },
             {
-              title: user?.role === "admin" ? "Total Courses" : "Department",
+              title: user?.role === "admin" ? "Total Batches" : "Department",
               value: user?.role === "admin"
-                ? (dashboardData?.stats?.courses || 0)
+                ? (dashboardData?.stats?.batches || 0)
                 : (Array.isArray(user?.department)
                   ? user.department.map(d => d.name || d).join(', ')
                   : (user?.department?.name || user?.department || "N/A")),

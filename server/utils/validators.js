@@ -11,12 +11,12 @@ export const userSchema = Joi.object({
     ),
     batch: Joi.string().hex().length(24).allow('', null),
     subjects: Joi.array().items(Joi.string()).optional(),
-    isMentor: Joi.boolean().default(false)
+    isMentor: Joi.boolean().default(false),
+    parentEmail: Joi.string().email().allow('', null).optional()
 });
 
 export const lectureSchema = Joi.object({
     title: Joi.string().required().min(3).max(100),
-    course: Joi.string().hex().length(24).optional(),
     subject: Joi.string().required(),
     teacher: Joi.string().required().hex().length(24),
     batch: Joi.string().required().hex().length(24), // New

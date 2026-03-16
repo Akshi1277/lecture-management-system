@@ -4,7 +4,7 @@ import Subject from '../models/subjectModel.js';
 import generateToken from '../utils/generateToken.js';
 import { userSchema } from '../utils/validators.js';
 import generateRandomPassword from '../utils/passGenerator.js';
-import { sendEnrollmentEmail } from '../utils/emailService.js';
+import { sendEnrollmentEmail, sendPasswordResetEmail } from '../utils/emailService.js';
 import xlsx from 'xlsx';
 
 // @desc    Auth user & get token
@@ -42,7 +42,7 @@ export const registerUser = asyncHandler(async (req, res) => {
         throw new Error(error.details[0].message);
     }
 
-    const { name, email, role, department, batch, isMentor, subjects } = req.body;
+    const { name, email, role, department, batch, isMentor, subjects, parentEmail } = req.body;
     let { password } = req.body;
 
     const requester = req.user;
@@ -89,7 +89,8 @@ export const registerUser = asyncHandler(async (req, res) => {
         department,
         subjects: role === 'teacher' ? subjects : [],
         batch: batch || undefined,
-        isMentor: isMentor || false
+        isMentor: isMentor || false,
+        parentEmail
     });
 
     // Save new subjects to Subject model if they don't exist
@@ -149,7 +150,7 @@ export const bulkRegisterUsers = asyncHandler(async (req, res) => {
 
     for (const student of studentsData) {
         try {
-            const { FullName, Email } = student;
+            const { FullName, Email, ParentEmail } = student;
 
             if (!FullName || !Email) {
                 errorCount++;
@@ -170,7 +171,8 @@ export const bulkRegisterUsers = asyncHandler(async (req, res) => {
                 email: Email.toLowerCase().trim(),
                 password,
                 role: 'student',
-                batch: batchId
+                batch: batchId,
+                parentEmail: ParentEmail ? ParentEmail.toLowerCase().trim() : undefined
             });
 
             // Send notification
@@ -214,4 +216,59 @@ export const getStudents = asyncHandler(async (req, res) => {
 export const getSubjects = asyncHandler(async (req, res) => {
     const subjects = await Subject.find({}).sort({ name: 1 });
     res.json(subjects.map(s => s.name));
+});
+
+// @desc    Forgot Password - Send OTP
+// @route   POST /api/users/forgot-password
+// @access  Public
+export const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (user) {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.resetPasswordToken = otp;
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+        await user.save();
+
+        await sendPasswordResetEmail(user.email, user.name, otp);
+        res.json({ message: 'Verification code sent to your email.' });
+    } else {
+        res.status(404);
+        throw new Error('User not found with this email.');
+    }
+});
+
+// @desc    Reset Password using OTP
+// @route   POST /api/users/reset-password
+// @access  Public
+export const resetPassword = asyncHandler(async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+    const user = await User.findOne({
+        email,
+        resetPasswordToken: otp,
+        resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (user) {
+        if (newPassword.length < 6) {
+            res.status(400);
+            throw new Error('Password must be at least 6 characters long.');
+        }
+
+        const isMatch = await user.matchPassword(newPassword);
+        if (isMatch) {
+            res.status(400);
+            throw new Error('New password cannot be the same as the old password.');
+        }
+
+        user.password = newPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+        res.json({ message: 'Password reset successful. You can now login.' });
+    } else {
+        res.status(400);
+        throw new Error('Invalid or expired verification code.');
+    }
 });

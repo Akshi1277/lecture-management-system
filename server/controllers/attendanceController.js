@@ -3,6 +3,8 @@ import asyncHandler from 'express-async-handler';
 import Attendance from '../models/attendanceModel.js';
 import Lecture from '../models/lectureModel.js';
 import User from '../models/userModel.js';
+import Settings from '../models/settingsModel.js';
+import { sendAttendanceWarningEmail } from '../utils/emailService.js';
 
 // @desc    Mark attendance for a lecture (Teacher only)
 // @route   POST /api/attendance
@@ -25,7 +27,7 @@ export const markAttendance = asyncHandler(async (req, res) => {
 
     const attendance = await Attendance.create({
         lecture: lectureId,
-        course: lecture.course,
+        subject: lecture.subject,
         batch: lecture.batch,
         students: students.map(s => ({
             student: s.studentId,
@@ -42,32 +44,51 @@ export const markAttendance = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Get attendance stats for a specific course and batch
-// @route   GET /api/attendance/stats/:courseId/:batchId
+// @desc    Get attendance stats for a specific subject and batch
+// @route   GET /api/attendance/stats/:subject/:batchId
 // @access  Private/Teacher
 export const getAttendanceStats = asyncHandler(async (req, res) => {
-    const { courseId, batchId } = req.params;
+    const { subject, batchId } = req.params;
 
-    // Aggregate to calculate percentages
+    // Aggregate to calculate percentages (with weight: Lab=4, Lecture=1)
     const stats = await Attendance.aggregate([
-        { $match: { course: new mongoose.Types.ObjectId(courseId), batch: new mongoose.Types.ObjectId(batchId) } },
+        { $match: { subject: subject, batch: new mongoose.Types.ObjectId(batchId) } },
+        {
+            $lookup: {
+                from: 'lectures',
+                localField: 'lecture',
+                foreignField: '_id',
+                as: 'lectureInfo'
+            }
+        },
+        { $unwind: '$lectureInfo' },
         { $unwind: '$students' },
         {
             $group: {
                 _id: '$students.student',
-                totalLectures: { $sum: 1 },
-                presentLectures: {
-                    $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] }
+                totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
+                presentWeight: {
+                    $sum: {
+                        $cond: [
+                            { $eq: ['$students.status', 'present'] },
+                            { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
+                            0
+                        ]
+                    }
                 }
             }
         },
         {
             $project: {
                 student: '$_id',
-                totalLectures: 1,
-                presentLectures: 1,
+                totalLectures: '$totalWeight',
+                presentLectures: '$presentWeight',
                 percentage: {
-                    $multiply: [{ $divide: ['$presentLectures', '$totalLectures'] }, 100]
+                    $cond: [
+                        { $eq: ['$totalWeight', 0] },
+                        0,
+                        { $multiply: [{ $divide: ['$presentWeight', '$totalWeight'] }, 100] }
+                    ]
                 }
             }
         }
@@ -103,22 +124,41 @@ export const getLowAttendanceStudents = asyncHandler(async (req, res) => {
 
     const stats = await Attendance.aggregate([
         { $match: { markedBy: teacherId } },
+        {
+            $lookup: {
+                from: 'lectures',
+                localField: 'lecture',
+                foreignField: '_id',
+                as: 'lectureInfo'
+            }
+        },
+        { $unwind: '$lectureInfo' },
         { $unwind: '$students' },
         {
             $group: {
-                _id: { student: '$students.student', course: '$course' },
-                totalLectures: { $sum: 1 },
-                presentLectures: {
-                    $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] }
+                _id: { student: '$students.student', subject: '$subject' },
+                totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
+                presentWeight: {
+                    $sum: {
+                        $cond: [
+                            { $eq: ['$students.status', 'present'] },
+                            { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
+                            0
+                        ]
+                    }
                 }
             }
         },
         {
             $project: {
                 student: '$_id.student',
-                course: '$_id.course',
+                subject: '$_id.subject',
                 percentage: {
-                    $multiply: [{ $divide: ['$presentLectures', '$totalLectures'] }, 100]
+                    $cond: [
+                        { $eq: ['$totalWeight', 0] },
+                        0,
+                        { $multiply: [{ $divide: ['$presentWeight', '$totalWeight'] }, 100] }
+                    ]
                 }
             }
         },
@@ -126,7 +166,63 @@ export const getLowAttendanceStudents = asyncHandler(async (req, res) => {
     ]);
 
     const populatedStats = await User.populate(stats, { path: 'student', select: 'name email' });
-    const finalStats = await mongoose.model('Course').populate(populatedStats, { path: 'course', select: 'name code' });
+
+    res.json(populatedStats);
+});
+
+// @desc    Get all students with < X% attendance globally
+// @route   GET /api/attendance/global-defaulters
+// @access  Private/Admin
+export const getGlobalDefaulters = asyncHandler(async (req, res) => {
+    const threshold = parseInt(req.query.threshold) || 75;
+
+    const stats = await Attendance.aggregate([
+        {
+            $lookup: {
+                from: 'lectures',
+                localField: 'lecture',
+                foreignField: '_id',
+                as: 'lectureInfo'
+            }
+        },
+        { $unwind: '$lectureInfo' },
+        { $unwind: '$students' },
+        {
+            $group: {
+                _id: { student: '$students.student', batch: '$batch' },
+                totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
+                presentWeight: {
+                    $sum: {
+                        $cond: [
+                            { $eq: ['$students.status', 'present'] },
+                            { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
+                            0
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                student: '$_id.student',
+                batch: '$_id.batch',
+                percentage: {
+                    $cond: [
+                        { $eq: ['$totalWeight', 0] },
+                        0,
+                        { $multiply: [{ $divide: ['$presentWeight', '$totalWeight'] }, 100] }
+                    ]
+                },
+                totalLectures: '$totalWeight',
+                presentLectures: '$presentWeight'
+            }
+        },
+        { $match: { percentage: { $lt: threshold } } },
+        { $sort: { percentage: 1 } }
+    ]);
+
+    const populatedStats = await User.populate(stats, { path: 'student', select: 'name email' });
+    const finalStats = await mongoose.model('Batch').populate(populatedStats, { path: 'batch', select: 'name division' });
 
     res.json(finalStats);
 });
@@ -166,28 +262,43 @@ export const getFacultyLoad = asyncHandler(async (req, res) => {
 // @access  Private
 export const getMyAttendanceStats = asyncHandler(async (req, res) => {
     const stats = await Attendance.aggregate([
+        {
+            $lookup: {
+                from: 'lectures',
+                localField: 'lecture',
+                foreignField: '_id',
+                as: 'lectureInfo'
+            }
+        },
+        { $unwind: '$lectureInfo' },
         { $unwind: '$students' },
         { $match: { 'students.student': req.user._id } },
         {
             $group: {
                 _id: null,
-                totalLectures: { $sum: 1 },
-                presentLectures: {
-                    $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] }
+                totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
+                presentWeight: {
+                    $sum: {
+                        $cond: [
+                            { $eq: ['$students.status', 'present'] },
+                            { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
+                            0
+                        ]
+                    }
                 }
             }
         },
         {
             $project: {
                 _id: 0,
-                totalLectures: 1,
-                presentLectures: 1,
-                absentLectures: { $subtract: ['$totalLectures', '$presentLectures'] },
+                totalLectures: '$totalWeight',
+                presentLectures: '$presentWeight',
+                absentLectures: { $subtract: ['$totalWeight', '$presentWeight'] },
                 percentage: {
                     $cond: [
-                        { $eq: ['$totalLectures', 0] },
+                        { $eq: ['$totalWeight', 0] },
                         0,
-                        { $multiply: [{ $divide: ['$presentLectures', '$totalLectures'] }, 100] }
+                        { $multiply: [{ $divide: ['$presentWeight', '$totalWeight'] }, 100] }
                     ]
                 }
             }
@@ -195,3 +306,149 @@ export const getMyAttendanceStats = asyncHandler(async (req, res) => {
     ]);
     res.json(stats[0] || { totalLectures: 0, presentLectures: 0, absentLectures: 0, percentage: 0 });
 });
+// @desc    Get logged in student attendance stats by subject
+// @route   GET /api/attendance/subject-wise
+// @access  Private
+export const getSubjectWiseAttendance = asyncHandler(async (req, res) => {
+    const stats = await Attendance.aggregate([
+        {
+            $lookup: {
+                from: 'lectures',
+                localField: 'lecture',
+                foreignField: '_id',
+                as: 'lectureInfo'
+            }
+        },
+        { $unwind: '$lectureInfo' },
+        { $unwind: '$students' },
+        { $match: { 'students.student': req.user._id } },
+        {
+            $group: {
+                _id: '$subject',
+                totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
+                presentWeight: {
+                    $sum: {
+                        $cond: [
+                            { $eq: ['$students.status', 'present'] },
+                            { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
+                            0
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                subject: '$_id',
+                totalLectures: '$totalWeight',
+                presentLectures: '$presentWeight',
+                absentLectures: { $subtract: ['$totalWeight', '$presentWeight'] },
+                percentage: {
+                    $cond: [
+                        { $eq: ['$totalWeight', 0] },
+                        0,
+                        { $multiply: [{ $divide: ['$presentWeight', '$totalWeight'] }, 100] }
+                    ]
+                }
+            }
+        },
+        { $sort: { subject: 1 } }
+    ]);
+    res.json(stats);
+});
+
+// @desc    Send attendance warning emails to parents
+// @route   POST /api/attendance/send-warnings
+// @access  Private/Admin
+export const sendAttendanceWarning = asyncHandler(async (req, res) => {
+    const { batchId } = req.body;
+
+    // Get current threshold from settings
+    const currentSettings = await Settings.findOne() || { attendanceThreshold: 75 };
+    const threshold = currentSettings.attendanceThreshold;
+
+    // 1. Get stats for students (potentially filtered by batch)
+    const matchStage = batchId ? { batch: new mongoose.Types.ObjectId(batchId) } : {};
+
+    const stats = await Attendance.aggregate([
+        { $match: matchStage },
+        {
+            $lookup: {
+                from: 'lectures',
+                localField: 'lecture',
+                foreignField: '_id',
+                as: 'lectureInfo'
+            }
+        },
+        { $unwind: '$lectureInfo' },
+        { $unwind: '$students' },
+        {
+            $group: {
+                _id: '$students.student',
+                totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
+                presentWeight: {
+                    $sum: {
+                        $cond: [
+                            { $eq: ['$students.status', 'present'] },
+                            { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
+                            0
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                student: '$_id',
+                percentage: {
+                    $cond: [
+                        { $eq: ['$totalWeight', 0] },
+                        0,
+                        { $multiply: [{ $divide: ['$presentWeight', '$totalWeight'] }, 100] }
+                    ]
+                }
+            }
+        },
+        { $match: { percentage: { $lt: threshold } } }
+    ]);
+
+    // 2. Populate student info (including parentEmail)
+    const populatedStats = await User.populate(stats, { 
+        path: 'student', 
+        select: 'name email parentEmail' 
+    });
+
+    // 3. Send emails
+    let sentCount = 0;
+    let failedCount = 0;
+    let noEmailCount = 0;
+
+    for (const stat of populatedStats) {
+        if (stat.student.parentEmail) {
+            try {
+                await sendAttendanceWarningEmail(
+                    stat.student.parentEmail,
+                    stat.student.name,
+                    stat.percentage,
+                    threshold
+                );
+                sentCount++;
+            } catch (error) {
+                console.error(`Failed to send warning email to ${stat.student.parentEmail}:`, error);
+                failedCount++;
+            }
+        } else {
+            noEmailCount++;
+        }
+    }
+
+    res.json({
+        message: `Processed ${populatedStats.length} defaulters. Emails sent: ${sentCount}, Failed: ${failedCount}, No parent email: ${noEmailCount}`,
+        defaultersCount: populatedStats.length,
+        sentCount,
+        failedCount,
+        noEmailCount
+    });
+});
+

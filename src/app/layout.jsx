@@ -2,16 +2,20 @@
 import "./globals.css";
 import Navbar from "@/components/Shared/Navbar";
 import Footer from "@/components/Shared/Footer";
-import { Inter } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { usePathname } from "next/navigation";
 import { ReduxProvider } from "@/components/Providers/ReduxProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const outfit = Outfit({ 
+  subsets: ["latin"],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-outfit'
+});
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen flex flex-col bg-gray-50`}>
+      <body className={`${outfit.className} min-h-screen flex flex-col bg-slate-950 antialiased`}>
         <ReduxProvider>
           <ConditionalNavbar />
           <main className="flex-1">{children}</main>

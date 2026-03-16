@@ -1,6 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/userModel.js';
-import Course from '../models/courseModel.js';
+
 import Batch from '../models/batchModel.js';
 import Lecture from '../models/lectureModel.js';
 import Attendance from '../models/attendanceModel.js';
@@ -13,9 +13,18 @@ export const getAdminStats = asyncHandler(async (req, res) => {
     // 1. Stats Cards
     const studentCount = await User.countDocuments({ role: 'student' });
     const teacherCount = await User.countDocuments({ role: 'teacher' });
-    const courseCount = await Course.countDocuments();
+    
     const batchCount = await Batch.countDocuments();
-    const departmentCount = await Department.countDocuments();
+
+    let departmentCount = await Department.countDocuments();
+    if (departmentCount === 0) {
+        await Department.insertMany([
+            { name: 'Information Technology', code: 'IT' },
+            { name: 'Computer Science', code: 'CS' }
+        ]);
+        departmentCount = 2;
+    }
+
     const totalUsers = studentCount + teacherCount;
 
     // 2. Today's Schedule
@@ -31,7 +40,6 @@ export const getAdminStats = asyncHandler(async (req, res) => {
         }
     })
         .populate('teacher', 'name')
-        .populate('course', 'name')
         .populate('batch', 'name')
         .sort({ startTime: 1 });
 
@@ -53,7 +61,6 @@ export const getAdminStats = asyncHandler(async (req, res) => {
         stats: {
             students: studentCount,
             teachers: teacherCount,
-            courses: courseCount,
             batches: batchCount,
             departments: departmentCount,
             totalUsers: totalUsers

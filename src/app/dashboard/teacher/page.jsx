@@ -11,6 +11,7 @@ import {
     AlertTriangle,
     ArrowRight
 } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { fetchLectures } from "@/redux/slices/lectureSlice";
@@ -60,7 +61,7 @@ export default function TeacherDashboard() {
                                 <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-slate-900 border border-slate-800 rounded-2xl group hover:border-indigo-500/50 transition-all">
                                     <div>
                                         <h4 className="text-lg font-bold group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{l.title}</h4>
-                                        <p className="text-slate-500 text-xs mt-1">Course: <b className="text-slate-300">{l.course?.name}</b> • Room {l.classroom}</p>
+                                        <p className="text-slate-500 text-xs mt-1">Subject: <b className="text-slate-300">{l.subject}</b> • Room {l.classroom}</p>
                                     </div>
                                     <div className="mt-4 md:mt-0 flex items-center space-x-4">
                                         <div className="text-right">
@@ -144,7 +145,7 @@ export default function TeacherDashboard() {
                                         <span className="font-bold text-white text-xs">{alert.student?.name}</span>
                                         <span className="text-rose-400 font-bold text-[10px]">{Math.round(alert.percentage)}%</span>
                                     </div>
-                                    <p className="text-[10px] text-slate-500 truncate lowercase">{alert.course?.code} • {alert.course?.name}</p>
+                                    <p className="text-[10px] text-slate-500 truncate uppercase">{alert.subject}</p>
                                 </div>
                             ))}
                             {alerts.length === 0 && (
@@ -155,31 +156,6 @@ export default function TeacherDashboard() {
                         </div>
                     </div>
 
-                    {/* Course / Syllabus Tracker */}
-                    <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl">
-                        <h4 className="font-bold mb-4 text-slate-400 text-sm flex items-center">
-                            <BookOpen className="w-4 h-4 mr-2 text-indigo-400" /> Course Progress
-                        </h4>
-                        <div className="space-y-3">
-                            {/* Derive unique courses from lectures */}
-                            {[...new Set(lectures.map(l => l.course?._id))].filter(id => id).map((courseId, i) => {
-                                const course = lectures.find(l => l.course?._id === courseId).course;
-                                return (
-                                    <button
-                                        key={i}
-                                        onClick={() => dispatch(setActiveModal({ type: 'viewSyllabus', data: courseId }))}
-                                        className="w-full p-4 bg-slate-800/50 border border-slate-700/50 rounded-2xl hover:border-indigo-500/50 transition-all flex items-center justify-between group"
-                                    >
-                                        <div className="text-left">
-                                            <p className="text-xs font-black text-white group-hover:text-indigo-400 transition-colors uppercase">{course?.code}</p>
-                                            <p className="text-[10px] text-slate-500 truncate w-32">{course?.name}</p>
-                                        </div>
-                                        <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

@@ -15,7 +15,7 @@ export const createLecture = asyncHandler(async (req, res) => {
         throw new Error(error.details[0].message);
     }
 
-    const { title, course, subject, teacher, startTime, endTime, classroom, batch, division, type } = req.body;
+    const { title, subject, teacher, startTime, endTime, classroom, batch, division, type } = req.body;
 
     // Check for conflicts
     // 1. Teacher busy
@@ -52,7 +52,6 @@ export const createLecture = asyncHandler(async (req, res) => {
 
     const lecture = await Lecture.create({
         title,
-        course,
         subject,
         teacher,
         startTime,
@@ -77,7 +76,6 @@ export const createLecture = asyncHandler(async (req, res) => {
 export const getLectures = asyncHandler(async (req, res) => {
     const lectures = await Lecture.find({})
         .populate('teacher', 'name email')
-        .populate('course', 'name code')
         .populate('batch', 'name');
     res.json(lectures);
 });
@@ -89,7 +87,6 @@ export const getMyLectures = asyncHandler(async (req, res) => {
     const query = req.user.role === 'teacher' ? { teacher: req.user._id } : {};
     const lectures = await Lecture.find(query)
         .populate('teacher', 'name email')
-        .populate('course', 'name code')
         .populate('batch', 'name');
     res.json(lectures);
 });
@@ -118,6 +115,11 @@ export const updateLecture = asyncHandler(async (req, res) => {
     const lecture = await Lecture.findById(req.params.id);
 
     if (lecture) {
+        if (req.body.teacher && req.body.teacher.toString() !== lecture.teacher.toString()) {
+            lecture.isSubstitutionRequested = false;
+            lecture.substitutionReason = undefined;
+        }
+
         lecture.title = req.body.title || lecture.title;
         lecture.teacher = req.body.teacher || lecture.teacher;
         lecture.classroom = req.body.classroom || lecture.classroom;

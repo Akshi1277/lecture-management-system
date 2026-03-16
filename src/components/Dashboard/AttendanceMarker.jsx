@@ -17,7 +17,8 @@ export default function AttendanceMarker({ lecture, onClose }) {
         const fetchStudents = async () => {
             try {
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/batch/${lecture.batch}`, config);
+                const batchId = lecture.batch?._id || lecture.batch;
+                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/batch/${batchId}`, config);
                 setStudents(res.data);
 
                 // Initialize all as present
@@ -76,7 +77,7 @@ export default function AttendanceMarker({ lecture, onClose }) {
                 </div>
                 <div className="text-right">
                     <span className="inline-flex items-center px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-full text-xs font-bold">
-                        Batch: {lecture.batchName || 'FYCS'}
+                        Batch: {lecture.batch?.name || lecture.batchName || 'N/A'}
                     </span>
                 </div>
             </div>
