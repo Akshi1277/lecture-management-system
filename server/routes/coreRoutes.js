@@ -2,7 +2,6 @@ import express from 'express';
 import { createLecture, getLectures, getMyLectures, uploadResource, updateLecture } from '../controllers/lectureController.js';
 import { suggestSubstitutes, getPendingSubstitutions, requestSubstitution } from '../controllers/substitutionController.js';
 import { createExam, getExams } from '../controllers/examController.js';
-// Exam Routes
 import { blockRoom, getActiveBlocks } from '../controllers/roomController.js';
 import {
     markAttendance,
@@ -18,6 +17,7 @@ import {
 import { getSettings, updateSettings } from '../controllers/settingsController.js';
 import { createAnnouncement, getAnnouncements, deleteAnnouncement } from '../controllers/announcementController.js';
 import { protect, admin, teacher } from '../middleware/authMiddleware.js';
+import { uploadToCloudinary } from '../config/cloudinary.js';
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ router.route('/lectures')
 router.put('/lectures/:id', protect, admin, updateLecture);
 
 router.get('/lectures/my', protect, getMyLectures);
-router.post('/lectures/:id/resources', protect, teacher, uploadResource);
+router.post('/lectures/:id/resources', protect, teacher, uploadToCloudinary.single('file'), uploadResource);
 router.get('/lectures/substitutes/:lectureId', protect, admin, suggestSubstitutes);
 router.get('/lectures/substitutions/pending', protect, admin, getPendingSubstitutions);
 router.post('/lectures/:id/request-substitution', protect, teacher, requestSubstitution);

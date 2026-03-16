@@ -91,27 +91,49 @@ export const getMyLectures = asyncHandler(async (req, res) => {
     res.json(lectures);
 });
 
-// @desc    Add resource to lecture
+// @desc    Add resource to lecture (file OR url)
 // @route   POST /api/lectures/:id/resources
 // @access  Private/Teacher
 export const uploadResource = asyncHandler(async (req, res) => {
-    const { name, url } = req.body;
     const lecture = await Lecture.findById(req.params.id);
 
-    if (lecture) {
-        // Security check: only the assigned teacher can add resources
-        if (req.user.role === 'teacher' && lecture.teacher.toString() !== req.user._id.toString()) {
-            res.status(403);
-            throw new Error('Not authorized to upload resources for this lecture');
-        }
-
-        lecture.resources.push({ name, url });
-        await lecture.save();
-        res.status(201).json(lecture);
-    } else {
+    if (!lecture) {
         res.status(404);
         throw new Error('Lecture not found');
     }
+
+    // Security check: only the assigned teacher can add resources
+    if (req.user.role === 'teacher' && lecture.teacher.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to upload resources for this lecture');
+    }
+
+    let resourceData;
+
+    if (req.file) {
+        // File was uploaded to Cloudinary via multer middleware
+        resourceData = {
+            name: req.body.name || req.file.originalname,
+            url: req.file.path,           // Cloudinary secure URL
+            publicId: req.file.filename,  // Cloudinary public_id (for deletion later)
+            fileType: req.file.mimetype,
+            type: req.file.mimetype.startsWith('image/') ? 'Image' : 'File',
+        };
+    } else if (req.body.url) {
+        // Fallback: URL-only mode (Google Drive, YouTube, etc.)
+        resourceData = {
+            name: req.body.name || 'Shared Link',
+            url: req.body.url,
+            type: 'Link',
+        };
+    } else {
+        res.status(400);
+        throw new Error('Please provide a file or a URL');
+    }
+
+    lecture.resources.push(resourceData);
+    await lecture.save();
+    res.status(201).json(lecture);
 });
 
 // @desc    Update lecture

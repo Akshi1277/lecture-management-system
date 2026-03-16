@@ -55,7 +55,9 @@ const lectureSchema = mongoose.Schema({
     resources: [{
         name: String,
         url: String,
-        type: { type: String, default: 'PDF' }
+        publicId: String,   // Cloudinary public_id (for deletion)
+        fileType: String,   // MIME type e.g. 'application/pdf'
+        type: { type: String, default: 'File', enum: ['PDF', 'File', 'Link', 'Image'] }
     }],
     isSubstitutionRequested: {
         type: Boolean,
