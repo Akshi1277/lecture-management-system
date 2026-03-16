@@ -3,6 +3,10 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
+import { xss } from 'express-xss-sanitizer';
+import hpp from 'hpp';
+import morgan from 'morgan';
 import http from 'http';
 import { initSocket } from './socket.js';
 import connectDB from './config/db.js';
@@ -19,8 +23,19 @@ const app = express();
 
 // Security Middleware
 app.use(helmet());
+app.disable('x-powered-by');
 app.use(cors());
 app.use(express.json());
+app.use(mongoSanitize()); // Prevent NoSQL Injection
+app.use(xss()); // Prevent Cross-Site Scripting (XSS)
+app.use(hpp()); // Prevent HTTP Parameter Pollution
+
+// Request Logging
+if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+} else {
+    app.use(morgan('combined', { skip: (req, res) => res.statusCode < 400 }));
+}
 
 // Rate Limiting
 const limiter = rateLimit({

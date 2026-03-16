@@ -18,6 +18,12 @@ export const markAttendance = asyncHandler(async (req, res) => {
         throw new Error('Lecture not found');
     }
 
+    // Security check: Teacher can only mark attendance for their own lectures
+    if (req.user.role === 'teacher' && lecture.teacher.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to mark attendance for this lecture');
+    }
+
     // Check if attendance already marked
     const attendanceExists = await Attendance.findOne({ lecture: lectureId });
     if (attendanceExists) {

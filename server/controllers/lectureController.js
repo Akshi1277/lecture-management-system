@@ -99,6 +99,12 @@ export const uploadResource = asyncHandler(async (req, res) => {
     const lecture = await Lecture.findById(req.params.id);
 
     if (lecture) {
+        // Security check: only the assigned teacher can add resources
+        if (req.user.role === 'teacher' && lecture.teacher.toString() !== req.user._id.toString()) {
+            res.status(403);
+            throw new Error('Not authorized to upload resources for this lecture');
+        }
+
         lecture.resources.push({ name, url });
         await lecture.save();
         res.status(201).json(lecture);

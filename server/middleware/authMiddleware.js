@@ -9,6 +9,21 @@ export const protect = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
             req.user = await User.findById(decoded.id).select('-password');
+            
+            if (!req.user) {
+                res.status(401);
+                throw new Error('Not authorized, user not found');
+            }
+
+            // Ghost Login Prevention: Check if the token was issued BEFORE the user's details/password were updated
+            if (req.user.updatedAt && decoded.iat) {
+                const updatedTimestamp = parseInt(req.user.updatedAt.getTime() / 1000, 10);
+                if (updatedTimestamp > decoded.iat + 5) { // 5 second buffer
+                    res.status(401);
+                    throw new Error('Not authorized, token invalidated due to account update');
+                }
+            }
+            
             next();
         } catch (error) {
             console.error(error);

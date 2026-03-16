@@ -1,5 +1,6 @@
 import express from 'express';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
 import { authUser, registerUser, bulkRegisterUsers, getTeachers, getStudents, getStudentsByBatch, getSubjects, forgotPassword, resetPassword } from '../controllers/userController.js';
 import { protect, admin, teacher } from '../middleware/authMiddleware.js';
 
@@ -8,7 +9,13 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/', protect, registerUser);
 router.post('/login', authUser);
-router.post('/forgot-password', forgotPassword);
+const forgotPasswordLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5,
+    message: 'Too many password reset requests from this IP, please try again after an hour'
+});
+
+router.post('/forgot-password', forgotPasswordLimiter, forgotPassword);
 router.post('/reset-password', resetPassword);
 router.post('/bulk', protect, upload.single('file'), bulkRegisterUsers);
 router.get('/teachers', protect, admin, getTeachers);

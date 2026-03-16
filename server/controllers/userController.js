@@ -6,6 +6,7 @@ import { userSchema } from '../utils/validators.js';
 import generateRandomPassword from '../utils/passGenerator.js';
 import { sendEnrollmentEmail, sendPasswordResetEmail } from '../utils/emailService.js';
 import xlsx from 'xlsx';
+import crypto from 'crypto';
 
 // @desc    Auth user & get token
 // @route   POST /api/users/login
@@ -144,6 +145,11 @@ export const bulkRegisterUsers = asyncHandler(async (req, res) => {
     const sheet = workbook.Sheets[sheetName];
     const studentsData = xlsx.utils.sheet_to_json(sheet);
 
+    if (studentsData.length > 200) {
+        res.status(400);
+        throw new Error('Maximum 200 students can be registered at once to prevent server timeout.');
+    }
+
     let createdCount = 0;
     let errorCount = 0;
     const errors = [];
@@ -175,8 +181,10 @@ export const bulkRegisterUsers = asyncHandler(async (req, res) => {
                 parentEmail: ParentEmail ? ParentEmail.toLowerCase().trim() : undefined
             });
 
-            // Send notification
-            await sendEnrollmentEmail(Email.toLowerCase().trim(), FullName, password, 'student');
+            // Send notification asynchronously in background (prevent DoS)
+            sendEnrollmentEmail(Email.toLowerCase().trim(), FullName, password, 'student')
+                .catch(err => console.error(`Failed to send email to ${Email}:`, err));
+                
             createdCount++;
         } catch (err) {
             errorCount++;
@@ -226,7 +234,9 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user) {
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        // Generates cryptographically strong 6-digit OTP
+        const otp = crypto.randomInt(100000, 1000000).toString();
+        
         user.resetPasswordToken = otp;
         user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
         await user.save();
