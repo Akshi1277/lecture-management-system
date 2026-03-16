@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import User from '../models/userModel.js';
 import Subject from '../models/subjectModel.js';
 import generateToken from '../utils/generateToken.js';
+import AuditLog from '../models/auditLogModel.js';
 import { userSchema } from '../utils/validators.js';
 import generateRandomPassword from '../utils/passGenerator.js';
 import { sendEnrollmentEmail, sendPasswordResetEmail } from '../utils/emailService.js';
@@ -109,6 +110,16 @@ export const registerUser = asyncHandler(async (req, res) => {
         // Send email with credentials
         await sendEnrollmentEmail(email, name, password, role);
 
+        // Audit Log
+        await AuditLog.create({
+            user: requester._id,
+            action: 'CREATE_USER',
+            entity: 'User',
+            entityId: user._id,
+            details: `Enrolled ${name} as ${role}`,
+            ipAddress: req.ip
+        });
+
         res.status(201).json({
             _id: user._id,
             name: user.name,
@@ -198,6 +209,17 @@ export const bulkRegisterUsers = asyncHandler(async (req, res) => {
         errorCount,
         errors
     });
+
+    // Audit Log for Bulk
+    if (createdCount > 0) {
+        await AuditLog.create({
+            user: requester._id,
+            action: 'BULK_REGISTER',
+            entity: 'User',
+            details: `Bulk enrolled ${createdCount} students into batch ${batchId}`,
+            ipAddress: req.ip
+        });
+    }
 });
 
 export const getTeachers = asyncHandler(async (req, res) => {

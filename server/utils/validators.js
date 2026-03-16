@@ -24,7 +24,9 @@ export const lectureSchema = Joi.object({
     type: Joi.string().valid('Lecture', 'Lab').default('Lecture'), // New
     startTime: Joi.date().required(),
     endTime: Joi.date().required().greater(Joi.ref('startTime')),
-    classroom: Joi.string().required()
+    classroom: Joi.string().required(),
+    recurring: Joi.string().valid('none', 'daily', 'weekly').optional(),
+    repeatUntil: Joi.date().optional()
 });
 
 export const departmentSchema = Joi.object({

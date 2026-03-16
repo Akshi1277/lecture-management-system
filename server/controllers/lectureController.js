@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import Lecture from '../models/lectureModel.js';
 import Batch from '../models/batchModel.js';
 import Classroom from '../models/classroomModel.js';
+import AuditLog from '../models/auditLogModel.js';
 import { lectureSchema } from '../utils/validators.js';
 
 // @desc    Create new lecture (Admin only)
@@ -50,24 +51,62 @@ export const createLecture = asyncHandler(async (req, res) => {
         }
     }
 
-    const lecture = await Lecture.create({
-        title,
-        subject,
-        teacher,
-        startTime,
-        endTime,
-        classroom,
-        batch,
-        division,
-        type
+    const { recurring, repeatUntil } = req.body;
+    let lecturesToCreate = [];
+
+    if (recurring && recurring !== 'none' && repeatUntil) {
+        let currentStart = new Date(startTime);
+        let currentEnd = new Date(endTime);
+        const untilDate = new Date(repeatUntil);
+
+        while (currentStart <= untilDate) {
+            lecturesToCreate.push({
+                title, subject, teacher, classroom, batch, division, type,
+                startTime: new Date(currentStart),
+                endTime: new Date(currentEnd)
+            });
+
+            if (recurring === 'daily') {
+                currentStart.setDate(currentStart.getDate() + 1);
+                currentEnd.setDate(currentEnd.getDate() + 1);
+            } else if (recurring === 'weekly') {
+                currentStart.setDate(currentStart.getDate() + 7);
+                currentEnd.setDate(currentEnd.getDate() + 7);
+            }
+        }
+    } else {
+        lecturesToCreate.push({
+            title, subject, teacher, startTime, endTime, classroom, batch, division, type
+        });
+    }
+
+    // Check conflicts for all generated slots
+    for (const data of lecturesToCreate) {
+        const conflict = await Lecture.findOne({
+            $or: [
+                { teacher: data.teacher, startTime: { $lt: data.endTime }, endTime: { $gt: data.startTime } },
+                { classroom: data.classroom, startTime: { $lt: data.endTime }, endTime: { $gt: data.startTime } },
+                { batch: data.batch, division: data.division, startTime: { $lt: data.endTime }, endTime: { $gt: data.startTime } }
+            ]
+        });
+        if (conflict) {
+            res.status(400);
+            throw new Error(`Conflict detected for slot: ${new Date(data.startTime).toLocaleString()}`);
+        }
+    }
+
+    const createdLectures = await Lecture.insertMany(lecturesToCreate);
+
+    // Audit Log
+    await AuditLog.create({
+        user: req.user._id,
+        action: 'CREATE_LECTURE',
+        entity: 'Lecture',
+        details: { count: createdLectures.length, subject, recurring },
+        ipAddress: req.ip
     });
 
-    if (lecture) {
-        res.status(201).json(lecture);
-    } else {
-        res.status(400);
-        throw new Error('Invalid lecture data');
-    }
+    res.status(201).json(createdLectures);
 });
 
 // @desc    Get all lectures
@@ -156,6 +195,16 @@ export const updateLecture = asyncHandler(async (req, res) => {
         lecture.status = req.body.status || lecture.status;
 
         const updatedLecture = await lecture.save();
+
+        await AuditLog.create({
+            user: req.user._id,
+            action: 'UPDATE_LECTURE',
+            entity: 'Lecture',
+            entityId: updatedLecture._id,
+            details: { updatedFields: Object.keys(req.body) },
+            ipAddress: req.ip
+        });
+
         res.json(updatedLecture);
     } else {
         res.status(404);

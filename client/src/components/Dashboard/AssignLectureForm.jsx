@@ -14,6 +14,8 @@ export default function AssignLectureForm({ onClose, isFullscreen = false }) {
         type: "Lecture", classroom: "",
         subject: "",
         startTime: "", endTime: "",
+        recurring: "none", // none, daily, weekly
+        repeatUntil: "",
     });
     const [teachers, setTeachers] = useState([]);
     const [batches, setBatches] = useState([]);
@@ -58,7 +60,6 @@ export default function AssignLectureForm({ onClose, isFullscreen = false }) {
         const date = getNextWeekday(slot.day);
         const startDate = new Date(date);
 
-        // Handle 7:30 AM start for the 7 AM slot
         if (slot.hour === 7) {
             startDate.setHours(7, 30, 0, 0);
         } else {
@@ -190,19 +191,46 @@ export default function AssignLectureForm({ onClose, isFullscreen = false }) {
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         />
-                        <div className="grid grid-cols-1 gap-3">
-                            <select value={formData.teacher} onChange={(e) => {
-                                const t = teachers.find(teach => teach._id === e.target.value);
-                                setFormData({ ...formData, teacher: e.target.value, subject: t?.subjects?.[0] || "" });
-                            }}
-                                className="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white appearance-none outline-none focus:ring-2 focus:ring-teal-500">
-                                <option value="">Select Teacher</option>
-                                {teachers.map(t => (
-                                    <option key={t._id} value={t._id}>
-                                        {t.name} {t.subjects && t.subjects.length > 0 ? `(${t.subjects.join(', ')})` : ''}
-                                    </option>
-                                ))}
-                            </select>
+
+                        <select value={formData.teacher} onChange={(e) => {
+                            const t = teachers.find(teach => teach._id === e.target.value);
+                            setFormData({ ...formData, teacher: e.target.value, subject: t?.subjects?.[0] || "" });
+                        }}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white appearance-none outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="">Select Teacher</option>
+                            {teachers.map(t => (
+                                <option key={t._id} value={t._id}>
+                                    {t.name} {t.subjects && t.subjects.length > 0 ? `(${t.subjects.join(', ')})` : ''}
+                                </option>
+                            ))}
+                        </select>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Recurring Pattern</label>
+                                <select 
+                                    value={formData.recurring} 
+                                    onChange={(e) => setFormData({ ...formData, recurring: e.target.value })}
+                                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white appearance-none outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value="none">One-time Session</option>
+                                    <option value="daily">Daily Repeat</option>
+                                    <option value="weekly">Weekly Repeat</option>
+                                </select>
+                            </div>
+                            {formData.recurring !== 'none' && (
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Repeat Until</label>
+                                    <input 
+                                        type="date" 
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white outline-none focus:ring-2 focus:ring-teal-500"
+                                        value={formData.repeatUntil}
+                                        onChange={(e) => setFormData({ ...formData, repeatUntil: e.target.value })}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        required
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <button
@@ -288,7 +316,7 @@ export default function AssignLectureForm({ onClose, isFullscreen = false }) {
                                     </div>
                                 ))}
                             </div>
-                            <div className="relative">
+                            <div className="relative overflow-y-auto max-h-[500px] custom-scrollbar">
                                 {HOURS.map(h => (
                                     <div key={h} className="grid grid-cols-[100px_repeat(6,1fr)] border-t border-slate-800/50 hover:bg-slate-800/5 transition-colors">
                                         <div className="py-8 text-[11px] font-black text-slate-500 flex items-center justify-center border-r border-slate-800 bg-slate-800/10">

@@ -158,6 +158,61 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
+            {/* Administrative Intelligence Section */}
+            <div className="grid md:grid-cols-2 gap-8">
+                <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl">
+                    <div className="flex items-center space-x-3 mb-6">
+                        <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400"><FileText className="w-5 h-5" /></div>
+                        <div>
+                            <h3 className="text-xl font-bold text-white italic">Intelligence & Reporting</h3>
+                            <p className="text-xs text-slate-500">Legal compliance & Data exports</p>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <button 
+                            onClick={() => dispatch(setActiveModal('generateReport'))}
+                            className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center hover:border-indigo-500/50 transition-all group"
+                        >
+                            <div className="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Activity className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <span className="text-xs font-bold text-white">Export Stats</span>
+                            <span className="text-[9px] text-slate-500 mt-1 uppercase font-black">PDF / Excel</span>
+                        </button>
+                        <button 
+                            onClick={() => dispatch(setActiveModal('viewAuditLogs'))}
+                            className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center hover:border-teal-500/50 transition-all group"
+                        >
+                            <div className="w-10 h-10 bg-teal-500/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Layers className="w-5 h-5 text-teal-400" />
+                            </div>
+                            <span className="text-xs font-bold text-white">Security Audit</span>
+                            <span className="text-[9px] text-slate-500 mt-1 uppercase font-black">Review Activity</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl relative overflow-hidden">
+                    <div className="flex items-center space-x-3 mb-6">
+                        <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-400"><ShieldAlert className="w-5 h-5" /></div>
+                        <div>
+                            <h3 className="text-xl font-bold text-white italic">System Health</h3>
+                            <p className="text-xs text-slate-500">Infrastructure status</p>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span className="text-xs text-slate-400">Database Sync</span>
+                            <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full font-black uppercase">Functional</span>
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span className="text-xs text-slate-400">SMTP Gateway</span>
+                            <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full font-black uppercase">Operational</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Logistical Analytics Section */}
             <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl">
                 <div className="flex items-center justify-between mb-8">

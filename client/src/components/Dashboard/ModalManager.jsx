@@ -13,6 +13,8 @@ import SubstitutionFinder from "./SubstitutionFinder";
 import ExamSchedulerForm from "./ExamSchedulerForm";
 import AssignLectureForm from "./AssignLectureForm";
 import RoomBlocker from "./RoomBlocker";
+import ReportGenerator from "./ReportGenerator";
+import AuditLogViewer from "./AuditLogViewer";
 
 export default function ModalManager() {
     const { activeModal, activeModalData, toasts } = useSelector((state) => state.ui);
@@ -29,6 +31,8 @@ export default function ModalManager() {
         findSubstitute: <SubstitutionFinder lecture={activeModalData} onClose={closeModal} />,
         scheduleExam: <ExamSchedulerForm onClose={closeModal} />,
         blockRoom: <RoomBlocker onClose={closeModal} />,
+        generateReport: <ReportGenerator onClose={closeModal} />,
+        viewAuditLogs: <AuditLogViewer onClose={closeModal} />,
     };
 
     return (
@@ -47,7 +51,7 @@ export default function ModalManager() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className={`relative w-full ${activeModal === 'manageBatches' ? 'max-w-5xl' : activeModal === 'assignLecture' ? 'max-w-5xl' : 'max-w-lg'} max-h-[90vh] flex flex-col bg-slate-900 border border-slate-800 rounded-[32px] overflow-hidden shadow-2xl transition-all duration-300`}
+                            className={`relative w-full ${activeModal === 'manageBatches' || activeModal === 'assignLecture' || activeModal === 'viewAuditLogs' || activeModal === 'generateReport' ? 'max-w-5xl' : 'max-w-lg'} max-h-[90vh] flex flex-col bg-slate-900 border border-slate-800 rounded-[32px] overflow-hidden shadow-2xl transition-all duration-300`}
                         >
                             <div className="absolute top-6 right-8 z-20">
                                 <button onClick={closeModal} className="p-2 bg-slate-900/50 backdrop-blur-md hover:bg-slate-800 rounded-xl transition-all text-slate-400 hover:text-white border border-slate-800">

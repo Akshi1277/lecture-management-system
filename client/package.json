@@ -21,7 +21,12 @@
     "react-dom": "^18.2.0",
     "react-redux": "^9.2.0",
     "recharts": "^3.7.0",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "exceljs": "^4.4.0",
+    "jspdf": "latest",
+    "jspdf-autotable": "latest",
+    "lodash": "^4.17.21",
+    "dompurify": "^3.0.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

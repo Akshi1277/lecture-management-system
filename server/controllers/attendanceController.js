@@ -4,6 +4,7 @@ import Attendance from '../models/attendanceModel.js';
 import Lecture from '../models/lectureModel.js';
 import User from '../models/userModel.js';
 import Settings from '../models/settingsModel.js';
+import AuditLog from '../models/auditLogModel.js';
 import { sendAttendanceWarningEmail } from '../utils/emailService.js';
 
 // @desc    Mark attendance for a lecture (Teacher only)
@@ -43,6 +44,16 @@ export const markAttendance = asyncHandler(async (req, res) => {
     });
 
     if (attendance) {
+        // Audit Log
+        await AuditLog.create({
+            user: req.user._id,
+            action: 'MARK_ATTENDANCE',
+            entity: 'Attendance',
+            entityId: attendance._id,
+            details: { lectureId, studentCount: students.length },
+            ipAddress: req.ip
+        });
+
         res.status(201).json(attendance);
     } else {
         res.status(400);
