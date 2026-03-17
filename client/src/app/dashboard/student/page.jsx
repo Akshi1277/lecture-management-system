@@ -159,7 +159,7 @@ export default function StudentDashboard() {
                         <h3 className="text-center text-[10px] font-black text-slate-500 uppercase tracking-widest mb-8">Academic Presence</h3>
                         
                         <div className="relative w-40 h-40 mx-auto mb-8">
-                            <svg className="w-full h-full transform -rotate-90">
+                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
                                 <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-800" />
                                 <motion.circle 
                                     initial={{ strokeDasharray: "0, 440" }}
