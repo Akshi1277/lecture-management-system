@@ -28,8 +28,8 @@ app.use(helmet());
 app.disable('x-powered-by');
 app.use(cors());
 app.use(express.json());
-app.use(mongoSanitize()); // Prevent NoSQL Injection
-app.use(xss()); // Prevent Cross-Site Scripting (XSS)
+// app.use(mongoSanitize()); // Prevent NoSQL Injection
+// app.use(xss()); // Prevent Cross-Site Scripting (XSS)
 app.use(hpp()); // Prevent HTTP Parameter Pollution
 
 // Request Logging
