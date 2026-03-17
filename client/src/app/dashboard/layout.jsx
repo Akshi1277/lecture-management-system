@@ -91,9 +91,7 @@ export default function DashboardLayout({ children }) {
                     >
                         <div className="px-6 mb-8 flex items-center justify-between shrink-0">
                             <div className="flex items-center space-x-3">
-                                <div className="p-2 bg-teal-500 rounded-lg shadow-lg shadow-teal-500/20">
-                                    <Calendar className="text-white w-5 h-5" />
-                                </div>
+                                <img src="/logo.png" alt="EduSync Logo" className="w-10 h-10 rounded-xl shadow-lg shadow-teal-500/20" />
                                 <span className="text-lg font-bold text-white tracking-tight">EduSync</span>
                             </div>
                             <button onClick={() => dispatch(toggleSidebar())} className="lg:hidden text-slate-400 hover:text-white">

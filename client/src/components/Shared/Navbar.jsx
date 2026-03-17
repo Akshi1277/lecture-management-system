@@ -13,18 +13,22 @@ import {
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
   const { userInfo } = useSelector((state) => state.auth);
 
   useEffect(() => {
+    setHasMounted(true);
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (!hasMounted) return null;
 
   const handleLogout = () => {
     dispatch(logout());
@@ -51,9 +55,7 @@ export default function Navbar() {
           
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="p-2 bg-teal-500 rounded-lg text-slate-950 group-hover:bg-teal-400 transition-colors">
-              <Calendar className="w-5 h-5" />
-            </div>
+            <img src="/logo.png" alt="EduSync Logo" className="w-10 h-10 rounded-xl shadow-lg shadow-teal-500/20 group-hover:scale-110 transition-transform duration-300" />
             <div>
               <h1 className="text-xl font-bold text-white tracking-tight">EduSync</h1>
             </div>

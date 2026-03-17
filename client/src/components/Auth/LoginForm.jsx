@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { login, clearError } from "@/redux/slices/authSlice";
 import { addToast } from "@/redux/slices/uiSlice";
+import UniversalLoader from "@/components/Shared/UniversalLoader";
+import { AnimatePresence } from "framer-motion";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -51,6 +53,9 @@ export default function LoginForm() {
 
   return (
     <div className="min-h-screen bg-transparent flex items-center justify-center p-6 relative overflow-hidden font-sans">
+      <AnimatePresence>
+        {loading && <UniversalLoader />}
+      </AnimatePresence>
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-teal-500/10 blur-[120px] rounded-full animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
@@ -73,9 +78,8 @@ export default function LoginForm() {
             </button>
 
             <div className="text-center">
-              <div className="inline-flex items-center px-3 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-full text-xs font-medium mb-6">
-                <Sparkles className="w-3 h-3 mr-2" />
-                World Class Management
+              <div className="mb-6 flex justify-center">
+                <img src="/logo.png" alt="EduSync Logo" className="w-20 h-20 rounded-3xl shadow-2xl shadow-teal-500/20" />
               </div>
               <h1 className="text-4xl font-black text-white tracking-tight mb-2">EduSync</h1>
               <p className="text-slate-400 font-medium lowercase tracking-wider opacity-80 italic text-sm">Elevating academic logistics</p>

@@ -2,7 +2,16 @@
 import Link from "next/link";
 import { Calendar, Mail, Phone, MapPin } from "lucide-react";
 
+import { useState, useEffect } from "react";
+
 export default function Footer() {
+  const [hasMounted, setHasMounted] = useState(false);
+  
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) return null;
   const currentYear = new Date().getFullYear();
 
   return (
@@ -13,9 +22,7 @@ export default function Footer() {
           {/* Main Brand Column */}
           <div className="md:col-span-2 space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-teal-500 rounded-lg">
-                <Calendar className="w-5 h-5 text-slate-950" />
-              </div>
+              <img src="/logo.png" alt="EduSync Logo" className="w-12 h-12 rounded-2xl shadow-xl shadow-teal-500/10" />
               <span className="text-xl font-bold text-white tracking-tight">EduSync</span>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed max-w-sm">

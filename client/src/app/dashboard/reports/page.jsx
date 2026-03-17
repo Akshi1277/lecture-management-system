@@ -3,12 +3,13 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion } from "framer-motion";
 import { 
-    BarChart3, TrendingUp, PieChart, Users, 
+    BarChart3, TrendingUp, PieChart, Users, AlertTriangle,
     Calendar, Download, ArrowUpRight, ArrowDownRight,
     Activity, ShieldCheck, Clock
 } from "lucide-react";
 import axios from "axios";
 import { addToast } from "@/redux/slices/uiSlice";
+import { ReportCardSkeleton, ChartSkeleton } from "@/components/Shared/Skeleton";
 
 export default function ReportsPage() {
     const { userInfo } = useSelector((state) => state.auth);
@@ -100,66 +101,70 @@ export default function ReportsPage() {
 
             {/* High Level Metrics */}
             <div className="grid md:grid-cols-4 gap-6">
-                {[
-                    { label: "Lecture Efficiency", value: `${stats.totalLectures ? Math.round((stats.completedLectures/stats.totalLectures)*100) : 0}%`, icon: <Activity className="text-teal-400" />, trend: "+2.4%", trendUp: true },
-                    { label: "Avg. Student Presence", value: `${stats.averageAttendance}%`, icon: <Users className="text-blue-400" />, trend: "-0.8%", trendUp: false },
-                    { label: "Faculty Utilization", value: "High", icon: <TrendingUp className="text-purple-400" />, trend: "Steady", trendUp: true },
-                    { label: "Security/Lockdowns", value: "03", icon: <ShieldCheck className="text-rose-500" />, trend: "Monthly", trendUp: true }
-                ].map((stat, idx) => (
-                    <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                        key={idx} 
-                        className="p-6 bg-slate-900 border border-slate-800 rounded-[32px] space-y-4 relative overflow-hidden group shadow-xl"
-                    >
-                        <div className="flex justify-between items-start">
-                            <div className="p-3 bg-slate-800 rounded-2xl group-hover:scale-110 transition-transform">{stat.icon}</div>
-                            <div className={`flex items-center space-x-1 text-[10px] font-black uppercase px-2 py-1 rounded-lg ${stat.trendUp ? 'bg-teal-500/10 text-teal-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                                {stat.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                                <span>{stat.trend}</span>
+                {loading ? (
+                    Array(4).fill(0).map((_, i) => <ReportCardSkeleton key={i} />)
+                ) : (
+                    [
+                        { label: "Lecture Efficiency", value: `${stats.totalLectures ? Math.round((stats.completedLectures/stats.totalLectures)*100) : 0}%`, icon: <Activity className="text-teal-400" />, trend: "+2.4%", trendUp: true },
+                        { label: "Avg. Student Presence", value: `${stats.averageAttendance}%`, icon: <Users className="text-blue-400" />, trend: "-0.8%", trendUp: false },
+                        { label: "Faculty Utilization", value: "High", icon: <TrendingUp className="text-purple-400" />, trend: "Steady", trendUp: true },
+                        { label: "Security/Lockdowns", value: "03", icon: <ShieldCheck className="text-rose-500" />, trend: "Monthly", trendUp: true }
+                    ].map((stat, idx) => (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            key={idx} 
+                            className="p-6 bg-slate-900 border border-slate-800 rounded-[32px] space-y-4 relative overflow-hidden group shadow-xl"
+                        >
+                            <div className="flex justify-between items-start">
+                                <div className="p-3 bg-slate-800 rounded-2xl group-hover:scale-110 transition-transform">{stat.icon}</div>
+                                <div className={`flex items-center space-x-1 text-[10px] font-black uppercase px-2 py-1 rounded-lg ${stat.trendUp ? 'bg-teal-500/10 text-teal-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                                    {stat.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                    <span>{stat.trend}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
-                            <p className="text-3xl font-black text-white">{loading ? '...' : stat.value}</p>
-                        </div>
-                    </motion.div>
-                ))}
+                            <div>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                <p className="text-3xl font-black text-white">{stat.value}</p>
+                            </div>
+                        </motion.div>
+                    ))
+                )}
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
                 {userInfo?.role === 'admin' && (
-                    <div className="bg-slate-900 border border-slate-800 rounded-[40px] p-8 shadow-2xl">
-                        <div className="flex items-center justify-between mb-8">
-                            <div>
-                                <h3 className="text-xl font-black text-white italic">Faculty Execution Load</h3>
-                                <p className="text-xs text-slate-500 uppercase tracking-widest mt-1 font-bold">Total Lectures Handled</p>
-                            </div>
-                            <div className="p-4 bg-slate-800/50 rounded-3xl"><PieChart className="w-6 h-6 text-slate-400" /></div>
-                        </div>
-
-                        <div className="space-y-6">
-                            {loading ? (
-                                <div className="py-10 text-center text-slate-500 animate-pulse font-bold tracking-widest uppercase text-xs">Calibrating data...</div>
-                            ) : stats.facultyLoad.map((faculty, i) => (
-                                <div key={i} className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="font-bold text-slate-300">{faculty.teacher}</span>
-                                        <span className="font-black text-white">{faculty.count} Sessions</span>
-                                    </div>
-                                    <div className="h-2 w-full bg-slate-800/50 rounded-full overflow-hidden">
-                                        <motion.div 
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${(faculty.count / stats.totalLectures) * 100}%` }}
-                                            transition={{ duration: 1.5, ease: "circOut" }}
-                                            className="h-full bg-gradient-to-r from-teal-500 to-teal-400 rounded-full"
-                                        />
-                                    </div>
+                    loading ? <ChartSkeleton /> : (
+                        <div className="bg-slate-900 border border-slate-800 rounded-[40px] p-8 shadow-2xl">
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h3 className="text-xl font-black text-white italic">Faculty Execution Load</h3>
+                                    <p className="text-xs text-slate-500 uppercase tracking-widest mt-1 font-bold">Total Lectures Handled</p>
                                 </div>
-                            ))}
+                                <div className="p-4 bg-slate-800/50 rounded-3xl"><PieChart className="w-6 h-6 text-slate-400" /></div>
+                            </div>
+
+                            <div className="space-y-6">
+                                {stats.facultyLoad.map((faculty, i) => (
+                                    <div key={i} className="space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-bold text-slate-300">{faculty.teacher}</span>
+                                            <span className="font-black text-white">{faculty.count} Sessions</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-slate-800/50 rounded-full overflow-hidden">
+                                            <motion.div 
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${(faculty.count / stats.totalLectures) * 100}%` }}
+                                                transition={{ duration: 1.5, ease: "circOut" }}
+                                                className="h-full bg-gradient-to-r from-teal-500 to-teal-400 rounded-full"
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )
                 )}
 
                 {/* Operations Summary */}

@@ -19,6 +19,7 @@ export default function LecturesPage() {
     const [hasMounted, setHasMounted] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
+    const [selectedDay, setSelectedDay] = useState(new Date().getDay()); // 0-6
 
     useEffect(() => {
         setHasMounted(true);
@@ -59,8 +60,6 @@ export default function LecturesPage() {
             default: return 'bg-slate-800 text-slate-400 border-slate-700';
         }
     };
-
-    const [selectedDay, setSelectedDay] = useState(new Date().getDay()); // 0-6
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
     const groupLecturesByDay = () => {

@@ -12,11 +12,26 @@ const outfit = Outfit({
   variable: '--font-outfit'
 });
 
+import { useState, useEffect } from "react";
+import UniversalLoader from "@/components/Shared/UniversalLoader";
+import { AnimatePresence } from "framer-motion";
+
 export default function RootLayout({ children }) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Artificial delay to ensure a smooth transition
+    const timer = setTimeout(() => setIsLoaded(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <html lang="en">
       <body className={`${outfit.className} min-h-screen flex flex-col bg-slate-950 antialiased`}>
         <ReduxProvider>
+          <AnimatePresence>
+            {!isLoaded && <UniversalLoader />}
+          </AnimatePresence>
           <ConditionalNavbar />
           <main className="flex-1">{children}</main>
           <ConditionalFooter />
