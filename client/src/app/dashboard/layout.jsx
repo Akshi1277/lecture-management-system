@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,18 +32,24 @@ export default function DashboardLayout({ children }) {
 
     const isFullPage = pathname === "/dashboard/admin/schedule";
 
+    const [hasMounted, setHasMounted] = useState(false);
+
     useEffect(() => {
-        if (!userInfo) {
+        setHasMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (hasMounted && !userInfo) {
             router.push("/login");
         }
-    }, [userInfo, router]);
+    }, [userInfo, router, hasMounted]);
 
     const handleLogout = () => {
         dispatch(logout());
         router.push("/login");
     };
 
-    if (!userInfo) return null;
+    if (!hasMounted || !userInfo) return null;
 
     // Direct return for full-screen pages like the scheduler
     if (isFullPage) {

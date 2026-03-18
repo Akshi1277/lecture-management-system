@@ -76,142 +76,126 @@ export default function AdminDashboard() {
                 ))}
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-8">
-                {/* Quick Actions Card */}
-                <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl space-y-6">
-                    <h3 className="text-xl font-bold text-white mb-2">Logistical Controls</h3>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                        <button
-                            onClick={() => router.push('/dashboard/admin/schedule')}
-                            className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-teal-500/50 transition-all group"
-                        >
-                            <div className="p-4 bg-teal-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                                <Plus className="text-teal-400 w-6 h-6" />
+            <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-stretch">
+                {/* Left Column: Actions & Intelligence */}
+                <div className="space-y-8 flex flex-col">
+                    {/* Logistical Controls */}
+                    <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl space-y-6 flex-1">
+                        <h3 className="text-xl font-bold text-white mb-2">Logistical Controls</h3>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <button
+                                onClick={() => router.push('/dashboard/admin/schedule')}
+                                className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-teal-500/50 transition-all group"
+                            >
+                                <div className="p-4 bg-teal-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                                    <Plus className="text-teal-400 w-6 h-6" />
+                                </div>
+                                <span className="font-bold text-sm">Assign Lecture</span>
+                                <span className="text-[10px] text-slate-500 mt-1">Conflict-free scheduling</span>
+                            </button>
+                            <button
+                                onClick={() => dispatch(setActiveModal('manageUsers'))}
+                                className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-blue-500/50 transition-all group"
+                            >
+                                <div className="p-4 bg-blue-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                                    <UserPlus className="text-blue-400 w-6 h-6" />
+                                </div>
+                                <span className="font-bold text-sm">Enroll User</span>
+                                <span className="text-[10px] text-slate-500 mt-1">Student & Faculty accounts</span>
+                            </button>
+                            <button
+                                onClick={() => dispatch(setActiveModal('manageBatches'))}
+                                className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-purple-500/50 transition-all group"
+                            >
+                                <div className="p-4 bg-purple-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                                    <Users className="text-purple-400 w-6 h-6" />
+                                </div>
+                                <span className="font-bold text-sm">Manage Batches</span>
+                                <span className="text-[10px] text-slate-500 mt-1">FY, SY, TY Groups</span>
+                            </button>
+                            <button
+                                onClick={() => dispatch(setActiveModal('blockRoom'))}
+                                className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-red-500/50 transition-all group "
+                            >
+                                <div className="p-4 bg-red-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                                    <ShieldAlert className="text-red-500 w-6 h-6" />
+                                </div>
+                                <span className="font-bold text-sm text-red-500">Lockdown Venue</span>
+                                <span className="text-[10px] text-slate-500 mt-1">Override schedules for Exams</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Administrative Intelligence Section */}
+                    <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl">
+                        <div className="flex items-center space-x-3 mb-6">
+                            <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400"><FileText className="w-5 h-5" /></div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white italic">Intelligence & Reporting</h3>
+                                <p className="text-xs text-slate-500">Legal compliance & Data exports</p>
                             </div>
-                            <span className="font-bold text-sm">Assign Lecture</span>
-                            <span className="text-[10px] text-slate-500 mt-1">Conflict-free scheduling</span>
-                        </button>
-                        <button
-                            onClick={() => dispatch(setActiveModal('manageUsers'))}
-                            className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-blue-500/50 transition-all group"
-                        >
-                            <div className="p-4 bg-blue-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                                <UserPlus className="text-blue-400 w-6 h-6" />
-                            </div>
-                            <span className="font-bold text-sm">Enroll User</span>
-                            <span className="text-[10px] text-slate-500 mt-1">Student & Faculty accounts</span>
-                        </button>
-                        <button
-                            onClick={() => dispatch(setActiveModal('manageBatches'))}
-                            className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-purple-500/50 transition-all group"
-                        >
-                            <div className="p-4 bg-purple-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                                <Users className="text-purple-400 w-6 h-6" />
-                            </div>
-                            <span className="font-bold text-sm">Manage Batches</span>
-                            <span className="text-[10px] text-slate-500 mt-1">FY, SY, TY Groups</span>
-                        </button>
-                       <button
-                            onClick={() => dispatch(setActiveModal('blockRoom'))}
-                            className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-red-500/50 transition-all group "
-                        >
-                            <div className="p-4 bg-red-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                                <ShieldAlert className="text-red-500 w-6 h-6" />
-                            </div>
-                            <span className="font-bold text-sm text-red-500">Lockdown Venue</span>
-                            <span className="text-[10px] text-slate-500 mt-1">Override schedules for Exams</span>
-                        </button>
-                     
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <button 
+                                onClick={() => dispatch(setActiveModal('generateReport'))}
+                                className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center hover:border-indigo-500/50 transition-all group"
+                            >
+                                <div className="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <Activity className="w-5 h-5 text-indigo-400" />
+                                </div>
+                                <span className="text-xs font-bold text-white">Export Stats</span>
+                                <span className="text-[9px] text-slate-500 mt-1 uppercase font-black">PDF / Excel</span>
+                            </button>
+                            <button 
+                                onClick={() => dispatch(setActiveModal('viewAuditLogs'))}
+                                className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center hover:border-teal-500/50 transition-all group"
+                            >
+                                <div className="w-10 h-10 bg-teal-500/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <Layers className="w-5 h-5 text-teal-400" />
+                                </div>
+                                <span className="text-xs font-bold text-white">Security Audit</span>
+                                <span className="text-[9px] text-slate-500 mt-1 uppercase font-black">Review Activity</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Recent Schedule Check */}
-                <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl">
+                {/* Right Column: Upcoming Logistics */}
+                <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl flex flex-col">
                     <h3 className="text-xl font-bold text-white mb-6">Upcoming Logistics</h3>
-                    <div className="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                    <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-[400px]">
                         {loading ? (
                             <p className="text-slate-500 italic text-sm">Syncing with backend...</p>
                         ) : lectures.length > 0 ? (
-                            lectures.slice(0, 5).map((l, i) => (
-                                <div key={i} className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between">
+                            lectures.map((l, i) => (
+                                <div key={i} className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between group hover:border-teal-500/30 transition-all">
                                     <div>
-                                        <h4 className="font-bold text-sm">{l.title}</h4>
-                                        <p className="text-[10px] text-slate-500 mt-1 flex items-center">
-                                            <Clock className="w-3 h-3 mr-1" /> {new Date(l.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Room {l.classroom}
+                                        <h4 className="font-bold text-sm group-hover:text-teal-400 transition-colors uppercase tracking-wide">{l.title}</h4>
+                                        <p className="text-[10px] text-slate-500 mt-1 flex items-center font-medium">
+                                            <Clock className="w-3 h-3 mr-1 text-teal-500/50" /> {new Date(l.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Room {l.classroom}
                                         </p>
                                     </div>
-                                    <div className="text-right flex flex-col items-end space-y-1">
-                                        <p className="text-[10px] font-bold text-teal-400">{l.teacher?.name}</p>
+                                    <div className="text-right flex flex-col items-end space-y-1.5">
+                                        <p className="text-[10px] font-black text-teal-400 uppercase italic tracking-widest">{l.teacher?.name}</p>
                                         <button
                                             onClick={() => dispatch(setActiveModal({ type: 'findSubstitute', data: l }))}
-                                            className="text-[9px] px-2 py-1 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-md hover:bg-orange-500/20 transition-all font-bold"
+                                            className="text-[9px] px-3 py-1 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-lg hover:bg-teal-500 hover:text-slate-950 transition-all font-black uppercase tracking-tighter"
                                         >
-                                            Find Substitute
+                                            Substitute
                                         </button>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <p className="text-slate-500 italic text-sm">No lectures found. Database is clean.</p>
+                            <div className="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-50">
+                                <Activity className="w-12 h-12 mb-4" />
+                                <p className="italic text-sm">No lectures pending in the queue.</p>
+                            </div>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* Administrative Intelligence Section */}
-            <div className="grid md:grid-cols-2 gap-8">
-                <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl">
-                    <div className="flex items-center space-x-3 mb-6">
-                        <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400"><FileText className="w-5 h-5" /></div>
-                        <div>
-                            <h3 className="text-xl font-bold text-white italic">Intelligence & Reporting</h3>
-                            <p className="text-xs text-slate-500">Legal compliance & Data exports</p>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <button 
-                            onClick={() => dispatch(setActiveModal('generateReport'))}
-                            className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center hover:border-indigo-500/50 transition-all group"
-                        >
-                            <div className="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Activity className="w-5 h-5 text-indigo-400" />
-                            </div>
-                            <span className="text-xs font-bold text-white">Export Stats</span>
-                            <span className="text-[9px] text-slate-500 mt-1 uppercase font-black">PDF / Excel</span>
-                        </button>
-                        <button 
-                            onClick={() => dispatch(setActiveModal('viewAuditLogs'))}
-                            className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center hover:border-teal-500/50 transition-all group"
-                        >
-                            <div className="w-10 h-10 bg-teal-500/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Layers className="w-5 h-5 text-teal-400" />
-                            </div>
-                            <span className="text-xs font-bold text-white">Security Audit</span>
-                            <span className="text-[9px] text-slate-500 mt-1 uppercase font-black">Review Activity</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl relative overflow-hidden">
-                    <div className="flex items-center space-x-3 mb-6">
-                        <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-400"><ShieldAlert className="w-5 h-5" /></div>
-                        <div>
-                            <h3 className="text-xl font-bold text-white italic">System Health</h3>
-                            <p className="text-xs text-slate-500">Infrastructure status</p>
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-slate-900/80 rounded-xl border border-slate-800">
-                            <span className="text-xs text-slate-400">Database Sync</span>
-                            <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full font-black uppercase">Functional</span>
-                        </div>
-                        <div className="flex items-center justify-between p-4 bg-slate-900/80 rounded-xl border border-slate-800">
-                            <span className="text-xs text-slate-400">SMTP Gateway</span>
-                            <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full font-black uppercase">Operational</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {/* Logistical Analytics Section */}
             <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl">

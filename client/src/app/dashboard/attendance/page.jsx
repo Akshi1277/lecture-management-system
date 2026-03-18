@@ -14,12 +14,6 @@ export default function AttendancePage() {
     const dispatch = useDispatch();
     const [hasMounted, setHasMounted] = useState(false);
 
-    useEffect(() => {
-        setHasMounted(true);
-    }, []);
-
-    if (!hasMounted || !userInfo) return null;
-
     const [defaulters, setDefaulters] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -30,6 +24,13 @@ export default function AttendancePage() {
     const [selectedSubject, setSelectedSubject] = useState("");
     const [subjects, setSubjects] = useState([]);
 
+    const [subjectStats, setSubjectStats] = useState([]);
+    const [subjectLoading, setSubjectLoading] = useState(false);
+
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
+
     useEffect(() => {
         if (userInfo?.role === 'admin') {
             fetchDefaulters();
@@ -37,6 +38,19 @@ export default function AttendancePage() {
             fetchTeacherContext();
         }
     }, [userInfo, threshold]);
+
+    // Sub-effect for teachers when selection changes
+    useEffect(() => {
+        if (userInfo?.role === 'teacher' && selectedBatch && selectedSubject) {
+            fetchDefaulters();
+        }
+    }, [selectedBatch, selectedSubject, userInfo?.role]);
+
+    useEffect(() => {
+        if (userInfo?.role === 'student') {
+            fetchSubjectStats();
+        }
+    }, [userInfo?.role]);
 
     const fetchTeacherContext = async () => {
         try {
@@ -79,13 +93,6 @@ export default function AttendancePage() {
         }
     };
 
-    // Sub-effect for teachers when selection changes
-    useEffect(() => {
-        if (userInfo?.role === 'teacher' && selectedBatch && selectedSubject) {
-            fetchDefaulters();
-        }
-    }, [selectedBatch, selectedSubject]);
-
     const handleExport = () => {
         if (defaulters.length === 0) return;
         const csvContent = [
@@ -107,15 +114,6 @@ export default function AttendancePage() {
         link.click();
     };
 
-    const [subjectStats, setSubjectStats] = useState([]);
-    const [subjectLoading, setSubjectLoading] = useState(false);
-
-    useEffect(() => {
-        if (userInfo?.role === 'student') {
-            fetchSubjectStats();
-        }
-    }, [userInfo]);
-
     const fetchSubjectStats = async () => {
         try {
             setSubjectLoading(true);
@@ -128,6 +126,8 @@ export default function AttendancePage() {
             setSubjectLoading(false);
         }
     };
+
+    if (!hasMounted || !userInfo) return null;
 
     if (userInfo?.role === 'student') {
         return (

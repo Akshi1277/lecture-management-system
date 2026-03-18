@@ -26,11 +26,14 @@ export default function AuditLogViewer() {
         if (userInfo) fetchLogs();
     }, [userInfo]);
 
-    const filteredLogs = logs.filter(log => 
-        log.details?.toLowerCase().includes(filter.toLowerCase()) ||
-        log.action?.toLowerCase().includes(filter.toLowerCase()) ||
-        log.user?.name?.toLowerCase().includes(filter.toLowerCase())
-    );
+    const filteredLogs = logs.filter(log => {
+        const search = filter.toLowerCase();
+        const details = (log.details?.toString() || "").toLowerCase();
+        const action = (log.action?.toString() || "").toLowerCase();
+        const userName = (log.user?.name?.toString() || "").toLowerCase();
+
+        return details.includes(search) || action.includes(search) || userName.includes(search);
+    });
 
     const getActionColor = (action) => {
         if (action.includes('CREATE')) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
@@ -87,7 +90,15 @@ export default function AuditLogViewer() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-slate-200">{log.details}</p>
+                                                <p className="text-sm font-bold text-slate-200">
+                                                    {typeof log.details === 'object' && log.details !== null ? (
+                                                        <span className="text-xs font-mono text-teal-400/80">
+                                                            {Object.entries(log.details).map(([key, value]) => `${key}: ${value}`).join(' | ')}
+                                                        </span>
+                                                    ) : (
+                                                        log.details
+                                                    )}
+                                                </p>
                                                 <div className="flex items-center space-x-3 mt-1.5">
                                                     <span className="flex items-center text-[10px] text-slate-500 font-bold">
                                                         <User className="w-3 h-3 mr-1 text-teal-500" /> {log.user?.name || 'System'}
@@ -95,7 +106,6 @@ export default function AuditLogViewer() {
                                                     <span className="flex items-center text-[10px] text-slate-500 font-bold">
                                                         <Clock className="w-3 h-3 mr-1 text-blue-500" /> {new Date(log.createdAt).toLocaleString()}
                                                     </span>
-                                                    <span className="text-[10px] text-slate-600 font-mono">IP: {log.ipAddress || 'Internal'}</span>
                                                 </div>
                                             </div>
                                         </div>
