@@ -100,7 +100,7 @@ export default function StudentDashboard() {
                             </div>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-6 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
                             {loading ? (
                                 <div className="py-20 text-center text-slate-500 animate-pulse font-bold tracking-widest uppercase text-xs italic">Syncing Curricular Data...</div>
                             ) : lectures.map((l, i) => (
