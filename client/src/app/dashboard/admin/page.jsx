@@ -161,9 +161,9 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Right Column: Upcoming Logistics */}
-                <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl flex flex-col">
+                <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl flex flex-col h-[750px] overflow-hidden">
                     <h3 className="text-xl font-bold text-white mb-6">Upcoming Logistics</h3>
-                    <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-[400px]">
+                    <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
                         {loading ? (
                             <p className="text-slate-500 italic text-sm">Syncing with backend...</p>
                         ) : lectures.length > 0 ? (

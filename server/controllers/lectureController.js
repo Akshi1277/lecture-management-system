@@ -115,7 +115,8 @@ export const createLecture = asyncHandler(async (req, res) => {
 export const getLectures = asyncHandler(async (req, res) => {
     const lectures = await Lecture.find({})
         .populate('teacher', 'name email')
-        .populate('batch', 'name');
+        .populate('batch', 'name')
+        .sort({ startTime: 1 });
     res.json(lectures);
 });
 
