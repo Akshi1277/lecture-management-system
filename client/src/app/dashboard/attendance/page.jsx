@@ -68,6 +68,8 @@ export default function AttendancePage() {
             setSubjects(uniqueSubjects.filter(Boolean));
         } catch (err) {
             console.error("Failed to load teacher context", err);
+        } finally {
+            setLoading(false);
         }
     };
 

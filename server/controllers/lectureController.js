@@ -212,3 +212,27 @@ export const updateLecture = asyncHandler(async (req, res) => {
         throw new Error('Lecture not found');
     }
 });
+
+// @desc    Delete lecture
+// @route   DELETE /api/lectures/:id
+// @access  Private/Admin
+export const deleteLecture = asyncHandler(async (req, res) => {
+    const lecture = await Lecture.findById(req.params.id);
+    if (lecture) {
+        await lecture.deleteOne();
+
+        await AuditLog.create({
+            user: req.user._id,
+            action: 'DELETE_LECTURE',
+            entity: 'Lecture',
+            entityId: req.params.id,
+            details: { subject: lecture.subject },
+            ipAddress: req.ip
+        });
+
+        res.json({ message: 'Lecture removed' });
+    } else {
+        res.status(404);
+        throw new Error('Lecture not found');
+    }
+});

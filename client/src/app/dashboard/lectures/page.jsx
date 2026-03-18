@@ -20,6 +20,21 @@ export default function LecturesPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [selectedDay, setSelectedDay] = useState(new Date().getDay()); // 0-6
+    const [activeDropdown, setActiveDropdown] = useState(null);
+
+    const handleCancel = async (id) => {
+        if (window.confirm("Are you sure you want to cancel this lecture?")) {
+            await dispatch(updateLecture({ id, lectureData: { status: 'Cancelled' } }));
+            setActiveDropdown(null);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("CRITICAL: This will permanently remove this record from the grid. Proceed?")) {
+            await dispatch(deleteLecture(id));
+            setActiveDropdown(null);
+        }
+    };
 
     useEffect(() => {
         setHasMounted(true);
@@ -327,9 +342,61 @@ export default function LecturesPage() {
                                             <UserMinus className="w-4 h-4" />
                                         </button>
                                     )}
-                                    <button className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition-colors border border-transparent hover:border-slate-600">
-                                        <MoreVertical className="w-4 h-4" />
-                                    </button>
+                                    <div className="relative">
+                                        <button 
+                                            onClick={() => setActiveDropdown(activeDropdown === lecture._id ? null : lecture._id)}
+                                            className={`p-2 rounded-lg transition-all border ${activeDropdown === lecture._id ? 'bg-teal-500/10 border-teal-500/30 text-teal-400' : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-transparent hover:border-slate-600'}`}
+                                        >
+                                            <MoreVertical className="w-4 h-4" />
+                                        </button>
+
+                                        <AnimatePresence>
+                                            {activeDropdown === lecture._id && (
+                                                <>
+                                                    <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)} />
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                        className="absolute right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-20 overflow-hidden"
+                                                    >
+                                                        <div className="p-2 space-y-1">
+                                                            {userInfo.role === 'admin' && (
+                                                                <button 
+                                                                    onClick={() => {
+                                                                        dispatch(setActiveModal({ type: 'assignLecture', data: lecture }));
+                                                                        setActiveDropdown(null);
+                                                                    }}
+                                                                    className="w-full flex items-center space-x-3 px-4 py-3 text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl transition-all"
+                                                                >
+                                                                    <Edit className="w-4 h-4 text-teal-400" />
+                                                                    <span>Modify Details</span>
+                                                                </button>
+                                                            )}
+                                                            {lecture.status !== 'Cancelled' && (
+                                                                <button 
+                                                                    onClick={() => handleCancel(lecture._id)}
+                                                                    className="w-full flex items-center space-x-3 px-4 py-3 text-xs font-bold text-slate-300 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all"
+                                                                >
+                                                                    <XCircle className="w-4 h-4 text-red-500" />
+                                                                    <span>Cancel Session</span>
+                                                                </button>
+                                                            )}
+                                                            {userInfo.role === 'admin' && (
+                                                                <button 
+                                                                    onClick={() => handleDelete(lecture._id)}
+                                                                    className="w-full flex items-center space-x-3 px-4 py-3 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                                                                >
+                                                                    <AlertTriangle className="w-4 h-4" />
+                                                                    <span>Purge Record</span>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </motion.div>
+                                                </>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 </div>
                             </motion.div>
                         ))

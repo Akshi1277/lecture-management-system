@@ -23,7 +23,7 @@ export default function ModalManager() {
     const closeModal = () => dispatch(setActiveModal(null));
 
     const modals = {
-        assignLecture: <AssignLectureForm onClose={closeModal} />,
+        assignLecture: <AssignLectureForm lecture={activeModalData} onClose={closeModal} />,
         manageUsers: <EnrollUserForm onClose={closeModal} />,
         manageBatches: <BatchManager onClose={closeModal} />,
         markAttendance: <AttendanceMarker lecture={activeModalData} onClose={closeModal} />,

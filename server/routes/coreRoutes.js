@@ -1,5 +1,5 @@
 import express from 'express';
-import { createLecture, getLectures, getMyLectures, uploadResource, updateLecture } from '../controllers/lectureController.js';
+import { createLecture, getLectures, getMyLectures, uploadResource, updateLecture, deleteLecture } from '../controllers/lectureController.js';
 import { suggestSubstitutes, getPendingSubstitutions, requestSubstitution } from '../controllers/substitutionController.js';
 import { createExam, getExams } from '../controllers/examController.js';
 import { blockRoom, getActiveBlocks } from '../controllers/roomController.js';
@@ -26,7 +26,9 @@ router.route('/lectures')
     .post(protect, admin, createLecture)
     .get(protect, getLectures);
 
-router.put('/lectures/:id', protect, admin, updateLecture);
+router.route('/lectures/:id')
+    .put(protect, admin, updateLecture)
+    .delete(protect, admin, deleteLecture);
 
 router.get('/lectures/my', protect, getMyLectures);
 router.post('/lectures/:id/resources', protect, teacher, uploadToCloudinary.single('file'), uploadResource);

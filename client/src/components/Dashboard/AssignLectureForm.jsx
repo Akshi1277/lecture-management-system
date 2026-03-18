@@ -7,7 +7,7 @@ import axios from "axios";
 import { addToast } from "@/redux/slices/uiSlice";
 import { createLecture } from "@/redux/slices/lectureSlice";
 
-export default function AssignLectureForm({ onClose, isFullscreen = false }) {
+export default function AssignLectureForm({ lecture, onClose, isFullscreen = false }) {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         title: "", teacher: "", batch: "",
@@ -17,6 +17,23 @@ export default function AssignLectureForm({ onClose, isFullscreen = false }) {
         recurring: "none", // none, daily, weekly
         repeatUntil: "",
     });
+
+    useEffect(() => {
+        if (lecture) {
+            setFormData({
+                title: lecture.title || "",
+                teacher: lecture.teacher?._id || lecture.teacher || "",
+                batch: lecture.batch?._id || lecture.batch || "",
+                type: lecture.type || "Lecture",
+                classroom: lecture.classroom || "",
+                subject: lecture.subject || "",
+                startTime: lecture.startTime || "",
+                endTime: lecture.endTime || "",
+                recurring: "none",
+                repeatUntil: "",
+            });
+        }
+    }, [lecture]);
     const [teachers, setTeachers] = useState([]);
     const [batches, setBatches] = useState([]);
     const [existingLectures, setExistingLectures] = useState([]);

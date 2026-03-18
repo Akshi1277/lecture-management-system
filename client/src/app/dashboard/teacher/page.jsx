@@ -54,7 +54,7 @@ export default function TeacherDashboard() {
                         <h3 className="text-xl font-bold text-white mb-6 flex items-center">
                             <Calendar className="w-5 h-5 mr-3 text-indigo-400" /> My Schedule
                         </h3>
-                        <div className="space-y-4">
+                        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                             {loading ? (
                                 <p className="text-slate-500 italic text-sm">Fetching your timetable...</p>
                             ) : lectures.map((l, i) => (

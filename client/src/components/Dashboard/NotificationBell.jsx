@@ -17,7 +17,9 @@ export default function NotificationBell() {
         if (userInfo) {
             dispatch(fetchNotifications());
 
-            const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000");
+            const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 
+                             (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '') : "http://localhost:5000");
+            const socket = io(socketUrl);
             
             socket.on('new_announcement', (data) => {
                 // Check if target is relevant for current user role/batch

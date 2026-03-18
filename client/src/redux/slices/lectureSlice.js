@@ -31,6 +31,26 @@ export const createLecture = createAsyncThunk('lectures/create', async (lectureD
     }
 });
 
+export const updateLecture = createAsyncThunk('lectures/update', async ({ id, lectureData }, { getState, rejectWithValue }) => {
+    try {
+        const { auth: { userInfo } } = getState();
+        const response = await api.put(`/lectures/${id}`, lectureData, getAuthHeader(userInfo));
+        return response.data;
+    } catch (error) {
+        return rejectWithValue(error.response.data.message || error.message);
+    }
+});
+
+export const deleteLecture = createAsyncThunk('lectures/delete', async (id, { getState, rejectWithValue }) => {
+    try {
+        const { auth: { userInfo } } = getState();
+        await api.delete(`/lectures/${id}`, getAuthHeader(userInfo));
+        return id;
+    } catch (error) {
+        return rejectWithValue(error.response.data.message || error.message);
+    }
+});
+
 const lectureSlice = createSlice({
     name: 'lectures',
     initialState: {
@@ -54,6 +74,15 @@ const lectureSlice = createSlice({
             })
             .addCase(createLecture.fulfilled, (state, action) => {
                 state.list.push(action.payload);
+            })
+            .addCase(updateLecture.fulfilled, (state, action) => {
+                const index = state.list.findIndex(l => l._id === action.payload._id);
+                if (index !== -1) {
+                    state.list[index] = action.payload;
+                }
+            })
+            .addCase(deleteLecture.fulfilled, (state, action) => {
+                state.list = state.list.filter(l => l._id !== action.payload);
             });
     },
 });
