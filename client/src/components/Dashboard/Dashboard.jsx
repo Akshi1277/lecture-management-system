@@ -2,55 +2,32 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, Users, BookOpen, TrendingUp, Clock, FileText, CheckCircle, Calendar, BarChart3, Download, Award } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setActiveModal } from "@/redux/slices/uiSlice";
+import { fetchAdminDashboard, fetchMyLectures } from "@/redux/slices/dashboardSlice";
 
 export default function Dashboard() {
   const dispatch = useDispatch();
-  const [user, setUser] = useState(null);
-  const [lectures, setLectures] = useState([]);
-  const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  const { userInfo: user } = useSelector(state => state.auth);
+  const { adminData: dashboardData, myLectures, loading } = useSelector(state => state.dashboard);
+  
+  const lectures = user?.role === "admin" ? (dashboardData?.todayLectures || []) : myLectures;
 
   const handleAction = (modalId) => {
     dispatch(setActiveModal(modalId));
   };
 
   useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    if (!userInfo) {
+    if (!user) {
       window.location.href = "/login";
       return;
     }
-    setUser(userInfo);
-    fetchData(userInfo);
-  }, []);
-
-  const fetchData = async (userInfo) => {
-    try {
-      if (userInfo.role === "admin") {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/dashboard/admin`, {
-          headers: { Authorization: `Bearer ${userInfo.token}` }
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setDashboardData(data);
-          setLectures(data.todayLectures || []);
-        }
-      } else {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/lectures/my`, {
-          headers: { Authorization: `Bearer ${userInfo.token}` }
-        });
-        const data = await res.json();
-        if (res.ok) setLectures(data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+    if (user.role === "admin") {
+      dispatch(fetchAdminDashboard());
+    } else {
+      dispatch(fetchMyLectures());
     }
-  };
+  }, [user, dispatch]);
 
   if (loading) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white text-2xl">Loading...</div>;
 

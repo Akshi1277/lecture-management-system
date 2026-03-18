@@ -6,7 +6,6 @@ import {
     BookOpen, Search, Download, FileText, 
     ExternalLink, Filter, FolderKanban, Clock
 } from "lucide-react";
-import axios from "axios";
 import { fetchLectures } from "@/redux/slices/lectureSlice";
 
 export default function ResourcesPage() {

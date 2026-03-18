@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Users, BookOpen, Clock, CheckCircle, AlertCircle, Info, ShieldCheck, ShieldCheck as ShieldCheckIcon, FileText, AlertTriangle, Upload, FileSpreadsheet, Download, ArrowRight, Plus } from "lucide-react";
 import { setActiveModal, removeToast, addToast } from "@/redux/slices/uiSlice";
 import { createLecture } from "@/redux/slices/lectureSlice";
+import { fetchBatches } from "@/redux/slices/hierarchySlice";
+import { fetchExistingSubjects, enrollUser, bulkEnroll } from "@/redux/slices/userSlice";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import BatchManager from "./BatchManager";
 import AttendanceMarker from "./AttendanceMarker";
 import ResourceUploadForm from "./ResourceUploadForm";
@@ -122,34 +123,21 @@ function EnrollUserForm({ onClose }) {
         parentEmail: ""
     });
     const [file, setFile] = useState(null);
-    const [batches, setBatches] = useState([]);
-    const [existingSubjects, setExistingSubjects] = useState([]);
+    const { batches } = useSelector(state => state.hierarchy);
+    const { subjects: existingSubjects, enrollLoading: isProcessing } = useSelector(state => state.users);
     const [subjectInput, setSubjectInput] = useState("");
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
 
     const departments = ['IT', 'CS'];
     const dispatch = useDispatch();
     const { userInfo } = useSelector(state => state.auth);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const [resBatches, resSubjects] = await Promise.all([
-                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, config),
-                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/subjects`, config)
-                ]);
-                setBatches(resBatches.data);
-                setExistingSubjects(resSubjects.data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
         if (userInfo) {
-            fetchData();
+            dispatch(fetchBatches());
+            dispatch(fetchExistingSubjects());
         }
-    }, [userInfo]);
+    }, [userInfo, dispatch]);
 
     const handleSubjectInput = (e) => {
         setSubjectInput(e.target.value);
@@ -180,19 +168,14 @@ function EnrollUserForm({ onClose }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsProcessing(true);
-
-        const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
 
         if (regMethod === "bulk") {
             if (!file) {
                 dispatch(addToast({ type: 'error', message: 'Please select an Excel file' }));
-                setIsProcessing(false);
                 return;
             }
             if (!formData.batch) {
                 dispatch(addToast({ type: 'error', message: 'Please select a batch for bulk registration' }));
-                setIsProcessing(false);
                 return;
             }
 
@@ -200,19 +183,12 @@ function EnrollUserForm({ onClose }) {
             bulkFormData.append('file', file);
             bulkFormData.append('batchId', formData.batch);
 
-            try {
-                const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/bulk`, bulkFormData, {
-                    headers: {
-                        ...config.headers,
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
-                dispatch(addToast({ type: 'success', message: res.data.message }));
+            const resultAction = await dispatch(bulkEnroll(bulkFormData));
+            if (bulkEnroll.fulfilled.match(resultAction)) {
+                dispatch(addToast({ type: 'success', message: resultAction.payload.message || 'Bulk registration successful' }));
                 onClose();
-            } catch (err) {
-                dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Bulk registration failed' }));
-            } finally {
-                setIsProcessing(false);
+            } else {
+                dispatch(addToast({ type: 'error', message: resultAction.payload || 'Bulk registration failed' }));
             }
             return;
         }
@@ -227,18 +203,15 @@ function EnrollUserForm({ onClose }) {
         }
         if (payload.role === 'student' && !payload.batch) {
             dispatch(addToast({ type: 'error', message: 'Please select a batch for the student' }));
-            setIsProcessing(false);
             return;
         }
 
-        try {
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users`, payload, config);
+        const resultAction = await dispatch(enrollUser(payload));
+        if (enrollUser.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: `${formData.name} enrolled! Credentials sent via email.` }));
             onClose();
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Enrollment failed' }));
-        } finally {
-            setIsProcessing(false);
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Enrollment failed' }));
         }
     };
 

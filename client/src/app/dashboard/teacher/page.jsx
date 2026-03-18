@@ -13,32 +13,22 @@ import {
 } from "lucide-react";
 import { BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
-import axios from "axios";
 import { fetchLectures } from "@/redux/slices/lectureSlice";
+import { fetchLowAttendanceStudents } from "@/redux/slices/attendanceSlice";
 import { setActiveModal } from "@/redux/slices/uiSlice";
 
 export default function TeacherDashboard() {
     const { userInfo } = useSelector((state) => state.auth);
     const { list: lectures, loading } = useSelector((state) => state.lecture);
-    const [alerts, setAlerts] = useState([]);
+    const { lowAttendanceStudents: alerts } = useSelector((state) => state.attendance);
     const dispatch = useDispatch();
 
     useEffect(() => {
         if (userInfo) {
             dispatch(fetchLectures());
-            fetchAlerts();
+            dispatch(fetchLowAttendanceStudents());
         }
     }, [userInfo, dispatch]);
-
-    const fetchAlerts = async () => {
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/low-stats`, config);
-                setAlerts(res.data);
-        } catch (error) {
-            console.error(error);
-        }
-    };
 
     return (
         <div className="space-y-10">

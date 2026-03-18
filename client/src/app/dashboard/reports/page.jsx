@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion } from "framer-motion";
 import { 
@@ -7,64 +7,39 @@ import {
     Calendar, Download, ArrowUpRight, ArrowDownRight,
     Activity, ShieldCheck, Clock
 } from "lucide-react";
-import axios from "axios";
 import { addToast } from "@/redux/slices/uiSlice";
+import { fetchLectures } from "@/redux/slices/lectureSlice";
+import { fetchUsers, fetchFacultyLoad } from "@/redux/slices/dashboardSlice";
 import { ReportCardSkeleton, ChartSkeleton } from "@/components/Shared/Skeleton";
 
 export default function ReportsPage() {
     const { userInfo } = useSelector((state) => state.auth);
+    const { list: lectures, loading: lectureLoading } = useSelector((state) => state.lecture);
+    const { users, facultyLoad, loading: dashboardLoading } = useSelector((state) => state.dashboard);
     const dispatch = useDispatch();
 
-    const [stats, setStats] = useState({
-        totalLectures: 0,
-        completedLectures: 0,
-        cancelledLectures: 0,
-        facultyLoad: [],
-        averageAttendance: 0,
-        totalUsers: { students: 0, teachers: 0 }
-    });
-    const [loading, setLoading] = useState(true);
+    const loading = lectureLoading || dashboardLoading;
 
     useEffect(() => {
-        fetchReportData();
-    }, [userInfo]);
-
-    const fetchReportData = async () => {
-        try {
-            setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            
-            const [resLectures, resUsers, resFacultyLoad] = await Promise.all([
-                axios.get(`${apiUrl}/lectures`, config),
-                axios.get(`${apiUrl}/users`, config),
-                axios.get(`${apiUrl}/attendance/faculty-load`, config)
-            ]);
-
-            let lectures = resLectures.data;
-            const users = resUsers.data;
-
-            // Filter for teachers: only their own data
-            if (userInfo?.role === 'teacher') {
-                lectures = lectures.filter(l => l.teacher?._id === userInfo?._id);
+        if (userInfo) {
+            dispatch(fetchLectures());
+            dispatch(fetchUsers());
+            if (userInfo.role === 'admin') {
+                dispatch(fetchFacultyLoad());
             }
-
-            setStats({
-                totalLectures: lectures.length,
-                completedLectures: lectures.filter(l => l.status === 'Completed').length,
-                cancelledLectures: lectures.filter(l => l.status === 'Cancelled').length,
-                facultyLoad: userInfo?.role === 'admin' ? resFacultyLoad.data : [],
-                totalUsers: {
-                    students: users.filter(u => u.role === 'student').length,
-                    teachers: users.filter(u => u.role === 'teacher').length
-                },
-                averageAttendance: 82 // Mocked for now
-            });
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: 'Failed to generate reports.' }));
-        } finally {
-            setLoading(false);
         }
+    }, [userInfo, dispatch]);
+
+    const stats = {
+        totalLectures: lectures.length,
+        completedLectures: lectures.filter(l => l.status === 'Completed').length,
+        cancelledLectures: lectures.filter(l => l.status === 'Cancelled').length,
+        facultyLoad: userInfo?.role === 'admin' ? facultyLoad : [],
+        totalUsers: {
+            students: users.filter(u => u.role === 'student').length,
+            teachers: users.filter(u => u.role === 'teacher').length
+        },
+        averageAttendance: 82 // Mocked for now
     };
 
     if (userInfo?.role === 'student') {

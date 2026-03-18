@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { addToast } from "@/redux/slices/uiSlice";
-import axios from "axios";
+import { requestOTP, resetPassword } from "@/redux/slices/authSlice";
 
 export default function ForgotPasswordForm() {
     const [step, setStep] = useState(1); // 1: Email, 2: OTP & New Password
@@ -35,17 +35,16 @@ export default function ForgotPasswordForm() {
         e.preventDefault();
         setLoading(true);
         setError("");
-        try {
-            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/forgot-password`, { email });
-            dispatch(addToast({ type: 'success', message: data.message }));
+        const resultAction = await dispatch(requestOTP(email));
+        if (requestOTP.fulfilled.match(resultAction)) {
+            dispatch(addToast({ type: 'success', message: resultAction.payload.message || 'OTP sent successfully.' }));
             setStep(2);
-        } catch (err) {
-            const msg = err.response?.data?.message || "Failed to send OTP.";
+        } else {
+            const msg = resultAction.payload || "Failed to send OTP.";
             setError(msg);
             dispatch(addToast({ type: 'error', message: msg }));
-        } finally {
-            setLoading(false);
         }
+        setLoading(false);
     };
 
     const handleResetPassword = async (e) => {
@@ -67,21 +66,16 @@ export default function ForgotPasswordForm() {
 
         setLoading(true);
         setError("");
-        try {
-            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/reset-password`, {
-                email,
-                otp,
-                newPassword
-            });
-            dispatch(addToast({ type: 'success', message: data.message }));
+        const resultAction = await dispatch(resetPassword({ email, otp, newPassword }));
+        if (resetPassword.fulfilled.match(resultAction)) {
+            dispatch(addToast({ type: 'success', message: resultAction.payload.message || 'Password reset successfully.' }));
             router.push("/login");
-        } catch (err) {
-            const msg = err.response?.data?.message || "Failed to reset password.";
+        } else {
+            const msg = resultAction.payload || "Failed to reset password.";
             setError(msg);
             dispatch(addToast({ type: 'error', message: msg }));
-        } finally {
-            setLoading(false);
         }
+        setLoading(false);
     };
 
     return (

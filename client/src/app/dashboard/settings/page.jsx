@@ -8,10 +8,11 @@ import {
 } from "lucide-react";
 import { setActiveModal, addToast } from "@/redux/slices/uiSlice";
 import { updateUserProfile, changePassword } from "@/redux/slices/authSlice";
-import axios from "axios";
+import { fetchSystemSettings, updateSystemSettings, uploadProfilePhoto, sendAttendanceWarnings } from "@/redux/slices/dashboardSlice";
 
 export default function SettingsPage() {
     const { userInfo } = useSelector((state) => state.auth);
+    const { systemSettings } = useSelector((state) => state.dashboard);
     const dispatch = useDispatch();
 
     const [activeTab, setActiveTab] = useState("profile");
@@ -35,38 +36,30 @@ export default function SettingsPage() {
     const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
     useEffect(() => {
-        const fetchGlobalSettings = async () => {
-            if (userInfo?.role !== 'admin' || !userInfo?.token) return;
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-                const { data } = await axios.get(`${apiUrl}/settings`, config);
-                if (data) {
-                    setGlobalSettings({
-                        attendanceThreshold: data.attendanceThreshold || 75,
-                        labWeight: data.labWeight || 4,
-                        systemName: data.systemName || "EduSync"
-                    });
-                }
-            } catch (err) {
-                console.error("Failed to fetch settings:", err);
-            }
-        };
-        fetchGlobalSettings();
-    }, [userInfo]);
+        if (userInfo?.role === 'admin') {
+            dispatch(fetchSystemSettings());
+        }
+    }, [userInfo, dispatch]);
+
+    useEffect(() => {
+        if (systemSettings) {
+            setGlobalSettings({
+                attendanceThreshold: systemSettings.attendanceThreshold || 75,
+                labWeight: systemSettings.labWeight || 4,
+                systemName: systemSettings.systemName || "EduSync"
+            });
+        }
+    }, [systemSettings]);
 
     const handleSaveGlobalSettings = async () => {
         setIsSaving(true);
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            await axios.put(`${apiUrl}/settings`, globalSettings, config);
+        const resultAction = await dispatch(updateSystemSettings(globalSettings));
+        if (updateSystemSettings.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Global configurations updated successfully' }));
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: 'Failed to update configurations' }));
-        } finally {
-            setIsSaving(false);
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to update configurations' }));
         }
+        setIsSaving(false);
     };
 
     const handleUpdateProfile = async (e) => {
@@ -83,26 +76,49 @@ export default function SettingsPage() {
         }
     };
 
+    const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    const MAX_PHOTO_SIZE_MB = 5;
+    const MAX_PHOTO_SIZE_BYTES = MAX_PHOTO_SIZE_MB * 1024 * 1024;
+
     const handlePhotoUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Reset input so same file can be re-selected after fixing an error
+        e.target.value = '';
+
+        // Validate format
+        if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+            dispatch(addToast({
+                type: 'error',
+                message: `Invalid file type. Allowed formats: JPG, PNG, WebP, GIF`
+            }));
+            return;
+        }
+
+        // Validate size
+        if (file.size > MAX_PHOTO_SIZE_BYTES) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            dispatch(addToast({
+                type: 'error',
+                message: `File too large (${sizeMB}MB). Max allowed size is ${MAX_PHOTO_SIZE_MB}MB`
+            }));
+            return;
+        }
 
         const formData = new FormData();
         formData.append('photo', file);
 
         setIsUploadingPhoto(true);
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            const { data } = await axios.post(`${apiUrl}/users/profile/photo`, formData, config);
-            
-            await dispatch(updateUserProfile({ profileImage: data.url })).unwrap();
-            dispatch(addToast({ type: 'success', message: 'Profile photo updated' }));
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: 'Failed to upload photo' }));
-        } finally {
-            setIsUploadingPhoto(false);
+        const resultAction = await dispatch(uploadProfilePhoto(formData));
+        if (uploadProfilePhoto.fulfilled.match(resultAction)) {
+            const photoUrl = resultAction.payload;
+            await dispatch(updateUserProfile({ profileImage: photoUrl })).unwrap();
+            dispatch(addToast({ type: 'success', message: 'Profile photo updated successfully' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to upload photo' }));
         }
+        setIsUploadingPhoto(false);
     };
 
     const handlePasswordUpdate = async (e) => {
@@ -128,16 +144,13 @@ export default function SettingsPage() {
         if (!window.confirm("This will send email notifications to parents of all students with low attendance. Proceed?")) return;
         
         setIsSending(true);
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            const { data } = await axios.post(`${apiUrl}/attendance/send-warnings`, {}, config);
-            dispatch(addToast({ type: 'success', message: data.message }));
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Failed to dispatch warning emails' }));
-        } finally {
-            setIsSending(false);
+        const resultAction = await dispatch(sendAttendanceWarnings());
+        if (sendAttendanceWarnings.fulfilled.match(resultAction)) {
+            dispatch(addToast({ type: 'success', message: resultAction.payload?.message || 'Warning emails dispatched' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to dispatch warning emails' }));
         }
+        setIsSending(false);
     };
 
     const renderTabs = () => {
@@ -213,7 +226,7 @@ export default function SettingsPage() {
                                     </div>
                                     <label className="absolute -bottom-2 -right-2 p-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-400 hover:text-white transition-all shadow-lg cursor-pointer">
                                         {isUploadingPhoto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-                                        <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
+                                        <input type="file" className="hidden" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
                                     </label>
                                 </div>
                                 <div>
@@ -221,8 +234,11 @@ export default function SettingsPage() {
                                     <p className="text-sm text-slate-500">{userInfo?.email}</p>
                                     <label className="mt-4 px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all border border-slate-700 uppercase tracking-widest cursor-pointer inline-block">
                                         {isUploadingPhoto ? "Uploading..." : "Update Photo"}
-                                        <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
+                                        <input type="file" className="hidden" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
                                     </label>
+                                    <p className="text-[10px] text-slate-600 mt-2 font-medium">
+                                        JPG, PNG, WebP or GIF &nbsp;·&nbsp; Max 5MB
+                                    </p>
                                 </div>
                             </div>
 
@@ -440,6 +456,12 @@ export default function SettingsPage() {
 }
 
 function Camera({className}) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+    )
+}
+
+function CameraIcon({className}) {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
     )

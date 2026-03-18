@@ -2,59 +2,45 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { BookOpen, CheckCircle, Circle, BarChart3, Plus, Trash2 } from "lucide-react";
-import axios from "axios";
 import { addToast } from "@/redux/slices/uiSlice";
+import { fetchSyllabus, toggleUnitStatus, addSyllabusUnit } from "@/redux/slices/syllabusSlice";
+import { fetchCourses } from "@/redux/slices/hierarchySlice";
 
 export default function SyllabusManager({ courseId, onClose }) {
-    const [units, setUnits] = useState([]);
-    const [course, setCourse] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { units, loading } = useSelector((state) => state.syllabus);
+    const { courses } = useSelector((state) => state.hierarchy);
     const [newUnit, setNewUnit] = useState({ unitNumber: "", title: "", description: "" });
     const { userInfo } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
 
+    const course = courses.find(c => c._id === courseId);
+
     useEffect(() => {
-        const fetchSyllabus = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/courses/${courseId}/syllabus`, config);
-                setUnits(res.data);
-
-                // Also fetch course name
-                const resCourse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/courses`, config);
-                const foundCourse = resCourse.data.find(c => c._id === courseId);
-                setCourse(foundCourse);
-
-                setLoading(false);
-            } catch (error) {
-                console.error(error);
-                setLoading(false);
+        if (userInfo && courseId) {
+            dispatch(fetchSyllabus(courseId));
+            if (courses.length === 0) {
+                dispatch(fetchCourses());
             }
-        };
-        if (userInfo && courseId) fetchSyllabus();
-    }, [userInfo, courseId]);
+        }
+    }, [userInfo, courseId, dispatch, courses.length]);
 
     const toggleUnit = async (unitId, currentStatus) => {
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/courses/${courseId}/syllabus/${unitId}`, { isCompleted: !currentStatus }, config);
-            setUnits(prev => prev.map(u => u._id === unitId ? { ...u, isCompleted: !currentStatus } : u));
+        const resultAction = await dispatch(toggleUnitStatus({ courseId, unitId, isCompleted: !currentStatus }));
+        if (toggleUnitStatus.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Syllabus progress updated!' }));
-        } catch (error) {
-            dispatch(addToast({ type: 'error', message: 'Update failed' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Update failed' }));
         }
     };
 
     const handleAddUnit = async (e) => {
         e.preventDefault();
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/courses/${courseId}/syllabus`, newUnit, config);
-            setUnits(res.data.syllabus);
+        const resultAction = await dispatch(addSyllabusUnit({ courseId, unitData: newUnit }));
+        if (addSyllabusUnit.fulfilled.match(resultAction)) {
             setNewUnit({ unitNumber: "", title: "", description: "" });
             dispatch(addToast({ type: 'success', message: 'Unit added to syllabus!' }));
-        } catch (error) {
-            dispatch(addToast({ type: 'error', message: 'Failed to add unit' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to add unit' }));
         }
     };
 

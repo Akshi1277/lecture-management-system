@@ -48,6 +48,24 @@ export const changePassword = createAsyncThunk('auth/changePassword', async (pas
     }
 });
 
+export const requestOTP = createAsyncThunk('auth/requestOTP', async (email, { rejectWithValue }) => {
+    try {
+        const response = await api.post('/users/forgot-password', { email });
+        return response.data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data?.message || error.message);
+    }
+});
+
+export const resetPassword = createAsyncThunk('auth/resetPassword', async ({ email, otp, newPassword }, { rejectWithValue }) => {
+    try {
+        const response = await api.post('/users/reset-password', { email, otp, newPassword });
+        return response.data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data?.message || error.message);
+    }
+});
+
 const initialState = {
     userInfo: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('userInfo')) : null,
     loading: false,

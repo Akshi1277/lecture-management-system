@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Clock, Users, ArrowUpRight, UserPlus, BookOpen, Layers, Settings, Plus, FileText,Activity, AlertTriangle, PlayCircle, ShieldAlert } from "lucide-react";
 import { motion } from "framer-motion";
@@ -8,36 +8,26 @@ import { fetchLectures } from "@/redux/slices/lectureSlice";
 import FacultyLoadChart from "@/components/Dashboard/FacultyLoadChart";
 import { useRouter } from "next/navigation";
 
+import { fetchAdminDashboard } from "@/redux/slices/dashboardSlice";
+
 export default function AdminDashboard() {
     const router = useRouter();
     const { userInfo } = useSelector((state) => state.auth);
-    const { list: lectures, loading } = useSelector((state) => state.lecture);
-    const [dashboardData, setDashboardData] = useState(null);
+    const { list: lectures, loading: lectureLoading } = useSelector((state) => state.lecture);
+    const { adminData, loading: dashboardLoading } = useSelector((state) => state.dashboard);
     const dispatch = useDispatch();
 
     useEffect(() => {
         if (userInfo) {
             dispatch(fetchLectures());
-            fetchDashboardStats();
+            dispatch(fetchAdminDashboard());
         }
     }, [userInfo, dispatch]);
 
-    const fetchDashboardStats = async () => {
-        try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/dashboard/admin`, {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
-            });
-            const data = await res.json();
-            if (res.ok) setDashboardData(data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
     const stats = [
         { title: "Active Lectures", value: lectures.length, icon: <Activity />, color: "text-orange-400" },
-        { title: "Departments", value: dashboardData?.stats?.departments ?? "...", icon: <BookOpen />, color: "text-teal-400" },
-        { title: "Total Users", value: dashboardData?.stats?.totalUsers ?? "...", icon: <Users />, color: "text-blue-400" },
+        { title: "Departments", value: adminData?.stats?.departments ?? "...", icon: <BookOpen />, color: "text-teal-400" },
+        { title: "Total Users", value: adminData?.stats?.totalUsers ?? "...", icon: <Users />, color: "text-blue-400" },
     ];
 
     return (
@@ -164,7 +154,7 @@ export default function AdminDashboard() {
                 <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl flex flex-col h-[750px] overflow-hidden">
                     <h3 className="text-xl font-bold text-white mb-6">Upcoming Lectures</h3>
                     <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                        {loading ? (
+                        {lectureLoading ? (
                             <p className="text-slate-500 italic text-sm">Syncing with backend...</p>
                         ) : lectures.length > 0 ? (
                             lectures.map((l, i) => (

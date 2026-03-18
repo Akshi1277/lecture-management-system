@@ -1,42 +1,43 @@
 "use client";
+import { fetchBatches, createBatch, deleteBatch } from "@/redux/slices/hierarchySlice";
+import { addToast } from "@/redux/slices/uiSlice";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Plus, Trash2, Users, Calendar, GraduationCap, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
-import { addToast } from "@/redux/slices/uiSlice";
 
 export default function BatchManager() {
-    const [batches, setBatches] = useState([]);
+    const { batches } = useSelector((state) => state.hierarchy);
     const departments = ['IT', 'CS'];
     const [newBatch, setNewBatch] = useState({ name: "", year: new Date().getFullYear(), department: "", studentCount: 60 });
     const { userInfo } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        fetchData();
-    }, [userInfo]);
-
-    const fetchData = async () => {
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const batchRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, config);
-                setBatches(batchRes.data);
-        } catch (error) {
-            console.error(error);
+        if (userInfo) {
+            dispatch(fetchBatches());
         }
-    };
+    }, [userInfo, dispatch]);
 
     const handleCreate = async (e) => {
         e.preventDefault();
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, newBatch, config);
-                dispatch(addToast({ type: 'success', message: 'Batch Created Successfully' }));
+        const resultAction = await dispatch(createBatch(newBatch));
+        if (createBatch.fulfilled.match(resultAction)) {
+            dispatch(addToast({ type: 'success', message: 'Batch Created Successfully' }));
             setNewBatch({ ...newBatch, name: "" });
-            fetchData();
-        } catch (error) {
-            dispatch(addToast({ type: 'error', message: error.response?.data?.message || 'Failed to create batch' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to create batch' }));
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this batch?")) {
+            const resultAction = await dispatch(deleteBatch(id));
+            if (deleteBatch.fulfilled.match(resultAction)) {
+                dispatch(addToast({ type: 'success', message: 'Batch Deleted Successfully' }));
+            } else {
+                dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to delete batch' }));
+            }
         }
     };
 
@@ -157,7 +158,10 @@ export default function BatchManager() {
                                         </div>
                                     </div>
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="p-2 text-slate-600 hover:text-red-400 transition-colors">
+                                        <button 
+                                            onClick={() => handleDelete(batch._id)}
+                                            className="p-2 text-slate-600 hover:text-red-400 transition-colors"
+                                        >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>

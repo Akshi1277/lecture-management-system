@@ -2,7 +2,9 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { FileText, Calendar, Clock, MapPin, User, ShieldCheck } from "lucide-react";
-import axios from "axios";
+import { fetchCourses, fetchBatches } from "@/redux/slices/hierarchySlice";
+import { fetchTeachers } from "@/redux/slices/userSlice";
+import { scheduleExam } from "@/redux/slices/examSlice";
 import { addToast } from "@/redux/slices/uiSlice";
 
 export default function ExamSchedulerForm({ onClose }) {
@@ -17,40 +19,27 @@ export default function ExamSchedulerForm({ onClose }) {
         supervisor: ""
     });
 
-    const [courses, setCourses] = useState([]);
-    const [batches, setBatches] = useState([]);
-    const [teachers, setTeachers] = useState([]);
+    const { courses, batches } = useSelector((state) => state.hierarchy);
+    const { teachers } = useSelector((state) => state.users);
     const { userInfo } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const [resCourses, resBatches, resTeachers] = await Promise.all([
-                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/courses`, config),
-                        axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, config),
-                            axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/teachers`, config)
-                ]);
-                setCourses(resCourses.data);
-                setBatches(resBatches.data);
-                setTeachers(resTeachers.data);
-            } catch (err) {
-                console.error("Fetch Data Error", err);
-            }
-        };
-        if (userInfo) fetchData();
-    }, [userInfo]);
+        if (userInfo) {
+            dispatch(fetchCourses());
+            dispatch(fetchBatches());
+            dispatch(fetchTeachers());
+        }
+    }, [userInfo, dispatch]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/exams`, formData, config);
-                dispatch(addToast({ type: 'success', message: 'Exam scheduled successfully!' }));
+        const resultAction = await dispatch(scheduleExam(formData));
+        if (scheduleExam.fulfilled.match(resultAction)) {
+            dispatch(addToast({ type: 'success', message: 'Exam scheduled successfully!' }));
             onClose();
-        } catch (error) {
-            dispatch(addToast({ type: 'error', message: error.response?.data?.message || 'Scheduling failed' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Scheduling failed' }));
         }
     };
 

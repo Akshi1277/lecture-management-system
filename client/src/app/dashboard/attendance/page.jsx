@@ -6,26 +6,25 @@ import {
     Search, Filter, CheckSquare, AlertTriangle,
     Download, UserX, Mail, Hash, BookOpen
 } from "lucide-react";
-import axios from "axios";
+import { fetchBatches } from "@/redux/slices/hierarchySlice";
+import { fetchLectures } from "@/redux/slices/lectureSlice";
+import { fetchDefaulters, fetchAttendanceStats, fetchSubjectWiseAttendance } from "@/redux/slices/attendanceSlice";
 import { addToast } from "@/redux/slices/uiSlice";
 
 export default function AttendancePage() {
     const { userInfo } = useSelector((state) => state.auth);
+    const { batches } = useSelector((state) => state.hierarchy);
+    const { list: lectures } = useSelector((state) => state.lecture);
+    const { defaulters, subjectStats, loading, statsLoading } = useSelector((state) => state.attendance);
     const dispatch = useDispatch();
-    const [hasMounted, setHasMounted] = useState(false);
 
-    const [defaulters, setDefaulters] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [hasMounted, setHasMounted] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [threshold, setThreshold] = useState(75);
 
-    const [batches, setBatches] = useState([]);
     const [selectedBatch, setSelectedBatch] = useState("");
     const [selectedSubject, setSelectedSubject] = useState("");
     const [subjects, setSubjects] = useState([]);
-
-    const [subjectStats, setSubjectStats] = useState([]);
-    const [subjectLoading, setSubjectLoading] = useState(false);
 
     useEffect(() => {
         setHasMounted(true);
@@ -33,67 +32,32 @@ export default function AttendancePage() {
 
     useEffect(() => {
         if (userInfo?.role === 'admin') {
-            fetchDefaulters();
+            dispatch(fetchDefaulters(threshold));
         } else if (userInfo?.role === 'teacher') {
-            fetchTeacherContext();
+            dispatch(fetchBatches());
+            dispatch(fetchLectures());
         }
-    }, [userInfo, threshold]);
+    }, [userInfo, threshold, dispatch]);
 
     // Sub-effect for teachers when selection changes
     useEffect(() => {
         if (userInfo?.role === 'teacher' && selectedBatch && selectedSubject) {
-            fetchDefaulters();
+            dispatch(fetchAttendanceStats({ subject: selectedSubject, batchId: selectedBatch }));
         }
-    }, [selectedBatch, selectedSubject, userInfo?.role]);
+    }, [selectedBatch, selectedSubject, userInfo?.role, dispatch]);
 
     useEffect(() => {
         if (userInfo?.role === 'student') {
-            fetchSubjectStats();
+            dispatch(fetchSubjectWiseAttendance());
         }
-    }, [userInfo?.role]);
+    }, [userInfo?.role, dispatch]);
 
-    const fetchTeacherContext = async () => {
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            // Fetch batches and courses associated with teacher
-            const [resBatches, resLectures] = await Promise.all([
-                axios.get(`${apiUrl}/hierarchy/batches`, config),
-                axios.get(`${apiUrl}/lectures/my`, config)
-            ]);
-            setBatches(resBatches.data);
-            
-            // Extract unique subjects from teacher's lectures
-            const uniqueSubjects = [...new Set(resLectures.data.map(item => item.subject))];
+    useEffect(() => {
+        if (userInfo?.role === 'teacher' && lectures.length > 0) {
+            const uniqueSubjects = [...new Set(lectures.map(item => item.subject))];
             setSubjects(uniqueSubjects.filter(Boolean));
-        } catch (err) {
-            console.error("Failed to load teacher context", err);
-        } finally {
-            setLoading(false);
         }
-    };
-
-    const fetchDefaulters = async () => {
-        try {
-            setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const endpoint = userInfo?.role === 'admin' 
-                ? `/attendance/global-defaulters?threshold=${threshold}`
-                : `/attendance/stats/${encodeURIComponent(selectedSubject)}/${selectedBatch}`;
-            
-            if (userInfo?.role === 'teacher' && (!selectedSubject || !selectedBatch)) {
-                setLoading(false);
-                return;
-            }
-
-            const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}${endpoint}`, config);
-            setDefaulters(data);
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: 'Failed to fetch attendance data.' }));
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [lectures, userInfo?.role]);
 
     const handleExport = () => {
         if (defaulters.length === 0) return;
@@ -116,19 +80,6 @@ export default function AttendancePage() {
         link.click();
     };
 
-    const fetchSubjectStats = async () => {
-        try {
-            setSubjectLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/subject-wise`, config);
-            setSubjectStats(data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setSubjectLoading(false);
-        }
-    };
-
     if (!hasMounted || !userInfo) return null;
 
     if (userInfo?.role === 'student') {
@@ -141,7 +92,7 @@ export default function AttendancePage() {
                     </div>
                 </div>
 
-                {subjectLoading ? (
+                {statsLoading ? (
                     <div className="py-20 text-center">
                         <div className="w-12 h-12 border-4 border-rose-500/20 border-t-rose-500 rounded-full mx-auto mb-4 animate-spin" />
                         <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Aggregating Subject Data...</p>

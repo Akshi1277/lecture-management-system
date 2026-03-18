@@ -7,18 +7,17 @@ import {
     Users, ShieldAlert, Clock, Filter, 
     Send, AlertTriangle 
 } from "lucide-react";
-import axios from "axios";
 import { addToast } from "@/redux/slices/uiSlice";
+import { fetchAnnouncements, createAnnouncement, deleteAnnouncement } from "@/redux/slices/dashboardSlice";
+import { fetchBatches } from "@/redux/slices/hierarchySlice";
 
 export default function NoticeBoard() {
     const { userInfo } = useSelector((state) => state.auth);
+    const { announcements: notices, loading } = useSelector((state) => state.dashboard);
+    const { batches } = useSelector((state) => state.hierarchy);
     const dispatch = useDispatch();
 
-    const [notices, setNotices] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
-    
-    // Form State
     const [formData, setFormData] = useState({
         title: "",
         content: "",
@@ -26,61 +25,33 @@ export default function NoticeBoard() {
         priority: "medium",
         targetBatch: ""
     });
-    const [batches, setBatches] = useState([]);
 
     useEffect(() => {
-        fetchNotices();
+        dispatch(fetchAnnouncements());
         if (userInfo?.role === 'admin' || userInfo?.role === 'teacher') {
-            fetchBatches();
+            dispatch(fetchBatches());
         }
-    }, [userInfo]);
-
-    const fetchNotices = async () => {
-        try {
-            setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/announcements`, config);
-            setNotices(data);
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: 'Failed to load notices.' }));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchBatches = async () => {
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, config);
-            setBatches(data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
+    }, [userInfo, dispatch]);
 
     const handleCreate = async (e) => {
         e.preventDefault();
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/announcements`, formData, config);
+        const resultAction = await dispatch(createAnnouncement(formData));
+        if (createAnnouncement.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Notice broadcasted successfully!' }));
             setIsCreating(false);
             setFormData({ title: "", content: "", targetAudience: "all", priority: "medium", targetBatch: "" });
-            fetchNotices();
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: 'Failed to broadcast notice.' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to broadcast notice.' }));
         }
     };
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to remove this notice?")) return;
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.delete(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/announcements/${id}`, config);
+        const resultAction = await dispatch(deleteAnnouncement(id));
+        if (deleteAnnouncement.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Notice removed.' }));
-            fetchNotices();
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: 'Failed to delete notice.' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to delete notice.' }));
         }
     };
 

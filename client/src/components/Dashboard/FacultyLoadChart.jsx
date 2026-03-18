@@ -1,31 +1,22 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import axios from "axios";
 import { BarChart3 } from "lucide-react";
+import { fetchFacultyLoad } from "@/redux/slices/dashboardSlice";
 
 const COLORS = ["#2DD4BF", "#FB923C", "#6366F1", "#A855F7", "#F43F5E", "#EAB308"];
 
 export default function FacultyLoadChart() {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { facultyLoad: data, loading } = useSelector((state) => state.dashboard);
     const { userInfo } = useSelector((state) => state.auth);
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        const fetchLoad = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/faculty-load`, config);
-                setData(res.data);
-                setLoading(false);
-            } catch (error) {
-                console.error(error);
-                setLoading(false);
-            }
-        };
-        if (userInfo) fetchLoad();
-    }, [userInfo]);
+        if (userInfo) {
+            dispatch(fetchFacultyLoad());
+        }
+    }, [userInfo, dispatch]);
 
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {

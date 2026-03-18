@@ -6,42 +6,21 @@ import {
     Search, UserPlus, Users, BookOpen, UserCircle,
     MoreVertical, Mail, Hash, ShieldCheck, GraduationCap, ArrowUpRight
 } from "lucide-react";
-import axios from "axios";
+import { fetchStudents, fetchTeachers } from "@/redux/slices/userSlice";
 import { setActiveModal, addToast } from "@/redux/slices/uiSlice";
 
 export default function UsersDirectoryPage() {
     const { userInfo } = useSelector((state) => state.auth);
+    const { students, teachers, loading } = useSelector((state) => state.users);
     const dispatch = useDispatch();
 
     const [activeTab, setActiveTab] = useState("students");
     const [searchTerm, setSearchTerm] = useState("");
 
-    const [students, setStudents] = useState([]);
-    const [teachers, setTeachers] = useState([]);
-    const [loading, setLoading] = useState(true);
-
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                setLoading(true);
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-
-                const [studentsRes, teachersRes] = await Promise.all([
-                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/students`, config),
-                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/teachers`, config)
-                ]);
-
-                setStudents(studentsRes.data);
-                setTeachers(teachersRes.data);
-            } catch (err) {
-                dispatch(addToast({ type: 'error', message: 'Failed to sync directory.' }));
-            } finally {
-                setLoading(false);
-            }
-        };
-
         if (userInfo) {
-            fetchUsers();
+            dispatch(fetchStudents());
+            dispatch(fetchTeachers());
         }
     }, [userInfo, dispatch]);
 

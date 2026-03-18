@@ -2,39 +2,33 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Users, CheckCircle, XCircle, Search, Save } from "lucide-react";
-import axios from "axios";
+import { fetchStudentsByBatch } from "@/redux/slices/userSlice";
+import { markAttendance } from "@/redux/slices/attendanceSlice";
 import { addToast } from "@/redux/slices/uiSlice";
 
 export default function AttendanceMarker({ lecture, onClose }) {
-    const [students, setStudents] = useState([]);
+    const { students, loading } = useSelector((state) => state.users);
     const [attendanceData, setAttendanceData] = useState({}); // { studentId: 'present' | 'absent' }
     const [searchTerm, setSearchTerm] = useState("");
-    const [loading, setLoading] = useState(true);
     const { userInfo } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        const fetchStudents = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const batchId = lecture.batch?._id || lecture.batch;
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/batch/${batchId}`, config);
-                setStudents(res.data);
+        if (userInfo && lecture?.batch) {
+            const batchId = lecture.batch?._id || lecture.batch;
+            dispatch(fetchStudentsByBatch(batchId));
+        }
+    }, [userInfo, lecture, dispatch]);
 
-                // Initialize all as present
-                const initialData = {};
-                res.data.forEach(s => {
-                    initialData[s._id] = 'present';
-                });
-                setAttendanceData(initialData);
-                setLoading(false);
-            } catch (error) {
-                console.error("Fetch Students Error", error);
-                setLoading(false);
-            }
-        };
-        if (userInfo && lecture?.batch) fetchStudents();
-    }, [userInfo, lecture]);
+    useEffect(() => {
+        if (students.length > 0) {
+            const initialData = {};
+            students.forEach(s => {
+                initialData[s._id] = 'present';
+            });
+            setAttendanceData(initialData);
+        }
+    }, [students]);
 
     const handleToggle = (studentId) => {
         setAttendanceData(prev => ({
@@ -44,20 +38,19 @@ export default function AttendanceMarker({ lecture, onClose }) {
     };
 
     const handleSubmit = async () => {
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const payload = {
-                lectureId: lecture._id,
-                students: Object.entries(attendanceData).map(([studentId, status]) => ({
-                    studentId,
-                    status
-                }))
-            };
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance`, payload, config);
-                dispatch(addToast({ type: 'success', message: 'Attendance marked successfully!' }));
+        const payload = {
+            lectureId: lecture._id,
+            students: Object.entries(attendanceData).map(([studentId, status]) => ({
+                studentId,
+                status
+            }))
+        };
+        const resultAction = await dispatch(markAttendance(payload));
+        if (markAttendance.fulfilled.match(resultAction)) {
+            dispatch(addToast({ type: 'success', message: 'Attendance marked successfully!' }));
             onClose();
-        } catch (error) {
-            dispatch(addToast({ type: 'error', message: error.response?.data?.message || 'Failed to mark attendance' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to mark attendance' }));
         }
     };
 

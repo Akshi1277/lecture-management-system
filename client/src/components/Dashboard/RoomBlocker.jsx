@@ -3,9 +3,8 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { ShieldAlert, AlertTriangle, CalendarRange, RotateCcw, XCircle } from "lucide-react";
-import axios from "axios";
 import { addToast } from "@/redux/slices/uiSlice";
-import { fetchLectures } from "@/redux/slices/lectureSlice";
+import { fetchLectures, blockRoom } from "@/redux/slices/lectureSlice";
 
 export default function RoomBlocker({ onClose }) {
     const [formData, setFormData] = useState({
@@ -18,12 +17,8 @@ export default function RoomBlocker({ onClose }) {
         newRoom: ""
     });
     const [submitting, setSubmitting] = useState(false);
-    const [affectedCount, setAffectedCount] = useState(null);
     const dispatch = useDispatch();
     const { userInfo } = useSelector(state => state.auth);
-
-    // Mock check for affected lectures - in a real app, this could be a debounced API call
-    // For now, we'll let the submission handle it and show the result
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -42,24 +37,22 @@ export default function RoomBlocker({ onClose }) {
                 ...(formData.action === 'relocate' && { newRoom: formData.newRoom })
             };
 
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/rooms/block`, payload, config);
-
-            dispatch(addToast({
-                type: 'success',
-                message: `Room blocked successfully. ${data.affectedCount} lecture(s) ${data.actionTaken}.`
-            }));
-
-            // Refresh schedule globally
-            dispatch(fetchLectures());
-
-            if (onClose) onClose();
-
+            const resultAction = await dispatch(blockRoom(payload));
+            if (blockRoom.fulfilled.match(resultAction)) {
+                dispatch(addToast({
+                    type: 'success',
+                    message: `Room blocked successfully. ${resultAction.payload.affectedCount} lecture(s) ${resultAction.payload.actionTaken}.`
+                }));
+                dispatch(fetchLectures());
+                if (onClose) onClose();
+            } else {
+                dispatch(addToast({
+                    type: 'error',
+                    message: resultAction.payload || 'Failed to block room'
+                }));
+            }
         } catch (err) {
-            dispatch(addToast({
-                type: 'error',
-                message: err.response?.data?.message || 'Failed to block room'
-            }));
+            dispatch(addToast({ type: 'error', message: 'Failed to block room' }));
         } finally {
             setSubmitting(false);
         }

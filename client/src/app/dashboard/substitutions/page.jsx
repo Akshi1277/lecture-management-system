@@ -1,63 +1,51 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     UserMinus, CalendarDays, Clock, ShieldAlert,
     UserCheck, AlertCircle, RefreshCcw
 } from "lucide-react";
-import axios from "axios";
 import { addToast, setActiveModal } from "@/redux/slices/uiSlice";
-import { fetchLectures } from "@/redux/slices/lectureSlice";
+import { fetchPendingSubstitutions, requestSubstitution, fetchLectures } from "@/redux/slices/lectureSlice";
 
 export default function SubstitutionsPage() {
     const { userInfo } = useSelector((state) => state.auth);
-    const { list: allLectures } = useSelector((state) => state.lecture);
+    const { list: allLectures, pendingSubstitutions, loading } = useSelector((state) => state.lecture);
     const dispatch = useDispatch();
 
-    const [pendingRequests, setPendingRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    const fetchPendingSubstitutions = async () => {
-        try {
-            setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}`;
-            
-            if (userInfo?.role === 'admin') {
-                const { data } = await axios.get(`${apiUrl}/lectures/substitutions/pending`, config);
-                setPendingRequests(data);
-            } else if (userInfo?.role === 'teacher') {
-                // Fetch teacher's own lectures that are scheduled
-                const { data } = await axios.get(`${apiUrl}/lectures/my`, config);
-                setPendingRequests(data.filter(l => l.status === 'Scheduled'));
-            }
-        } catch (error) {
-            dispatch(addToast({ type: 'error', message: 'Failed to fetch substitution data.' }));
-        } finally {
-            setLoading(false);
+    const refreshFeed = () => {
+        if (userInfo?.role === 'admin') {
+            dispatch(fetchPendingSubstitutions());
+        } else {
+            dispatch(fetchLectures());
         }
     };
 
-    // We also refetch whenever global lectures change 
-    // to keep the list synced if someone assigns a sub from elsewhere
+    const pendingRequests = userInfo?.role === 'admin' 
+        ? pendingSubstitutions 
+        : allLectures.filter(l => l.status === 'Scheduled');
+
     useEffect(() => {
         if (userInfo) {
-            fetchPendingSubstitutions();
+            if (userInfo.role === 'admin') {
+                dispatch(fetchPendingSubstitutions());
+            } else {
+                dispatch(fetchLectures());
+            }
         }
-    }, [userInfo, allLectures]);
+    }, [userInfo, dispatch]); // only re-run when user changes
 
     const handleTeacherRequest = async (lectureId) => {
         const reason = window.prompt("Reason for substitution request?");
         if (!reason) return;
         
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/lectures/${lectureId}/request-substitution`, { reason }, config);
+        const resultAction = await dispatch(requestSubstitution({ lectureId, reason }));
+        if (requestSubstitution.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Substitution request sent to admin.' }));
-            fetchPendingSubstitutions();
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: 'Failed to send request.' }));
+            dispatch(fetchLectures());
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to send request.' }));
         }
     };
 
@@ -87,7 +75,7 @@ export default function SubstitutionsPage() {
                 </div>
                 <div className="flex space-x-3">
                     <button
-                        onClick={fetchPendingSubstitutions}
+                        onClick={refreshFeed}
                         className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-black transition-all border border-slate-700 flex items-center shadow-xl shadow-slate-950/20"
                     >
                         <RefreshCcw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Refresh Feed

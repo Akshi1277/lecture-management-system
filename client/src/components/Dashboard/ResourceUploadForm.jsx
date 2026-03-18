@@ -2,9 +2,9 @@
 import { useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { FilePlus, Link, Send, UploadCloud, FileText, Image, File, X } from "lucide-react";
-import axios from "axios";
 import { addToast } from "@/redux/slices/uiSlice";
 import { motion, AnimatePresence } from "framer-motion";
+import { uploadResource } from "@/redux/slices/lectureSlice";
 
 export default function ResourceUploadForm({ lecture, onClose }) {
     const [mode, setMode] = useState("file"); // "file" | "url"
@@ -68,27 +68,31 @@ export default function ResourceUploadForm({ lecture, onClose }) {
         setLoading(true);
 
         try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const API = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}`;
+            let payload;
+            let isFile = false;
 
             if (mode === "file" && selectedFile) {
-                const formData = new FormData();
-                formData.append("file", selectedFile);
-                formData.append("name", resourceName || selectedFile.name);
-                config.headers["Content-Type"] = "multipart/form-data";
-                await axios.post(`${API}/lectures/${lecture._id}/resources`, formData, config);
+                payload = new FormData();
+                payload.append("file", selectedFile);
+                payload.append("name", resourceName || selectedFile.name);
+                isFile = true;
             } else if (mode === "url" && url) {
-                await axios.post(`${API}/lectures/${lecture._id}/resources`, { name: resourceName, url }, config);
+                payload = { name: resourceName, url };
             } else {
                 dispatch(addToast({ type: "error", message: "Please select a file or enter a URL." }));
                 setLoading(false);
                 return;
             }
 
-            dispatch(addToast({ type: "success", message: "Resource shared with students!" }));
-            onClose();
+            const resultAction = await dispatch(uploadResource({ lectureId: lecture._id, payload, isFile }));
+            if (uploadResource.fulfilled.match(resultAction)) {
+                dispatch(addToast({ type: "success", message: "Resource shared with students!" }));
+                onClose();
+            } else {
+                dispatch(addToast({ type: "error", message: resultAction.payload || "Upload failed" }));
+            }
         } catch (error) {
-            dispatch(addToast({ type: "error", message: error.response?.data?.message || "Upload failed. Please try again." }));
+            dispatch(addToast({ type: "error", message: "Upload failed. Please try again." }));
         } finally {
             setLoading(false);
         }

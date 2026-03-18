@@ -1,30 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Shield, Clock, User, Activity, Search, Filter, Terminal, ChevronRight } from "lucide-react";
-import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { fetchAuditLogs } from "@/redux/slices/dashboardSlice";
 
 export default function AuditLogViewer() {
-    const [logs, setLogs] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { auditLogs: logs, loading } = useSelector((state) => state.dashboard);
     const [filter, setFilter] = useState("");
     const { userInfo } = useSelector(state => state.auth);
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        const fetchLogs = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/audit`, config);
-                setLogs(res.data);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        if (userInfo) fetchLogs();
-    }, [userInfo]);
+        if (userInfo) {
+            dispatch(fetchAuditLogs());
+        }
+    }, [userInfo, dispatch]);
 
     const filteredLogs = logs.filter(log => {
         const search = filter.toLowerCase();

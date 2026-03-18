@@ -3,11 +3,18 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Plus, CheckCircle, AlertCircle, Info } from "lucide-react";
-import axios from "axios";
+import { fetchTeachers } from "@/redux/slices/userSlice";
+import { fetchBatches } from "@/redux/slices/hierarchySlice";
 import { addToast } from "@/redux/slices/uiSlice";
-import { createLecture } from "@/redux/slices/lectureSlice";
+import { createLecture, fetchLectures } from "@/redux/slices/lectureSlice";
 
 export default function AssignLectureForm({ lecture, onClose, isFullscreen = false }) {
+    const dispatch = useDispatch();
+    const { userInfo } = useSelector(state => state.auth);
+    const { teachers } = useSelector(state => state.users);
+    const { batches } = useSelector(state => state.hierarchy);
+    const { list: existingLectures } = useSelector(state => state.lecture);
+
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         title: "", teacher: "", batch: "",
@@ -34,29 +41,15 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
             });
         }
     }, [lecture]);
-    const [teachers, setTeachers] = useState([]);
-    const [batches, setBatches] = useState([]);
-    const [existingLectures, setExistingLectures] = useState([]);
     const [selectedSlots, setSelectedSlots] = useState([]);
-    const dispatch = useDispatch();
-    const { userInfo } = useSelector(state => state.auth);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const [resTeachers, resBatches, resLectures] = await Promise.all([
-                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/teachers`, config),
-                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, config),
-                    axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/lectures`, config)
-                ]);
-                setTeachers(resTeachers.data);
-                setBatches(resBatches.data);
-                setExistingLectures(resLectures.data);
-            } catch (err) { console.error("Fetch Data Error", err); }
-        };
-        if (userInfo) fetchData();
-    }, [userInfo]);
+        if (userInfo) {
+            dispatch(fetchTeachers());
+            dispatch(fetchBatches());
+            dispatch(fetchLectures());
+        }
+    }, [userInfo, dispatch]);
 
     const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const HOURS = Array.from({ length: 9 }, (_, i) => i + 7); // 7 AM – 3 PM

@@ -2,44 +2,30 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Users, UserCheck, ShieldAlert, Sparkles, Send } from "lucide-react";
-import axios from "axios";
+import { fetchSubstitutes, substituteTeacher, fetchLectures } from "@/redux/slices/lectureSlice";
 import { addToast } from "@/redux/slices/uiSlice";
-import { fetchLectures } from "@/redux/slices/lectureSlice";
 
 export default function SubstitutionFinder({ lecture, onClose }) {
-    const [substitutes, setSubstitutes] = useState([]);
+    const { substitutes, loading } = useSelector((state) => state.lecture);
     const [selectedSub, setSelectedSub] = useState(null);
-    const [loading, setLoading] = useState(true);
     const { userInfo } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        const fetchSubs = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/lectures/substitutes/${lecture._id}`, config);
-                setSubstitutes(res.data);
-                setLoading(false);
-            } catch (error) {
-                console.error(error);
-                setLoading(false);
-            }
-        };
-        if (userInfo && lecture?._id) fetchSubs();
-    }, [userInfo, lecture]);
+        if (userInfo && lecture?._id) {
+            dispatch(fetchSubstitutes(lecture._id));
+        }
+    }, [userInfo, lecture, dispatch]);
 
     const handleSubstitute = async () => {
         if (!selectedSub) return;
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            // Simple update for now: just change the teacher. 
-            // In a more complex system, we'd mark it as 'Substituted'
-            await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/lectures/${lecture._id}`, { teacher: selectedSub }, config);
+        const resultAction = await dispatch(substituteTeacher({ lectureId: lecture._id, teacherId: selectedSub }));
+        if (substituteTeacher.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Teacher substituted successfully!' }));
-            dispatch(fetchLectures()); // Refresh global list
+            dispatch(fetchLectures()); // Refresh list
             onClose();
-        } catch (error) {
-            dispatch(addToast({ type: 'error', message: error.response?.data?.message || 'Substitution failed' }));
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Substitution failed' }));
         }
     };
 

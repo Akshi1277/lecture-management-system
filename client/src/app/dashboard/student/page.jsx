@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 import {
     BookOpen,
     Calendar,
@@ -11,41 +12,24 @@ import {
     Activity
 } from "lucide-react";
 import { motion } from "framer-motion";
-import axios from "axios";
 import { fetchLectures } from "@/redux/slices/lectureSlice";
-import { useState } from "react";
+import { fetchMyAttendanceStats, fetchAnnouncements } from "@/redux/slices/dashboardSlice";
 import { setActiveModal } from "@/redux/slices/uiSlice";
 
 export default function StudentDashboard() {
     const { userInfo } = useSelector((state) => state.auth);
     const { list: lectures, loading } = useSelector((state) => state.lecture);
-    const [stats, setStats] = useState({ totalLectures: 0, presentLectures: 0, absentLectures: 0, percentage: 0 });
-    const [notices, setNotices] = useState([]);
+    const { myStats: stats, announcements: notices } = useSelector(state => state.dashboard);
     const dispatch = useDispatch();
+    const router = useRouter();
 
     useEffect(() => {
         if (userInfo) {
             dispatch(fetchLectures());
-            fetchAttendance();
-            fetchNotices();
+            dispatch(fetchMyAttendanceStats());
+            dispatch(fetchAnnouncements());
         }
     }, [userInfo, dispatch]);
-
-    const fetchAttendance = async () => {
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/my-stats`, config);
-            setStats(res.data);
-        } catch (error) { console.error(error); }
-    };
-
-    const fetchNotices = async () => {
-        try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/announcements`, config);
-            setNotices(data.slice(0, 3)); // Only top 3 for dashboard
-        } catch (error) { console.error(error); }
-    };
 
     const nextLecture = lectures[0];
 

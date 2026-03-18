@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion } from "framer-motion";
 import { FileDown, FileSpreadsheet, FileText, CheckCircle, Download, Database, Users, Calendar } from "lucide-react";
-import axios from "axios";
+import { fetchBatches } from "@/redux/slices/hierarchySlice";
+import { fetchAttendanceReport, fetchFacultyWorkloadReport } from "@/redux/slices/reportSlice";
 import { addToast } from "@/redux/slices/uiSlice";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -11,24 +12,17 @@ import ExcelJS from "exceljs";
 
 export default function ReportGenerator({ onClose }) {
     const [reportType, setReportType] = useState(null); // 'attendance' or 'workload'
-    const [batches, setBatches] = useState([]);
+    const { batches } = useSelector(state => state.hierarchy);
     const [selectedBatch, setSelectedBatch] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
     const { userInfo } = useSelector(state => state.auth);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        const fetchBatches = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/hierarchy/batches`, config);
-                setBatches(res.data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-        if (userInfo) fetchBatches();
-    }, [userInfo]);
+        if (userInfo) {
+            dispatch(fetchBatches());
+        }
+    }, [userInfo, dispatch]);
 
     const exportToExcel = async (data, title) => {
         const workbook = new ExcelJS.Workbook();
@@ -85,29 +79,29 @@ export default function ReportGenerator({ onClose }) {
 
         setIsGenerating(true);
         try {
-            const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-            let url = "";
+            let resultAction;
             let title = "";
 
             if (reportType === 'attendance') {
-                url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/reports/attendance/${selectedBatch}`;
+                resultAction = await dispatch(fetchAttendanceReport(selectedBatch));
                 const batchName = batches.find(b => b._id === selectedBatch)?.name || "";
                 title = `Attendance Report - ${batchName}`;
             } else {
-                url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/reports/faculty-workload`;
+                resultAction = await dispatch(fetchFacultyWorkloadReport());
                 title = "Faculty Workload Report";
             }
 
-            const res = await axios.get(url, config);
-            const data = res.data;
-
-            if (format === 'excel') {
-                await exportToExcel(data, title);
+            if (resultAction.payload) {
+                const data = resultAction.payload;
+                if (format === 'excel') {
+                    await exportToExcel(data, title);
+                } else {
+                    exportToPDF(data, title);
+                }
+                dispatch(addToast({ type: 'success', message: 'Report generated successfully!' }));
             } else {
-                exportToPDF(data, title);
+                dispatch(addToast({ type: 'error', message: 'Failed to generate report' }));
             }
-
-            dispatch(addToast({ type: 'success', message: 'Report generated successfully!' }));
         } catch (err) {
             dispatch(addToast({ type: 'error', message: 'Failed to generate report' }));
         } finally {
