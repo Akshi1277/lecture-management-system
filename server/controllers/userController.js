@@ -312,3 +312,51 @@ export const resetPassword = asyncHandler(async (req, res) => {
         throw new Error('Invalid or expired verification code.');
     }
 });
+
+// @desc    Update user profile (Name)
+// @route   PUT /api/users/profile
+// @access  Private
+export const updateUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        user.name = req.body.name || user.name;
+        if (req.body.profileImage) user.profileImage = req.body.profileImage;
+        
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            token: generateToken(updatedUser._id),
+            profileImage: updatedUser.profileImage
+        });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+// @desc    Change password while logged in
+// @route   PUT /api/users/change-password
+// @access  Private
+export const updatePasswordWhileLoggedIn = asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (user && (await user.matchPassword(currentPassword))) {
+        if (newPassword?.length < 6) {
+            res.status(400);
+            throw new Error('New password must be at least 6 characters long.');
+        }
+
+        user.password = newPassword;
+        await user.save();
+        res.json({ message: 'Password updated successfully' });
+    } else {
+        res.status(401);
+        throw new Error('Incorrect current password');
+    }
+});

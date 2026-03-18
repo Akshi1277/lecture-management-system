@@ -25,6 +25,29 @@ export const register = createAsyncThunk('auth/register', async (userData, { rej
     }
 });
 
+export const updateUserProfile = createAsyncThunk('auth/updateProfile', async (userData, { getState, rejectWithValue }) => {
+    try {
+        const { auth: { userInfo } } = getState();
+        const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
+        const response = await api.put('/users/profile', userData, config);
+        localStorage.setItem('userInfo', JSON.stringify(response.data));
+        return response.data;
+    } catch (error) {
+        return rejectWithValue(error.response.data.message || error.message);
+    }
+});
+
+export const changePassword = createAsyncThunk('auth/changePassword', async (passwordData, { getState, rejectWithValue }) => {
+    try {
+        const { auth: { userInfo } } = getState();
+        const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
+        const response = await api.put('/users/change-password', passwordData, config);
+        return response.data;
+    } catch (error) {
+        return rejectWithValue(error.response.data.message || error.message);
+    }
+});
+
 const initialState = {
     userInfo: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('userInfo')) : null,
     loading: false,
@@ -68,6 +91,9 @@ const authSlice = createSlice({
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+            .addCase(updateUserProfile.fulfilled, (state, action) => {
+                state.userInfo = action.payload;
             });
     },
 });

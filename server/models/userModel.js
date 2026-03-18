@@ -29,6 +29,10 @@ const userSchema = mongoose.Schema({
     parentEmail: {
         type: String,
         required: false
+    },
+    profileImage: {
+        type: String,
+        default: ""
     }
 }, {
     timestamps: true

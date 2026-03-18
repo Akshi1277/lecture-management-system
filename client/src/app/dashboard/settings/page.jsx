@@ -7,6 +7,7 @@ import {
     Save, Mail, Percent, Loader2
 } from "lucide-react";
 import { setActiveModal, addToast } from "@/redux/slices/uiSlice";
+import { updateUserProfile, changePassword } from "@/redux/slices/authSlice";
 import axios from "axios";
 
 export default function SettingsPage() {
@@ -23,6 +24,15 @@ export default function SettingsPage() {
     });
     const [isSaving, setIsSaving] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    
+    // User Profile State
+    const [name, setName] = useState(userInfo?.name || "");
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
     useEffect(() => {
         const fetchGlobalSettings = async () => {
@@ -56,6 +66,61 @@ export default function SettingsPage() {
             dispatch(addToast({ type: 'error', message: 'Failed to update configurations' }));
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleUpdateProfile = async (e) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+        setIsUpdatingProfile(true);
+        try {
+            await dispatch(updateUserProfile({ name })).unwrap();
+            dispatch(addToast({ type: 'success', message: 'Profile updated successfully' }));
+        } catch (err) {
+            dispatch(addToast({ type: 'error', message: err || 'Failed to update profile' }));
+        } finally {
+            setIsUpdatingProfile(false);
+        }
+    };
+
+    const handlePhotoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        setIsUploadingPhoto(true);
+        try {
+            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+            const { data } = await axios.post(`${apiUrl}/users/profile/photo`, formData, config);
+            
+            await dispatch(updateUserProfile({ profileImage: data.url })).unwrap();
+            dispatch(addToast({ type: 'success', message: 'Profile photo updated' }));
+        } catch (err) {
+            dispatch(addToast({ type: 'error', message: 'Failed to upload photo' }));
+        } finally {
+            setIsUploadingPhoto(false);
+        }
+    };
+
+    const handlePasswordUpdate = async (e) => {
+        e.preventDefault();
+        if (newPassword !== confirmPassword) {
+            return dispatch(addToast({ type: 'error', message: 'Passwords do not match' }));
+        }
+        setIsUpdatingPassword(true);
+        try {
+            await dispatch(changePassword({ currentPassword, newPassword })).unwrap();
+            dispatch(addToast({ type: 'success', message: 'Password changed successfully' }));
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+        } catch (err) {
+            dispatch(addToast({ type: 'error', message: err || 'Failed to change password' }));
+        } finally {
+            setIsUpdatingPassword(false);
         }
     };
 
@@ -139,24 +204,37 @@ export default function SettingsPage() {
 
                             <div className="flex items-center space-x-8">
                                 <div className="relative group">
-                                    <div className="w-28 h-28 rounded-[38px] bg-slate-800 flex items-center justify-center text-4xl font-black text-teal-400 border-2 border-slate-700 shadow-2xl shadow-teal-500/10 transition-transform group-hover:scale-105">
-                                        {(userInfo?.name || '?').split(' ').map(n => n[0]).join('').substring(0, 2)}
+                                    <div className="w-28 h-28 rounded-[38px] bg-slate-800 flex items-center justify-center text-4xl font-black text-teal-400 border-2 border-slate-700 shadow-2xl shadow-teal-500/10 transition-transform group-hover:scale-105 overflow-hidden">
+                                        {userInfo?.profileImage ? (
+                                            <img src={userInfo.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            (userInfo?.name || '?').split(' ').map(n => n[0]).join('').substring(0, 2)
+                                        )}
                                     </div>
-                                    <button className="absolute -bottom-2 -right-2 p-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-400 hover:text-white transition-all shadow-lg">
-                                        <Camera className="w-4 h-4" />
-                                    </button>
+                                    <label className="absolute -bottom-2 -right-2 p-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-400 hover:text-white transition-all shadow-lg cursor-pointer">
+                                        {isUploadingPhoto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                                        <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
+                                    </label>
                                 </div>
                                 <div>
                                     <h4 className="text-lg font-bold text-white">{userInfo?.name}</h4>
                                     <p className="text-sm text-slate-500">{userInfo?.email}</p>
-                                    <button className="mt-4 px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all border border-slate-700 uppercase tracking-widest">Update Photo</button>
+                                    <label className="mt-4 px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all border border-slate-700 uppercase tracking-widest cursor-pointer inline-block">
+                                        {isUploadingPhoto ? "Uploading..." : "Update Photo"}
+                                        <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
+                                    </label>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                            <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-black text-slate-500 uppercase ml-1 tracking-widest">Legal Full Name</label>
-                                    <input type="text" defaultValue={userInfo?.name} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none transition-all" />
+                                    <input 
+                                        type="text" 
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none transition-all" 
+                                    />
                                 </div>
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-black text-slate-500 uppercase ml-1 tracking-widest">Email Address</label>
@@ -169,7 +247,16 @@ export default function SettingsPage() {
                                         <span className="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-teal-400 uppercase text-[9px] font-black italic">{userInfo?.role}</span>
                                     </div>
                                 </div>
-                            </div>
+                                <div className="md:col-span-2 pt-4">
+                                    <button 
+                                        type="submit"
+                                        disabled={isUpdatingProfile || !name.trim() || name === userInfo?.name}
+                                        className="px-8 py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-xl shadow-teal-500/20 active:scale-95 disabled:opacity-50 uppercase tracking-widest"
+                                    >
+                                        {isUpdatingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     )}
 
@@ -182,25 +269,50 @@ export default function SettingsPage() {
                                 <p className="text-xs text-slate-500 mt-1 uppercase font-black tracking-widest">Credential Logic</p>
                             </div>
 
-                            <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-8 space-y-6">
+                            <form onSubmit={handlePasswordUpdate} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-8 space-y-6">
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-black text-slate-500 uppercase ml-1 tracking-widest">Current Credentials</label>
-                                    <input type="password" placeholder="••••••••" className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none transition-all" />
+                                    <input 
+                                        type="password" 
+                                        required
+                                        placeholder="••••••••" 
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none transition-all" 
+                                    />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-slate-500 uppercase ml-1 tracking-widest">New Password</label>
-                                        <input type="password" placeholder="••••••••" className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none transition-all" />
+                                        <input 
+                                            type="password" 
+                                            required
+                                            placeholder="••••••••" 
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none transition-all" 
+                                        />
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-slate-500 uppercase ml-1 tracking-widest">Confirm New Password</label>
-                                        <input type="password" placeholder="••••••••" className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none transition-all" />
+                                        <input 
+                                            type="password" 
+                                            required
+                                            placeholder="••••••••" 
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none transition-all" 
+                                        />
                                     </div>
                                 </div>
-                                <button className="w-full md:w-auto px-10 py-4 bg-teal-500 hover:bg-teal-400 text-slate-950 text-sm font-black rounded-2xl transition-all shadow-xl shadow-teal-500/20 active:scale-95 uppercase tracking-widest">
-                                    Initialize Change
+                                <button 
+                                    type="submit"
+                                    disabled={isUpdatingPassword || !newPassword}
+                                    className="w-full md:w-auto px-10 py-4 bg-teal-500 hover:bg-teal-400 text-slate-950 text-sm font-black rounded-2xl transition-all shadow-xl shadow-teal-500/20 active:scale-95 uppercase tracking-widest disabled:opacity-50"
+                                >
+                                    {isUpdatingPassword ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Initialize Change"}
                                 </button>
-                            </div>
+                            </form>
                         </div>
                     )}
 
@@ -305,6 +417,7 @@ export default function SettingsPage() {
                                     <p className="text-xs text-slate-500 mt-2 leading-relaxed">Configure structural nodes, divisions, and year mappings (FY, SY, TY).</p>
                                 </button>
                                 <button
+                                    onClick={() => dispatch(setActiveModal('viewAuditLogs'))}
                                     className="p-8 bg-slate-950/50 border border-slate-800 rounded-[32px] text-left hover:border-slate-600 transition-all group relative overflow-hidden active:scale-95 shadow-xl hover:shadow-2xl"
                                 >
                                     <div className="absolute top-0 right-0 p-8 text-slate-800 group-hover:text-slate-700 transition-colors">

@@ -57,4 +57,15 @@ export const uploadToCloudinary = multer({
     },
 });
 
+const profileStorage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder: 'edusync/profiles',
+        allowed_formats: ['jpg', 'png', 'jpeg'],
+        transformation: [{ width: 300, height: 300, crop: 'limit' }]
+    }
+});
+
+export const uploadProfile = multer({ storage: profileStorage });
+
 export default cloudinary;

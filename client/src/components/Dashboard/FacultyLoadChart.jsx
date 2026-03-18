@@ -27,6 +27,23 @@ export default function FacultyLoadChart() {
         if (userInfo) fetchLoad();
     }, [userInfo]);
 
+    const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-slate-900/90 border border-slate-700 p-4 rounded-2xl backdrop-blur-md shadow-2xl">
+                    <p className="text-white font-bold text-xs mb-1 uppercase italic tracking-wider">{label}</p>
+                    <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: payload[0].color }}></div>
+                        <p className="text-slate-400 text-[10px] font-black uppercase">
+                            Count : <span className="text-teal-400">{payload[0].value}</span>
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+        return null;
+    };
+
     if (loading) return <div className="h-[300px] flex items-center justify-center text-slate-500 italic">Calculating workload...</div>;
 
     return (
@@ -55,12 +72,7 @@ export default function FacultyLoadChart() {
                         />
                         <Tooltip
                             cursor={{ fill: '#1e293b', opacity: 0.4 }}
-                            contentStyle={{
-                                backgroundColor: '#0f172a',
-                                border: '1px solid #334155',
-                                borderRadius: '12px',
-                                fontSize: '10px'
-                            }}
+                            content={<CustomTooltip />}
                         />
                         <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={30}>
                             {data.map((entry, index) => (
