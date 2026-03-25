@@ -25,6 +25,12 @@ connectDB();
 
 const app = express();
 
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://lecture-management-system-eta.vercel.app',
+    process.env.CLIENT_URL
+].filter(Boolean);
+
 // Security Middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -33,7 +39,7 @@ app.use(helmet({
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:", "res.cloudinary.com"],
-            connectSrc: ["'self'", "http://localhost:5000", "ws://localhost:5000"],
+            connectSrc: ["'self'", ...allowedOrigins, "ws://localhost:5000", "wss://lecture-management-system-npia.onrender.com"],
             fontSrc: ["'self'", "https:", "data:"],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
@@ -43,7 +49,15 @@ app.use(helmet({
 }));
 app.disable('x-powered-by');
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     credentials: true,
 }));
 app.use(express.json());
