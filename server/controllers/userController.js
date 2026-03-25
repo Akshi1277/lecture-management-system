@@ -18,6 +18,15 @@ export const authUser = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
+        const token = generateToken(user._id);
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        });
+
         res.json({
             _id: user._id,
             name: user.name,
@@ -26,7 +35,7 @@ export const authUser = asyncHandler(async (req, res) => {
             department: user.department,
             subjects: user.subjects,
             isMentor: user.isMentor,
-            token: generateToken(user._id),
+            token, // Keep sending for now to avoid breaking existing frontend logic immediately
         });
     } else {
         res.status(401);
@@ -120,13 +129,22 @@ export const registerUser = asyncHandler(async (req, res) => {
             ipAddress: req.ip
         });
 
+        const token = generateToken(user._id);
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
         res.status(201).json({
             _id: user._id,
             name: user.name,
             email: user.email,
             role: user.role,
             isEmailSent: true,
-            token: generateToken(user._id),
+            token,
         });
     } else {
         res.status(400);

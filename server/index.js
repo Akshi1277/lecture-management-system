@@ -8,6 +8,7 @@ import { xss } from 'express-xss-sanitizer';
 import hpp from 'hpp';
 import morgan from 'morgan';
 import http from 'http';
+import cookieParser from 'cookie-parser';
 import { initSocket } from './socket.js';
 import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
@@ -26,8 +27,12 @@ const app = express();
 // Security Middleware
 app.use(helmet());
 app.disable('x-powered-by');
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+}));
 app.use(express.json());
+app.use(cookieParser());
 // app.use(mongoSanitize()); // Prevent NoSQL Injection
 // app.use(xss()); // Prevent Cross-Site Scripting (XSS)
 app.use(hpp()); // Prevent HTTP Parameter Pollution
