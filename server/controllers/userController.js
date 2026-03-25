@@ -19,12 +19,20 @@ export const authUser = asyncHandler(async (req, res) => {
 
     if (user && (await user.matchPassword(password))) {
         const token = generateToken(user._id);
+        const csrfToken = crypto.randomBytes(32).toString('hex');
 
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
+        // Set CSRF token in a non-httpOnly cookie so frontend can read it
+        res.cookie('csrfToken', csrfToken, {
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
         res.json({
@@ -35,7 +43,8 @@ export const authUser = asyncHandler(async (req, res) => {
             department: user.department,
             subjects: user.subjects,
             isMentor: user.isMentor,
-            token, // Keep sending for now to avoid breaking existing frontend logic immediately
+            token,
+            csrfToken,
         });
     } else {
         res.status(401);
@@ -130,9 +139,16 @@ export const registerUser = asyncHandler(async (req, res) => {
         });
 
         const token = generateToken(user._id);
+        const csrfToken = crypto.randomBytes(32).toString('hex');
 
         res.cookie('token', token, {
             httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
+        res.cookie('csrfToken', csrfToken, {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -145,6 +161,7 @@ export const registerUser = asyncHandler(async (req, res) => {
             role: user.role,
             isEmailSent: true,
             token,
+            csrfToken,
         });
     } else {
         res.status(400);

@@ -56,3 +56,15 @@ export const teacher = (req, res, next) => {
         res.status(401).json({ message: 'Not authorized as a teacher' });
     }
 };
+
+export const verifyCSRF = (req, res, next) => {
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+        const csrfTokenInCookie = req.cookies.csrfToken;
+        const csrfTokenInHeader = req.headers['x-csrf-token'];
+
+        if (!csrfTokenInCookie || !csrfTokenInHeader || csrfTokenInCookie !== csrfTokenInHeader) {
+            return res.status(403).json({ message: 'CSRF token mismatch or missing' });
+        }
+    }
+    next();
+};

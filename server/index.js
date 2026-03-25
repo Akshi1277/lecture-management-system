@@ -18,6 +18,7 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
+import { verifyCSRF } from './middleware/authMiddleware.js';
 
 dotenv.config();
 connectDB();
@@ -25,7 +26,21 @@ connectDB();
 const app = express();
 
 // Security Middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "res.cloudinary.com"],
+            connectSrc: ["'self'", "http://localhost:5000", "ws://localhost:5000"],
+            fontSrc: ["'self'", "https:", "data:"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'self'"],
+        },
+    },
+}));
 app.disable('x-powered-by');
 app.use(cors({
     origin: 'http://localhost:3000',
@@ -33,6 +48,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(verifyCSRF);
 // app.use(mongoSanitize()); // Prevent NoSQL Injection
 // app.use(xss()); // Prevent Cross-Site Scripting (XSS)
 app.use(hpp()); // Prevent HTTP Parameter Pollution

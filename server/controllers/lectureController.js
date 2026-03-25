@@ -5,6 +5,29 @@ import Classroom from '../models/classroomModel.js';
 import AuditLog from '../models/auditLogModel.js';
 import { lectureSchema } from '../utils/validators.js';
 
+// Helper to check for scheduling conflicts
+const checkForConflicts = async (data, excludeId = null) => {
+    const { teacher, classroom, batch, division, startTime, endTime } = data;
+    
+    const query = {
+        $and: [
+            {
+                $or: [
+                    { teacher, startTime: { $lt: endTime }, endTime: { $gt: startTime } },
+                    { classroom, startTime: { $lt: endTime }, endTime: { $gt: startTime } },
+                    { batch, division, startTime: { $lt: endTime }, endTime: { $gt: startTime } }
+                ]
+            }
+        ]
+    };
+
+    if (excludeId) {
+        query.$and.push({ _id: { $ne: excludeId } });
+    }
+
+    return await Lecture.findOne(query);
+};
+
 // @desc    Create new lecture (Admin only)
 // @route   POST /api/lectures
 // @access  Private/Admin
@@ -18,22 +41,11 @@ export const createLecture = asyncHandler(async (req, res) => {
 
     const { title, subject, teacher, startTime, endTime, classroom, batch, division, type } = req.body;
 
-    // Check for conflicts
-    // 1. Teacher busy
-    // 2. Classroom busy
-    // 3. Batch + Division busy (Students cannot be in two places)
-
-    const conflict = await Lecture.findOne({
-        $or: [
-            { teacher, startTime: { $lt: endTime }, endTime: { $gt: startTime } },
-            { classroom, startTime: { $lt: endTime }, endTime: { $gt: startTime } },
-            { batch, division, startTime: { $lt: endTime }, endTime: { $gt: startTime } }
-        ]
-    });
+    const conflict = await checkForConflicts({ teacher, classroom, batch, division, startTime, endTime });
 
     if (conflict) {
         res.status(400);
-        throw new Error('Scheduling conflict: Teacher, Classroom, or Batch is already booked.');
+        throw new Error(`Scheduling conflict detected for slot: ${new Date(startTime).toLocaleString()}`);
     }
 
     // Capacity Check
@@ -82,16 +94,10 @@ export const createLecture = asyncHandler(async (req, res) => {
 
     // Check conflicts for all generated slots
     for (const data of lecturesToCreate) {
-        const conflict = await Lecture.findOne({
-            $or: [
-                { teacher: data.teacher, startTime: { $lt: data.endTime }, endTime: { $gt: data.startTime } },
-                { classroom: data.classroom, startTime: { $lt: data.endTime }, endTime: { $gt: data.startTime } },
-                { batch: data.batch, division: data.division, startTime: { $lt: data.endTime }, endTime: { $gt: data.startTime } }
-            ]
-        });
+        const conflict = await checkForConflicts(data);
         if (conflict) {
             res.status(400);
-            throw new Error(`Conflict detected for slot: ${new Date(data.startTime).toLocaleString()}`);
+            throw new Error(`Conflict detected for recurring slot: ${new Date(data.startTime).toLocaleString()}`);
         }
     }
 
@@ -194,6 +200,23 @@ export const updateLecture = asyncHandler(async (req, res) => {
         lecture.startTime = req.body.startTime || lecture.startTime;
         lecture.endTime = req.body.endTime || lecture.endTime;
         lecture.status = req.body.status || lecture.status;
+        lecture.batch = req.body.batch || lecture.batch;
+        lecture.division = req.body.division || lecture.division;
+
+        // Perform conflict check on update
+        const conflict = await checkForConflicts({
+            teacher: lecture.teacher,
+            classroom: lecture.classroom,
+            batch: lecture.batch,
+            division: lecture.division,
+            startTime: lecture.startTime,
+            endTime: lecture.endTime
+        }, lecture._id);
+
+        if (conflict) {
+            res.status(400);
+            throw new Error('Updating this lecture would cause a scheduling conflict.');
+        }
 
         const updatedLecture = await lecture.save();
 
