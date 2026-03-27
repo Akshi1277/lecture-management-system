@@ -59,6 +59,10 @@ const lectureSchema = mongoose.Schema({
         fileType: String,   // MIME type e.g. 'application/pdf'
         type: { type: String, default: 'File', enum: ['PDF', 'File', 'Link', 'Image'] }
     }],
+    attendanceMarked: {
+        type: Boolean,
+        default: false
+    },
     isSubstitutionRequested: {
         type: Boolean,
         default: false

@@ -5,6 +5,7 @@ import { Users, CheckCircle, XCircle, Search, Save } from "lucide-react";
 import { fetchStudentsByBatch } from "@/redux/slices/userSlice";
 import { markAttendance } from "@/redux/slices/attendanceSlice";
 import { addToast } from "@/redux/slices/uiSlice";
+import api from "@/redux/api";
 
 export default function AttendanceMarker({ lecture, onClose }) {
     const { students, loading } = useSelector((state) => state.users);
@@ -20,15 +21,34 @@ export default function AttendanceMarker({ lecture, onClose }) {
         }
     }, [userInfo, lecture, dispatch]);
 
+
     useEffect(() => {
         if (students.length > 0) {
-            const initialData = {};
-            students.forEach(s => {
-                initialData[s._id] = 'present';
-            });
-            setAttendanceData(initialData);
+            const initializeAttendance = async () => {
+                const initialData = {};
+                students.forEach(s => {
+                    initialData[s._id] = 'present';
+                });
+
+                if (lecture?.attendanceMarked) {
+                    try {
+                        const { data } = await api.get(`/attendance/${lecture._id}`);
+                        if (data && data.students) {
+                            data.students.forEach(record => {
+                                const id = typeof record.student === 'object' ? record.student._id : record.student;
+                                if (id) initialData[id] = record.status;
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch existing attendance', error);
+                        dispatch(addToast({ type: 'error', message: 'Failed to load existing attendance data' }));
+                    }
+                }
+                setAttendanceData(initialData);
+            };
+            initializeAttendance();
         }
-    }, [students]);
+    }, [students, lecture, dispatch]);
 
     const handleToggle = (studentId) => {
         setAttendanceData(prev => ({
@@ -48,6 +68,12 @@ export default function AttendanceMarker({ lecture, onClose }) {
         const resultAction = await dispatch(markAttendance(payload));
         if (markAttendance.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Attendance marked successfully!' }));
+            // Refresh lectures so the UI updates to "Marked" immediately without refresh
+            dispatch({ type: 'lectures/fetchAll/pending' }); // Optional trick, or direct thunks below:
+            if (userInfo?.role === 'teacher') {
+                import('@/redux/slices/lectureSlice').then(m => dispatch(m.fetchLectures()));
+                import('@/redux/slices/dashboardSlice').then(m => dispatch(m.fetchMyLectures()));
+            }
             onClose();
         } else {
             dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to mark attendance' }));

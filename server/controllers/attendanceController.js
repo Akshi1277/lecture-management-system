@@ -26,31 +26,43 @@ export const markAttendance = asyncHandler(async (req, res) => {
     }
 
     // Check if attendance already marked
-    const attendanceExists = await Attendance.findOne({ lecture: lectureId });
-    if (attendanceExists) {
-        res.status(400);
-        throw new Error('Attendance already marked for this lecture');
-    }
-
-    const attendance = await Attendance.create({
-        lecture: lectureId,
-        subject: lecture.subject,
-        batch: lecture.batch,
-        students: students.map(s => ({
+    let attendance = await Attendance.findOne({ lecture: lectureId });
+    
+    if (attendance) {
+        // Update existing attendance
+        attendance.students = students.map(s => ({
             student: s.studentId,
             status: s.status
-        })),
-        markedBy: req.user._id
-    });
+        }));
+        attendance.markedBy = req.user._id;
+        await attendance.save();
+    } else {
+        // Create new attendance
+        attendance = await Attendance.create({
+            lecture: lectureId,
+            subject: lecture.subject,
+            batch: lecture.batch,
+            students: students.map(s => ({
+                student: s.studentId,
+                status: s.status
+            })),
+            markedBy: req.user._id
+        });
+    }
 
     if (attendance) {
+        // Mark lecture as attendance processed
+        lecture.attendanceMarked = true;
+        lecture.status = 'Completed'; // Optionally update status!
+        await lecture.save();
+
         // Audit Log
         await AuditLog.create({
             user: req.user._id,
             action: 'MARK_ATTENDANCE',
             entity: 'Attendance',
             entityId: attendance._id,
-            details: { lectureId, studentCount: students.length },
+            details: { lectureId, studentCount: students.length, updated: !!attendance.isNew },
             ipAddress: req.ip
         });
 
@@ -82,7 +94,7 @@ export const getAttendanceStats = asyncHandler(async (req, res) => {
         { $unwind: '$students' },
         {
             $group: {
-                _id: '$students.student',
+                _id: { student: '$students.student', batch: '$batch' },
                 totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
                 presentWeight: {
                     $sum: {
@@ -97,7 +109,8 @@ export const getAttendanceStats = asyncHandler(async (req, res) => {
         },
         {
             $project: {
-                student: '$_id',
+                student: '$_id.student',
+                batch: '$_id.batch',
                 totalLectures: '$totalWeight',
                 presentLectures: '$presentWeight',
                 percentage: {
@@ -111,10 +124,11 @@ export const getAttendanceStats = asyncHandler(async (req, res) => {
         }
     ]);
 
-    // Populate student names
-    const populatedStats = await User.populate(stats, { path: 'student', select: 'name email' });
+    // Populate student names and batches
+    const populatedStats = await mongoose.model('User').populate(stats, { path: 'student', select: 'name email' });
+    const finalStats = await mongoose.model('Batch').populate(populatedStats, { path: 'batch', select: 'name' });
 
-    res.json(populatedStats);
+    res.json(finalStats);
 });
 
 // @desc    Get attendance for a specific lecture

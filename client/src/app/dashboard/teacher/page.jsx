@@ -59,12 +59,21 @@ export default function TeacherDashboard() {
                                             <p className="text-[10px] text-slate-500">TODAY</p>
                                         </div>
                                         <div className="flex flex-col space-y-2">
-                                            <button
-                                                onClick={() => dispatch(setActiveModal({ type: 'markAttendance', data: l }))}
-                                                className="px-6 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all text-sm"
-                                            >
-                                                Mark Attendance
-                                            </button>
+                                            {l.attendanceMarked ? (
+                                                <button
+                                                    onClick={() => dispatch(setActiveModal({ type: 'markAttendance', data: l }))}
+                                                    className="px-6 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl border border-emerald-500/30 transition-all text-sm flex items-center justify-center cursor-pointer"
+                                                >
+                                                    <CheckSquare className="w-4 h-4 mr-2" /> Edit Attendance
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => dispatch(setActiveModal({ type: 'markAttendance', data: l }))}
+                                                    className="px-6 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all text-sm"
+                                                >
+                                                    Mark Attendance
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => dispatch(setActiveModal({ type: 'uploadResource', data: l }))}
                                                 className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition-all text-[11px] flex items-center justify-center"
