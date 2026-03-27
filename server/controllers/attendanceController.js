@@ -95,6 +95,10 @@ export const getAttendanceStats = asyncHandler(async (req, res) => {
         {
             $group: {
                 _id: { student: '$students.student', batch: '$batch' },
+                // Physical counts (Unweighted) for UI display
+                totalCount: { $sum: 1 },
+                presentCount: { $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] } },
+                // Weights for Percentage Calculation (Lab=4, Lecture=1)
                 totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
                 presentWeight: {
                     $sum: {
@@ -111,8 +115,8 @@ export const getAttendanceStats = asyncHandler(async (req, res) => {
             $project: {
                 student: '$_id.student',
                 batch: '$_id.batch',
-                totalLectures: '$totalWeight',
-                presentLectures: '$presentWeight',
+                totalLectures: '$totalCount',
+                presentLectures: '$presentCount',
                 percentage: {
                     $cond: [
                         { $eq: ['$totalWeight', 0] },
@@ -221,6 +225,10 @@ export const getGlobalDefaulters = asyncHandler(async (req, res) => {
         {
             $group: {
                 _id: { student: '$students.student', batch: '$batch' },
+                // Physical counts (Unweighted) for UI display
+                totalCount: { $sum: 1 },
+                presentCount: { $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] } },
+                // Weights for Percentage Calculation (Lab=4, Lecture=1)
                 totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
                 presentWeight: {
                     $sum: {
@@ -244,8 +252,8 @@ export const getGlobalDefaulters = asyncHandler(async (req, res) => {
                         { $multiply: [{ $divide: ['$presentWeight', '$totalWeight'] }, 100] }
                     ]
                 },
-                totalLectures: '$totalWeight',
-                presentLectures: '$presentWeight'
+                totalLectures: '$totalCount',
+                presentLectures: '$presentCount'
             }
         },
         { $match: { percentage: { $lt: threshold } } },
@@ -307,6 +315,10 @@ export const getMyAttendanceStats = asyncHandler(async (req, res) => {
         {
             $group: {
                 _id: null,
+                // Physical counts
+                totalCount: { $sum: 1 },
+                presentCount: { $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] } },
+                // Weights
                 totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
                 presentWeight: {
                     $sum: {
@@ -322,9 +334,9 @@ export const getMyAttendanceStats = asyncHandler(async (req, res) => {
         {
             $project: {
                 _id: 0,
-                totalLectures: '$totalWeight',
-                presentLectures: '$presentWeight',
-                absentLectures: { $subtract: ['$totalWeight', '$presentWeight'] },
+                totalLectures: '$totalCount',
+                presentLectures: '$presentCount',
+                absentLectures: { $subtract: ['$totalCount', '$presentCount'] },
                 percentage: {
                     $cond: [
                         { $eq: ['$totalWeight', 0] },
@@ -356,6 +368,10 @@ export const getSubjectWiseAttendance = asyncHandler(async (req, res) => {
         {
             $group: {
                 _id: '$subject',
+                // Physical counts
+                totalCount: { $sum: 1 },
+                presentCount: { $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] } },
+                // Weights
                 totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
                 presentWeight: {
                     $sum: {
@@ -372,9 +388,9 @@ export const getSubjectWiseAttendance = asyncHandler(async (req, res) => {
             $project: {
                 _id: 0,
                 subject: '$_id',
-                totalLectures: '$totalWeight',
-                presentLectures: '$presentWeight',
-                absentLectures: { $subtract: ['$totalWeight', '$presentWeight'] },
+                totalLectures: '$totalCount',
+                presentLectures: '$presentCount',
+                absentLectures: { $subtract: ['$totalCount', '$presentCount'] },
                 percentage: {
                     $cond: [
                         { $eq: ['$totalWeight', 0] },
