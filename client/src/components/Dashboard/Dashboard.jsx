@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, Users, BookOpen, TrendingUp, Clock, FileText, CheckCircle, Calendar, BarChart3, Download, Award } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { setActiveModal } from "@/redux/slices/uiSlice";
+import { setActiveModal, clearToasts } from "@/redux/slices/uiSlice";
+import { logout } from "@/redux/slices/authSlice";
 import { fetchAdminDashboard, fetchMyLectures } from "@/redux/slices/dashboardSlice";
 
 export default function Dashboard() {
@@ -43,7 +44,11 @@ export default function Dashboard() {
             <p className="text-slate-400 mt-2">Welcome back! You are logged in as <b className="text-teal-400">{user?.role}</b></p>
           </div>
           <button
-            onClick={() => { localStorage.removeItem("userInfo"); window.location.href = "/login"; }}
+            onClick={() => {
+              dispatch(logout());
+              dispatch(clearToasts());
+              window.location.href = "/login";
+            }}
             className="mt-4 md:mt-0 px-6 py-2 bg-red-500/20 text-red-200 border border-red-500/30 rounded-xl hover:bg-red-500/30 transition-all font-medium"
           >
             Logout

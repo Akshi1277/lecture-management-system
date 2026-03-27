@@ -18,7 +18,6 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
-import { verifyCSRF } from './middleware/authMiddleware.js';
 
 dotenv.config();
 connectDB();
@@ -62,7 +61,6 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(verifyCSRF);
 // app.use(mongoSanitize()); // Prevent NoSQL Injection
 // app.use(xss()); // Prevent Cross-Site Scripting (XSS)
 app.use(hpp()); // Prevent HTTP Parameter Pollution

@@ -31,8 +31,11 @@ const uiSlice = createSlice({
         removeToast: (state, action) => {
             state.toasts = state.toasts.filter(t => t.id !== action.payload);
         },
+        clearToasts: (state) => {
+            state.toasts = [];
+        },
     },
 });
 
-export const { toggleSidebar, setActiveModal, addToast, removeToast } = uiSlice.actions;
+export const { toggleSidebar, setActiveModal, addToast, removeToast, clearToasts } = uiSlice.actions;
 export default uiSlice.reducer;

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/slices/authSlice";
+import { clearToasts } from "@/redux/slices/uiSlice";
 import { useRouter, usePathname } from "next/navigation";
 import { 
     Menu, X, Calendar, Home, LayoutDashboard, 
@@ -32,6 +33,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(clearToasts());
     router.push('/login');
     setIsMobileMenuOpen(false);
   };

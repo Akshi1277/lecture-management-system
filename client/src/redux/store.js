@@ -1,10 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import axios from 'axios';
 import authReducer from './slices/authSlice';
-
-axios.defaults.withCredentials = true;
-axios.defaults.xsrfCookieName = 'csrfToken';
-axios.defaults.xsrfHeaderName = 'X-CSRF-Token';
 import lectureReducer from './slices/lectureSlice';
 import uiReducer from './slices/uiSlice';
 import notificationReducer from './slices/notificationSlice';

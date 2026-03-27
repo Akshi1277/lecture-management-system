@@ -14,7 +14,7 @@ import {
   ChevronLeft
 } from "lucide-react";
 import { login, clearError } from "@/redux/slices/authSlice";
-import { addToast } from "@/redux/slices/uiSlice";
+import { addToast, clearToasts } from "@/redux/slices/uiSlice";
 import UniversalLoader from "@/components/Shared/UniversalLoader";
 import { AnimatePresence } from "framer-motion";
 
@@ -33,6 +33,7 @@ export default function LoginForm() {
   useEffect(() => {
     if (userInfo && !hasShownToast) {
       setHasShownToast(true);
+      dispatch(clearToasts());
       dispatch(addToast({
         type: 'success',
         message: `Welcome back, ${userInfo?.name || 'User'}! Redirecting to dashboard...`
