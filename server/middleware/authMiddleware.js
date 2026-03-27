@@ -58,7 +58,18 @@ export const teacher = (req, res, next) => {
 };
 
 export const verifyCSRF = (req, res, next) => {
+    // Exempt public POST routes that seed the initial CSRF token
+    const exemptedRoutes = [
+        '/api/users/login',
+        '/api/users/forgot-password',
+        '/api/users/reset-password'
+    ];
+
     if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+        if (exemptedRoutes.some(route => req.originalUrl.includes(route))) {
+            return next();
+        }
+
         const csrfTokenInCookie = req.cookies.csrfToken;
         const csrfTokenInHeader = req.headers['x-csrf-token'];
 
