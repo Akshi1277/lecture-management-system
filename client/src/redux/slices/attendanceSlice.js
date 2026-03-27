@@ -1,15 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../api';
 
-const getAuthOptions = (getState) => ({
-    headers: { Authorization: `Bearer ${getState().auth.userInfo?.token}` }
-});
 
 export const fetchDefaulters = createAsyncThunk(
     'attendance/fetchDefaulters',
     async (threshold, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/attendance/global-defaulters?threshold=${threshold}`, getAuthOptions(getState));
+            const { data } = await api.get(`/attendance/global-defaulters?threshold=${threshold}`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -21,7 +18,7 @@ export const fetchAttendanceStats = createAsyncThunk(
     'attendance/fetchStats',
     async ({ subject, batchId }, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/attendance/stats/${encodeURIComponent(subject)}/${batchId}`, getAuthOptions(getState));
+            const { data } = await api.get(`/attendance/stats/${encodeURIComponent(subject)}/${batchId}`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -33,7 +30,7 @@ export const fetchSubjectWiseAttendance = createAsyncThunk(
     'attendance/fetchSubjectWise',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/attendance/subject-wise`, getAuthOptions(getState));
+            const { data } = await api.get(`/attendance/subject-wise`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -45,7 +42,7 @@ export const fetchFacultyLoad = createAsyncThunk(
     'attendance/fetchFacultyLoad',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/attendance/faculty-load`, getAuthOptions(getState));
+            const { data } = await api.get(`/attendance/faculty-load`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -57,7 +54,7 @@ export const fetchLowAttendanceStudents = createAsyncThunk(
     'attendance/fetchLowStats',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/attendance/low-stats`, getAuthOptions(getState));
+            const { data } = await api.get(`/attendance/low-stats`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -69,7 +66,7 @@ export const markAttendance = createAsyncThunk(
     'attendance/mark',
     async (payload, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.post(`/attendance`, payload, getAuthOptions(getState));
+            const { data } = await api.post(`/attendance`, payload);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

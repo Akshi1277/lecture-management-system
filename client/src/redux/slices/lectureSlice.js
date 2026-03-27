@@ -1,16 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../api';
 
-// Helper to get token for headers
-const getAuthHeader = (userInfo) => ({
-    headers: { Authorization: `Bearer ${userInfo?.token}` }
-});
 
 export const fetchLectures = createAsyncThunk('lectures/fetchAll', async (_, { getState, rejectWithValue }) => {
     try {
         const { auth: { userInfo } } = getState();
         const endpoint = userInfo?.role === 'admin' ? '/lectures' : '/lectures/my';
-        const response = await api.get(endpoint, getAuthHeader(userInfo));
+        const response = await api.get(endpoint);
         return response.data;
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);
@@ -20,7 +16,7 @@ export const fetchLectures = createAsyncThunk('lectures/fetchAll', async (_, { g
 export const createLecture = createAsyncThunk('lectures/create', async (lectureData, { getState, rejectWithValue }) => {
     try {
         const { auth: { userInfo } } = getState();
-        const response = await api.post('/lectures', lectureData, getAuthHeader(userInfo));
+        const response = await api.post('/lectures', lectureData);
         return response.data;
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);
@@ -30,7 +26,7 @@ export const createLecture = createAsyncThunk('lectures/create', async (lectureD
 export const updateLecture = createAsyncThunk('lectures/update', async ({ id, lectureData }, { getState, rejectWithValue }) => {
     try {
         const { auth: { userInfo } } = getState();
-        const response = await api.put(`/lectures/${id}`, lectureData, getAuthHeader(userInfo));
+        const response = await api.put(`/lectures/${id}`, lectureData);
         return response.data;
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);
@@ -40,7 +36,7 @@ export const updateLecture = createAsyncThunk('lectures/update', async ({ id, le
 export const deleteLecture = createAsyncThunk('lectures/delete', async (id, { getState, rejectWithValue }) => {
     try {
         const { auth: { userInfo } } = getState();
-        await api.delete(`/lectures/${id}`, getAuthHeader(userInfo));
+        await api.delete(`/lectures/${id}`);
         return id;
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);
@@ -52,7 +48,7 @@ export const fetchSubstitutes = createAsyncThunk(
     async (lectureId, { getState, rejectWithValue }) => {
         try {
             const { auth: { userInfo } } = getState();
-            const { data } = await api.get(`/lectures/substitutes/${lectureId}`, getAuthHeader(userInfo));
+            const { data } = await api.get(`/lectures/substitutes/${lectureId}`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -65,7 +61,7 @@ export const substituteTeacher = createAsyncThunk(
     async ({ lectureId, teacherId }, { getState, rejectWithValue }) => {
         try {
             const { auth: { userInfo } } = getState();
-            const { data } = await api.put(`/lectures/${lectureId}`, { teacher: teacherId }, getAuthHeader(userInfo));
+            const { data } = await api.put(`/lectures/${lectureId}`, { teacher: teacherId });
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -78,9 +74,9 @@ export const uploadResource = createAsyncThunk(
     async ({ lectureId, payload, isFile }, { getState, rejectWithValue }) => {
         try {
             const { auth: { userInfo } } = getState();
-            const config = getAuthHeader(userInfo);
+            const config = {};
             if (isFile) {
-                config.headers['Content-Type'] = 'multipart/form-data';
+                config.headers = { 'Content-Type': 'multipart/form-data' };
             }
             const { data } = await api.post(`/lectures/${lectureId}/resources`, payload, config);
             return { lectureId, resource: data };
@@ -95,7 +91,7 @@ export const blockRoom = createAsyncThunk(
     async (payload, { getState, rejectWithValue }) => {
         try {
             const { auth: { userInfo } } = getState();
-            const { data } = await api.post(`/rooms/block`, payload, getAuthHeader(userInfo));
+            const { data } = await api.post(`/rooms/block`, payload);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -108,7 +104,7 @@ export const fetchPendingSubstitutions = createAsyncThunk(
     async (_, { getState, rejectWithValue }) => {
         try {
             const { auth: { userInfo } } = getState();
-            const { data } = await api.get(`/lectures/substitutions/pending`, getAuthHeader(userInfo));
+            const { data } = await api.get(`/lectures/substitutions/pending`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

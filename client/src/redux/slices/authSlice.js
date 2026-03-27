@@ -4,8 +4,7 @@ import api from '../api';
 export const login = createAsyncThunk('auth/login', async (userData, { rejectWithValue }) => {
     try {
         const response = await api.post('/users/login', userData);
-        const { token, ...userInfo } = response.data; // Strip token for storage
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        localStorage.setItem('userInfo', JSON.stringify(response.data));
         return response.data; 
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);
@@ -15,8 +14,7 @@ export const login = createAsyncThunk('auth/login', async (userData, { rejectWit
 export const register = createAsyncThunk('auth/register', async (userData, { rejectWithValue }) => {
     try {
         const response = await api.post('/users', userData);
-        const { token, ...userInfo } = response.data;
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        localStorage.setItem('userInfo', JSON.stringify(response.data));
         return response.data;
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);
@@ -25,12 +23,13 @@ export const register = createAsyncThunk('auth/register', async (userData, { rej
 
 export const updateUserProfile = createAsyncThunk('auth/updateProfile', async (userData, { getState, rejectWithValue }) => {
     try {
-        const { auth: { userInfo } } = getState();
-        const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-        const response = await api.put('/users/profile', userData, config);
-        const { token, ...dataToStore } = response.data;
-        localStorage.setItem('userInfo', JSON.stringify(dataToStore));
-        return response.data;
+        const { auth: { userInfo: currentInfo } } = getState();
+        const response = await api.put('/users/profile', userData);
+        
+        // Preserve token if not returned in profile update
+        const updatedInfo = { ...currentInfo, ...response.data };
+        localStorage.setItem('userInfo', JSON.stringify(updatedInfo));
+        return updatedInfo;
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);
     }
@@ -49,9 +48,7 @@ export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValu
 
 export const changePassword = createAsyncThunk('auth/changePassword', async (passwordData, { getState, rejectWithValue }) => {
     try {
-        const { auth: { userInfo } } = getState();
-        const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-        const response = await api.put('/users/change-password', passwordData, config);
+        const response = await api.put('/users/change-password', passwordData);
         return response.data;
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);

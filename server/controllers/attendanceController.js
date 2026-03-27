@@ -25,6 +25,12 @@ export const markAttendance = asyncHandler(async (req, res) => {
         throw new Error('Not authorized to mark attendance for this lecture');
     }
 
+    // Time validation: Attendance can only be marked AFTER the lecture has started
+    if (new Date() < new Date(lecture.startTime)) {
+        res.status(400);
+        throw new Error('Attendance marking is only allowed once the lecture has started');
+    }
+
     // Check if attendance already marked
     let attendance = await Attendance.findOne({ lecture: lectureId });
     

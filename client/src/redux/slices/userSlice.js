@@ -1,15 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../api';
 
-const getAuthOptions = (getState) => ({
-    headers: { Authorization: `Bearer ${getState().auth.userInfo?.token}` }
-});
 
 export const fetchAllUsers = createAsyncThunk(
     'users/fetchAll',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/users`, getAuthOptions(getState));
+            const { data } = await api.get(`/users`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -21,7 +18,7 @@ export const enrollUser = createAsyncThunk(
     'users/enroll',
     async (payload, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.post(`/users`, payload, getAuthOptions(getState));
+            const { data } = await api.post(`/users`, payload);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -33,10 +30,8 @@ export const bulkEnroll = createAsyncThunk(
     'users/bulkEnroll',
     async (formData, { getState, rejectWithValue }) => {
         try {
-            const config = getAuthOptions(getState);
             const { data } = await api.post(`/users/bulk`, formData, {
                 headers: {
-                    ...config.headers,
                     'Content-Type': 'multipart/form-data'
                 }
             });
@@ -51,7 +46,7 @@ export const fetchExistingSubjects = createAsyncThunk(
     'users/fetchSubjects',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/users/subjects`, getAuthOptions(getState));
+            const { data } = await api.get(`/users/subjects`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -63,7 +58,7 @@ export const updateLocalUserProfile = createAsyncThunk(
     'users/updateLocal',
     async (payload, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.put(`/users/profile`, payload, getAuthOptions(getState));
+            const { data } = await api.put(`/users/profile`, payload);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -75,7 +70,7 @@ export const fetchTeachers = createAsyncThunk(
     'users/fetchTeachers',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/users/teachers`, getAuthOptions(getState));
+            const { data } = await api.get(`/users/teachers`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -87,7 +82,7 @@ export const fetchStudents = createAsyncThunk(
     'users/fetchStudents',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/users/students`, getAuthOptions(getState));
+            const { data } = await api.get(`/users/students`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -99,7 +94,7 @@ export const fetchStudentsByBatch = createAsyncThunk(
     'users/fetchByBatch',
     async (batchId, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/users/batch/${batchId}`, getAuthOptions(getState));
+            const { data } = await api.get(`/users/batch/${batchId}`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

@@ -56,7 +56,18 @@ export default function TeacherDashboard() {
                                     <div className="mt-4 md:mt-0 flex items-center space-x-4">
                                         <div className="text-right">
                                             <p className="text-xs font-bold text-white">{new Date(l.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                                            <p className="text-[10px] text-slate-500">TODAY</p>
+                                            <p className="text-[10px] text-slate-500 uppercase">
+                                                {(() => {
+                                                    const d = new Date(l.startTime);
+                                                    const today = new Date();
+                                                    const tomorrow = new Date();
+                                                    tomorrow.setDate(today.getDate() + 1);
+                                                    
+                                                    if (d.toDateString() === today.toDateString()) return 'Today';
+                                                    if (d.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+                                                    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                                                })()}
+                                            </p>
                                         </div>
                                         <div className="flex flex-col space-y-2">
                                             {l.attendanceMarked ? (
@@ -68,10 +79,16 @@ export default function TeacherDashboard() {
                                                 </button>
                                             ) : (
                                                 <button
+                                                    disabled={new Date() < new Date(l.startTime)}
                                                     onClick={() => dispatch(setActiveModal({ type: 'markAttendance', data: l }))}
-                                                    className="px-6 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all text-sm"
+                                                    className={`px-6 py-2 font-bold rounded-xl transition-all text-sm flex items-center justify-center ${
+                                                        new Date() < new Date(l.startTime)
+                                                            ? "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700"
+                                                            : "bg-indigo-500 hover:bg-indigo-400 text-white shadow-lg shadow-indigo-500/20"
+                                                    }`}
                                                 >
-                                                    Mark Attendance
+                                                    {new Date() < new Date(l.startTime) ? <Clock className="w-4 h-4 mr-2" /> : null}
+                                                    {new Date() < new Date(l.startTime) ? "Too Early" : "Mark Attendance"}
                                                 </button>
                                             )}
                                             <button

@@ -5,13 +5,7 @@ export const fetchNotifications = createAsyncThunk(
     'notifications/fetchAll',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { auth: { userInfo } } = getState();
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-            const { data } = await api.get(`/announcements`, config);
+            const { data } = await api.get(`/announcements`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
