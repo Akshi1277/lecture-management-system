@@ -1,9 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-const getAuthHeader = (getState) => ({
+const getAuthOptions = (getState) => ({
     headers: { Authorization: `Bearer ${getState().auth.userInfo?.token}` }
 });
 
@@ -11,7 +9,7 @@ export const fetchSyllabus = createAsyncThunk(
     'syllabus/fetchByCourse',
     async (courseId, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/courses/${courseId}/syllabus`, getAuthHeader(getState));
+            const { data } = await api.get(`/courses/${courseId}/syllabus`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -23,7 +21,7 @@ export const toggleUnitStatus = createAsyncThunk(
     'syllabus/toggleUnit',
     async ({ courseId, unitId, isCompleted }, { getState, rejectWithValue }) => {
         try {
-            await axios.put(`${API_URL}/courses/${courseId}/syllabus/${unitId}`, { isCompleted }, getAuthHeader(getState));
+            await api.put(`/courses/${courseId}/syllabus/${unitId}`, { isCompleted }, getAuthOptions(getState));
             return { unitId, isCompleted };
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -35,7 +33,7 @@ export const addSyllabusUnit = createAsyncThunk(
     'syllabus/addUnit',
     async ({ courseId, unitData }, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.post(`${API_URL}/courses/${courseId}/syllabus`, unitData, getAuthHeader(getState));
+            const { data } = await api.post(`/courses/${courseId}/syllabus`, unitData, getAuthOptions(getState));
             return data.syllabus; // assuming API returns the updated syllabus array
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

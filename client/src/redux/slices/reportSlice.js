@@ -1,9 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-const getAuthHeader = (getState) => ({
+const getAuthOptions = (getState) => ({
     headers: { Authorization: `Bearer ${getState().auth.userInfo?.token}` }
 });
 
@@ -11,7 +9,7 @@ export const fetchAttendanceReport = createAsyncThunk(
     'reports/fetchAttendance',
     async (batchId, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/reports/attendance/${batchId}`, getAuthHeader(getState));
+            const { data } = await api.get(`/reports/attendance/${batchId}`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -23,7 +21,7 @@ export const fetchFacultyWorkloadReport = createAsyncThunk(
     'reports/fetchWorkload',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/reports/faculty-workload`, getAuthHeader(getState));
+            const { data } = await api.get(`/reports/faculty-workload`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

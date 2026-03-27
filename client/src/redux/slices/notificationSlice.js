@@ -1,7 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import api from '../api';
 
 export const fetchNotifications = createAsyncThunk(
     'notifications/fetchAll',
@@ -13,7 +11,7 @@ export const fetchNotifications = createAsyncThunk(
                     Authorization: `Bearer ${userInfo.token}`,
                 },
             };
-            const { data } = await axios.get(`${API_URL}/announcements`, config);
+            const { data } = await api.get(`/announcements`, config);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

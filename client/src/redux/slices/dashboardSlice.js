@@ -1,9 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-const getAuthHeader = (getState) => ({
+const getAuthOptions = (getState) => ({
     headers: { Authorization: `Bearer ${getState().auth.userInfo?.token}` }
 });
 
@@ -11,7 +9,7 @@ export const fetchAdminDashboard = createAsyncThunk(
     'dashboard/fetchAdmin',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/dashboard/admin`, getAuthHeader(getState));
+            const { data } = await api.get(`/dashboard/admin`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -23,7 +21,7 @@ export const fetchMyLectures = createAsyncThunk(
     'dashboard/fetchMyLectures',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/lectures/my`, getAuthHeader(getState));
+            const { data } = await api.get(`/lectures/my`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -35,7 +33,7 @@ export const fetchAnnouncements = createAsyncThunk(
     'dashboard/fetchAnnouncements',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/announcements`, getAuthHeader(getState));
+            const { data } = await api.get(`/announcements`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -47,7 +45,7 @@ export const fetchMyAttendanceStats = createAsyncThunk(
     'dashboard/fetchMyAttendanceStats',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/attendance/my-stats`, getAuthHeader(getState));
+            const { data } = await api.get(`/attendance/my-stats`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -59,7 +57,7 @@ export const fetchAuditLogs = createAsyncThunk(
     'dashboard/fetchAuditLogs',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/audit`, getAuthHeader(getState));
+            const { data } = await api.get(`/audit`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -71,7 +69,7 @@ export const fetchFacultyLoad = createAsyncThunk(
     'dashboard/fetchFacultyLoad',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/attendance/faculty-load`, getAuthHeader(getState));
+            const { data } = await api.get(`/attendance/faculty-load`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -83,7 +81,7 @@ export const fetchSystemSettings = createAsyncThunk(
     'dashboard/fetchSettings',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/settings`, getAuthHeader(getState));
+            const { data } = await api.get(`/settings`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -95,7 +93,7 @@ export const fetchUsers = createAsyncThunk(
     'dashboard/fetchUsers',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/users`, getAuthHeader(getState));
+            const { data } = await api.get(`/users`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -107,7 +105,7 @@ export const updateSystemSettings = createAsyncThunk(
     'dashboard/updateSettings',
     async (settings, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.put(`${API_URL}/settings`, settings, getAuthHeader(getState));
+            const { data } = await api.put(`/settings`, settings, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -119,9 +117,9 @@ export const uploadProfilePhoto = createAsyncThunk(
     'dashboard/uploadPhoto',
     async (formData, { getState, rejectWithValue }) => {
         try {
-            const config = getAuthHeader(getState);
+            const config = getAuthOptions(getState);
             config.headers['Content-Type'] = 'multipart/form-data';
-            const { data } = await axios.post(`${API_URL}/users/profile/photo`, formData, config);
+            const { data } = await api.post(`/users/profile/photo`, formData, config);
             return data.url;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -133,7 +131,7 @@ export const sendAttendanceWarnings = createAsyncThunk(
     'dashboard/sendWarnings',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.post(`${API_URL}/attendance/send-warnings`, {}, getAuthHeader(getState));
+            const { data } = await api.post(`/attendance/send-warnings`, {}, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -145,7 +143,7 @@ export const createAnnouncement = createAsyncThunk(
     'dashboard/createAnnouncement',
     async (formData, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.post(`${API_URL}/announcements`, formData, getAuthHeader(getState));
+            const { data } = await api.post(`/announcements`, formData, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -157,7 +155,7 @@ export const deleteAnnouncement = createAsyncThunk(
     'dashboard/deleteAnnouncement',
     async (id, { getState, rejectWithValue }) => {
         try {
-            await axios.delete(`${API_URL}/announcements/${id}`, getAuthHeader(getState));
+            await api.delete(`/announcements/${id}`, getAuthOptions(getState));
             return id;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

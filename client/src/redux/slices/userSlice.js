@@ -1,9 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-const getAuthHeader = (getState) => ({
+const getAuthOptions = (getState) => ({
     headers: { Authorization: `Bearer ${getState().auth.userInfo?.token}` }
 });
 
@@ -11,7 +9,7 @@ export const fetchAllUsers = createAsyncThunk(
     'users/fetchAll',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/users`, getAuthHeader(getState));
+            const { data } = await api.get(`/users`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -23,7 +21,7 @@ export const enrollUser = createAsyncThunk(
     'users/enroll',
     async (payload, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.post(`${API_URL}/users`, payload, getAuthHeader(getState));
+            const { data } = await api.post(`/users`, payload, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -35,8 +33,8 @@ export const bulkEnroll = createAsyncThunk(
     'users/bulkEnroll',
     async (formData, { getState, rejectWithValue }) => {
         try {
-            const config = getAuthHeader(getState);
-            const { data } = await axios.post(`${API_URL}/users/bulk`, formData, {
+            const config = getAuthOptions(getState);
+            const { data } = await api.post(`/users/bulk`, formData, {
                 headers: {
                     ...config.headers,
                     'Content-Type': 'multipart/form-data'
@@ -53,7 +51,7 @@ export const fetchExistingSubjects = createAsyncThunk(
     'users/fetchSubjects',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/users/subjects`, getAuthHeader(getState));
+            const { data } = await api.get(`/users/subjects`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -65,7 +63,7 @@ export const updateLocalUserProfile = createAsyncThunk(
     'users/updateLocal',
     async (payload, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.put(`${API_URL}/users/profile`, payload, getAuthHeader(getState));
+            const { data } = await api.put(`/users/profile`, payload, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -77,7 +75,7 @@ export const fetchTeachers = createAsyncThunk(
     'users/fetchTeachers',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/users/teachers`, getAuthHeader(getState));
+            const { data } = await api.get(`/users/teachers`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -89,7 +87,7 @@ export const fetchStudents = createAsyncThunk(
     'users/fetchStudents',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/users/students`, getAuthHeader(getState));
+            const { data } = await api.get(`/users/students`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
@@ -101,7 +99,7 @@ export const fetchStudentsByBatch = createAsyncThunk(
     'users/fetchByBatch',
     async (batchId, { getState, rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${API_URL}/users/batch/${batchId}`, getAuthHeader(getState));
+            const { data } = await api.get(`/users/batch/${batchId}`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

@@ -1,12 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-
-const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
-    withCredentials: true,
-    xsrfCookieName: 'csrfToken',
-    xsrfHeaderName: 'X-CSRF-Token',
-});
+import api from '../api';
 
 // Helper to get token for headers
 const getAuthHeader = (userInfo) => ({
