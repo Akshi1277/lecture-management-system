@@ -103,13 +103,13 @@ export const getAttendanceStats = asyncHandler(async (req, res) => {
                 _id: { student: '$students.student', batch: '$batch' },
                 // Physical counts (Unweighted) for UI display
                 totalCount: { $sum: 1 },
-                presentCount: { $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] } },
+                presentCount: { $sum: { $cond: [{ $in: ['$students.status', ['present', 'late']] }, 1, 0] } },
                 // Weights for Percentage Calculation (Lab=4, Lecture=1)
                 totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
                 presentWeight: {
                     $sum: {
                         $cond: [
-                            { $eq: ['$students.status', 'present'] },
+                            { $in: ['$students.status', ['present', 'late']] },
                             { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
                             0
                         ]
@@ -182,7 +182,7 @@ export const getLowAttendanceStudents = asyncHandler(async (req, res) => {
                 presentWeight: {
                     $sum: {
                         $cond: [
-                            { $eq: ['$students.status', 'present'] },
+                            { $in: ['$students.status', ['present', 'late']] },
                             { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
                             0
                         ]
@@ -233,13 +233,13 @@ export const getGlobalDefaulters = asyncHandler(async (req, res) => {
                 _id: { student: '$students.student', batch: '$batch' },
                 // Physical counts (Unweighted) for UI display
                 totalCount: { $sum: 1 },
-                presentCount: { $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] } },
+                presentCount: { $sum: { $cond: [{ $in: ['$students.status', ['present', 'late']] }, 1, 0] } },
                 // Weights for Percentage Calculation (Lab=4, Lecture=1)
                 totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
                 presentWeight: {
                     $sum: {
                         $cond: [
-                            { $eq: ['$students.status', 'present'] },
+                            { $in: ['$students.status', ['present', 'late']] },
                             { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
                             0
                         ]
@@ -323,13 +323,14 @@ export const getMyAttendanceStats = asyncHandler(async (req, res) => {
                 _id: null,
                 // Physical counts
                 totalCount: { $sum: 1 },
-                presentCount: { $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] } },
+                presentCount: { $sum: { $cond: [{ $in: ['$students.status', ['present', 'late']] }, 1, 0] } },
+                lateCount: { $sum: { $cond: [{ $eq: ['$students.status', 'late'] }, 1, 0] } },
                 // Weights
                 totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
                 presentWeight: {
                     $sum: {
                         $cond: [
-                            { $eq: ['$students.status', 'present'] },
+                            { $in: ['$students.status', ['present', 'late']] },
                             { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
                             0
                         ]
@@ -342,6 +343,7 @@ export const getMyAttendanceStats = asyncHandler(async (req, res) => {
                 _id: 0,
                 totalLectures: '$totalCount',
                 presentLectures: '$presentCount',
+                lateLectures: '$lateCount',
                 absentLectures: { $subtract: ['$totalCount', '$presentCount'] },
                 percentage: {
                     $cond: [
@@ -376,13 +378,13 @@ export const getSubjectWiseAttendance = asyncHandler(async (req, res) => {
                 _id: '$subject',
                 // Physical counts
                 totalCount: { $sum: 1 },
-                presentCount: { $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] } },
+                presentCount: { $sum: { $cond: [{ $in: ['$students.status', ['present', 'late']] }, 1, 0] } },
                 // Weights
                 totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
                 presentWeight: {
                     $sum: {
                         $cond: [
-                            { $eq: ['$students.status', 'present'] },
+                            { $in: ['$students.status', ['present', 'late']] },
                             { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
                             0
                         ]
@@ -443,7 +445,7 @@ export const sendAttendanceWarning = asyncHandler(async (req, res) => {
                 presentWeight: {
                     $sum: {
                         $cond: [
-                            { $eq: ['$students.status', 'present'] },
+                            { $in: ['$students.status', ['present', 'late']] },
                             { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
                             0
                         ]

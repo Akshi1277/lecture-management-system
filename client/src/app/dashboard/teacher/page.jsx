@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 import {
     Clock,
     CheckSquare,
@@ -22,13 +23,14 @@ export default function TeacherDashboard() {
     const { list: lectures, loading } = useSelector((state) => state.lecture);
     const { lowAttendanceStudents: alerts } = useSelector((state) => state.attendance);
     const dispatch = useDispatch();
+    const router = useRouter();
 
     useEffect(() => {
         if (userInfo) {
             dispatch(fetchLectures());
             dispatch(fetchLowAttendanceStudents());
         }
-    }, [userInfo, dispatch]);
+    }, [userInfo?._id, dispatch]); // Using _id is more stable than the entire object
 
     return (
         <div className="space-y-10">
@@ -72,7 +74,7 @@ export default function TeacherDashboard() {
                                         <div className="flex flex-col space-y-2">
                                             {l.attendanceMarked ? (
                                                 <button
-                                                    onClick={() => dispatch(setActiveModal({ type: 'markAttendance', data: l }))}
+                                                    onClick={() => router.push(`/dashboard/attendance/mark/${l._id}`)}
                                                     className="px-6 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl border border-emerald-500/30 transition-all text-sm flex items-center justify-center cursor-pointer"
                                                 >
                                                     <CheckSquare className="w-4 h-4 mr-2" /> Edit Attendance
@@ -80,7 +82,7 @@ export default function TeacherDashboard() {
                                             ) : (
                                                 <button
                                                     disabled={new Date() < new Date(l.startTime)}
-                                                    onClick={() => dispatch(setActiveModal({ type: 'markAttendance', data: l }))}
+                                                    onClick={() => router.push(`/dashboard/attendance/mark/${l._id}`)}
                                                     className={`px-6 py-2 font-bold rounded-xl transition-all text-sm flex items-center justify-center ${
                                                         new Date() < new Date(l.startTime)
                                                             ? "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700"

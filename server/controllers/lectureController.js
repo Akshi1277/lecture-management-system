@@ -137,6 +137,22 @@ export const getMyLectures = asyncHandler(async (req, res) => {
     res.json(lectures);
 });
 
+// @desc    Get single lecture details
+// @route   GET /api/lectures/:id
+// @access  Private
+export const getLectureById = asyncHandler(async (req, res) => {
+    const lecture = await Lecture.findById(req.params.id)
+        .populate('teacher', 'name email')
+        .populate('batch', 'name studentCount');
+
+    if (lecture) {
+        res.json(lecture);
+    } else {
+        res.status(404);
+        throw new Error('Lecture not found');
+    }
+});
+
 // @desc    Add resource to lecture (file OR url)
 // @route   POST /api/lectures/:id/resources
 // @access  Private/Teacher

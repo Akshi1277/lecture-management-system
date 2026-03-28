@@ -35,15 +35,16 @@ export default function ResourcesPage() {
     }, []);
 
     const filteredResources = allResources.filter(res => 
-        res.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.teacher.toLowerCase().includes(searchTerm.toLowerCase())
+        (res.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+        (res.subject?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+        (res.teacher?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     );
 
     // Grouping by Subject for a more organized view
     const groupedBySubject = filteredResources.reduce((acc, res) => {
-        if (!acc[res.subject]) acc[res.subject] = [];
-        acc[res.subject].push(res);
+        const key = res.subject || 'Uncategorized';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(res);
         return acc;
     }, {});
 

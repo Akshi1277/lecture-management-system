@@ -39,7 +39,7 @@ export default function NotificationBell() {
 
             return () => socket.disconnect();
         }
-    }, [dispatch, userInfo]);
+    }, [dispatch, userInfo?._id]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {

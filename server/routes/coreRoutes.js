@@ -1,5 +1,5 @@
 import express from 'express';
-import { createLecture, getLectures, getMyLectures, uploadResource, updateLecture, deleteLecture } from '../controllers/lectureController.js';
+import { createLecture, getLectures, getMyLectures, getLectureById, uploadResource, updateLecture, deleteLecture } from '../controllers/lectureController.js';
 import { suggestSubstitutes, getPendingSubstitutions, requestSubstitution } from '../controllers/substitutionController.js';
 import { createExam, getExams } from '../controllers/examController.js';
 import { blockRoom, getActiveBlocks } from '../controllers/roomController.js';
@@ -27,6 +27,7 @@ router.route('/lectures')
     .get(protect, getLectures);
 
 router.route('/lectures/:id')
+    .get(protect, getLectureById)
     .put(protect, admin, updateLecture)
     .delete(protect, admin, deleteLecture);
 

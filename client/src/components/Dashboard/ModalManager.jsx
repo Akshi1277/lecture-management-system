@@ -8,7 +8,6 @@ import { fetchBatches } from "@/redux/slices/hierarchySlice";
 import { fetchExistingSubjects, enrollUser, bulkEnroll } from "@/redux/slices/userSlice";
 import { useState, useEffect } from "react";
 import BatchManager from "./BatchManager";
-import AttendanceMarker from "./AttendanceMarker";
 import ResourceUploadForm from "./ResourceUploadForm";
 import SubstitutionFinder from "./SubstitutionFinder";
 import ExamSchedulerForm from "./ExamSchedulerForm";
@@ -27,7 +26,6 @@ export default function ModalManager() {
         assignLecture: <AssignLectureForm lecture={activeModalData} onClose={closeModal} />,
         manageUsers: <EnrollUserForm onClose={closeModal} />,
         manageBatches: <BatchManager onClose={closeModal} />,
-        markAttendance: <AttendanceMarker lecture={activeModalData} onClose={closeModal} />,
         uploadResource: <ResourceUploadForm lecture={activeModalData} onClose={closeModal} />,
         findSubstitute: <SubstitutionFinder lecture={activeModalData} onClose={closeModal} />,
         scheduleExam: <ExamSchedulerForm onClose={closeModal} />,
@@ -83,7 +81,7 @@ function ToastItem({ toast, onClose }) {
     useEffect(() => {
         const timer = setTimeout(() => {
             onClose(toast.id);
-        }, 5000); // 5 seconds
+        }, 2000); // 2 seconds
         return () => clearTimeout(timer);
     }, [toast.id, onClose]);
 
