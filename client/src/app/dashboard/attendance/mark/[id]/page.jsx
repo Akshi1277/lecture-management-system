@@ -6,7 +6,6 @@ import {
     Search, 
     CheckCircle2, 
     XCircle, 
-    Clock, 
     Save, 
     ArrowLeft, 
     Users, 
@@ -103,7 +102,6 @@ export default function MarkAttendancePage() {
 
     const stats = {
         present: attData.filter(s => s.status === 'present').length,
-        late: attData.filter(s => s.status === 'late').length,
         absent: attData.filter(s => s.status === 'absent').length,
     };
 
@@ -150,10 +148,6 @@ export default function MarkAttendancePage() {
                             <div className="text-center">
                                 <p className="text-[10px] text-slate-600 font-black uppercase tracking-widest mb-1">Present</p>
                                 <p className="text-xl font-black text-emerald-400 leading-none">{stats.present}</p>
-                            </div>
-                            <div className="text-center border-x border-slate-800 px-10">
-                                <p className="text-[10px] text-slate-600 font-black uppercase tracking-widest mb-1">Late</p>
-                                <p className="text-xl font-black text-amber-500 leading-none">{stats.late}</p>
                             </div>
                             <div className="text-center">
                                 <p className="text-[10px] text-slate-600 font-black uppercase tracking-widest mb-1">Absent</p>
@@ -221,14 +215,12 @@ export default function MarkAttendancePage() {
                                 key={student.studentId}
                                 className={`p-4 rounded-[28px] border transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-6 group shadow-xl ${
                                     student.status === 'present' ? 'bg-emerald-500/5 border-emerald-500/20 shadow-emerald-500/5' :
-                                    student.status === 'late' ? 'bg-amber-500/5 border-amber-500/20 shadow-amber-500/5' :
                                     'bg-rose-500/5 border-rose-500/20 shadow-rose-500/5'
                                 }`}
                             >
                                 <div className="flex items-center space-x-6 flex-1">
                                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg border shadow-inner transition-colors duration-500 ${
                                         student.status === 'present' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                        student.status === 'late' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
                                         'bg-rose-500/10 text-rose-500 border-rose-500/20'
                                     }`}>
                                         {student.name[0]}
@@ -242,7 +234,6 @@ export default function MarkAttendancePage() {
                                     <div className="hidden sm:block">
                                         <span className={`px-4 py-1.5 bg-slate-950/50 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all duration-500 ${
                                             student.status === 'present' ? 'text-emerald-400 border-emerald-500/20 shadow-emerald-500/10' :
-                                            student.status === 'late' ? 'text-amber-500 border-amber-500/20 shadow-amber-500/10' :
                                             'text-rose-400 border-rose-500/20 shadow-rose-500/10'
                                         }`}>
                                             {student.status}
@@ -261,17 +252,6 @@ export default function MarkAttendancePage() {
                                     >
                                         <CheckCircle2 className="w-4 h-4" />
                                         <span className="text-[10px] font-black uppercase tracking-widest">Present</span>
-                                    </button>
-                                    <button 
-                                        onClick={() => handleStatusChange(student.studentId, 'late')}
-                                        className={`flex-1 md:flex-none px-6 py-3 rounded-2xl border flex items-center justify-center space-x-2 transition-all duration-300 ${
-                                            student.status === 'late' 
-                                            ? 'bg-amber-500 border-amber-400 text-white shadow-2xl shadow-amber-500/50 scale-[1.02]' 
-                                            : 'bg-slate-900 border-slate-800 text-slate-600 hover:border-amber-500/30 hover:text-amber-500'
-                                        }`}
-                                    >
-                                        <Clock className="w-4 h-4" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Late</span>
                                     </button>
                                     <button 
                                         onClick={() => handleStatusChange(student.studentId, 'absent')}

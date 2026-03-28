@@ -26,12 +26,12 @@ router.route('/lectures')
     .post(protect, admin, createLecture)
     .get(protect, getLectures);
 
+router.get('/lectures/my', protect, getMyLectures);
+
 router.route('/lectures/:id')
     .get(protect, getLectureById)
     .put(protect, admin, updateLecture)
     .delete(protect, admin, deleteLecture);
-
-router.get('/lectures/my', protect, getMyLectures);
 router.post('/lectures/:id/resources', protect, teacher, uploadToCloudinary.single('file'), uploadResource);
 router.get('/lectures/substitutes/:lectureId', protect, admin, suggestSubstitutes);
 router.get('/lectures/substitutions/pending', protect, admin, getPendingSubstitutions);
