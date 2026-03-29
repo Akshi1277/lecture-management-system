@@ -124,7 +124,7 @@ export default function Home() {
           >
             <Link 
               href="/login" 
-              className="px-8 py-4 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-teal-500/20 transition-all flex items-center space-x-2 group"
+              className="px-8 py-4 bg-teal-700 hover:bg-teal-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-teal-500/20 transition-all flex items-center space-x-2 group"
             >
               <span>Access Academic Portal</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -271,7 +271,7 @@ export default function Home() {
             </p>
             <Link 
               href="/login" 
-              className="inline-flex items-center px-12 py-5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black rounded-2xl transition-all shadow-xl shadow-teal-500/20 active:scale-95 uppercase tracking-widest text-xs"
+              className="inline-flex items-center px-12 py-5 bg-teal-700 hover:bg-teal-600 text-slate-950 font-black rounded-2xl transition-all shadow-xl shadow-teal-500/20 active:scale-95 uppercase tracking-widest text-xs"
             >
               Start Managed Session
             </Link>

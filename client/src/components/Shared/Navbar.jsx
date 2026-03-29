@@ -101,7 +101,7 @@ export default function Navbar() {
             ) : (
                 <Link
                   href="/login"
-                  className="flex items-center space-x-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 text-sm font-semibold rounded-lg transition-all shadow-lg shadow-teal-500/20 active:scale-95"
+                  className="flex items-center space-x-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-slate-950 text-sm font-semibold rounded-lg transition-all shadow-lg shadow-teal-500/20 active:scale-95"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>Access Portal</span>
@@ -166,7 +166,7 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center space-x-2 p-3 bg-teal-500 text-slate-950 font-semibold rounded-lg"
+                  className="w-full flex items-center justify-center space-x-2 p-3 bg-teal-700 text-slate-950 font-semibold rounded-lg"
                 >
                   <LogIn className="w-5 h-5" />
                   <span>Access Portal</span>

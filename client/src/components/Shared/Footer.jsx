@@ -58,15 +58,15 @@ export default function Footer() {
             <ul className="space-y-4">
               <li className="flex items-center space-x-3 text-slate-400 text-sm">
                 <Mail className="w-4 h-4 text-teal-500" />
-                <span>contact@edusync.org</span>
+                <span>contact@edusync.in</span>
               </li>
               <li className="flex items-center space-x-3 text-slate-400 text-sm">
                 <Phone className="w-4 h-4 text-teal-500" />
-                <span>+1 (555) 123-4567</span>
+                <span>+91 96 2345 6789</span>
               </li>
               <li className="flex items-center space-x-3 text-slate-400 text-sm">
                 <MapPin className="w-4 h-4 text-teal-500" />
-                <span>123 University Ave, NY</span>
+                <span>Supreme Business Park, Bandra (W), Mumbai 400050</span>
               </li>
             </ul>
           </div>
@@ -76,14 +76,14 @@ export default function Footer() {
         {/* Bottom Strip */}
         <div className="pt-8 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-slate-500">
-            © {currentYear} EduSync Inc. All rights reserved.
+            © {currentYear} EduSync. All rights reserved.
           </div>
           
           <div className="flex items-center space-x-6">
-            <Link href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+            <Link href="/privacy" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+            <Link href="/terms" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
               Terms of Service
             </Link>
           </div>
