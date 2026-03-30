@@ -31,6 +31,9 @@ export default function LoginForm() {
   const { userInfo, loading, error } = useSelector((state) => state.auth);
 
   useEffect(() => {
+    // Ping to wake up the server (Cold Start prevention)
+    api.get('/users/ping').catch(() => {});
+
     if (userInfo && !hasShownToast) {
       setHasShownToast(true);
       dispatch(clearToasts());

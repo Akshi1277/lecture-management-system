@@ -8,6 +8,13 @@ import generateRandomPassword from '../utils/passGenerator.js';
 import { sendEnrollmentEmail, sendPasswordResetEmail } from '../utils/emailService.js';
 import xlsx from 'xlsx';
 
+// @desc    Ping to wake up server
+// @route   GET /api/users/ping
+// @access  Public
+export const ping = asyncHandler(async (req, res) => {
+    res.json({ message: 'Server is awake' });
+});
+
 // @desc    Auth user & get token
 // @route   POST /api/users/login
 // @access  Public

@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import rateLimit from 'express-rate-limit';
-import { authUser, registerUser, bulkRegisterUsers, getUsers, getTeachers, getStudents, getStudentsByBatch, getSubjects, forgotPassword, resetPassword, updateUserProfile, updatePasswordWhileLoggedIn } from '../controllers/userController.js';
+import { authUser, registerUser, bulkRegisterUsers, getUsers, getTeachers, getStudents, getStudentsByBatch, getSubjects, forgotPassword, resetPassword, updateUserProfile, updatePasswordWhileLoggedIn, ping } from '../controllers/userController.js';
 import { protect, admin, teacher } from '../middleware/authMiddleware.js';
 import { uploadProfile } from '../config/cloudinary.js';
 
@@ -11,6 +11,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post('/', protect, registerUser);
 router.get('/', protect, admin, getUsers);
 router.post('/login', authUser);
+router.get('/ping', ping);
 router.post('/logout', (req, res) => {
     res.cookie('token', '', {
         httpOnly: true,

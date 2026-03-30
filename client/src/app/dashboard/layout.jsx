@@ -22,6 +22,7 @@ import { logout } from "@/redux/slices/authSlice";
 import { toggleSidebar } from "@/redux/slices/uiSlice";
 import ModalManager from "@/components/Dashboard/ModalManager";
 import NotificationBell from "@/components/Dashboard/NotificationBell";
+import api from "@/redux/api";
 
 export default function DashboardLayout({ children }) {
     const { userInfo } = useSelector((state) => state.auth);
@@ -36,6 +37,8 @@ export default function DashboardLayout({ children }) {
 
     useEffect(() => {
         setHasMounted(true);
+        // Wake up server in background if not already awake
+        api.get('/users/ping').catch(() => {});
     }, []);
 
     useEffect(() => {

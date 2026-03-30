@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import { fetchLectures } from "@/redux/slices/lectureSlice";
 import { fetchMyAttendanceStats, fetchAnnouncements } from "@/redux/slices/dashboardSlice";
 import { setActiveModal } from "@/redux/slices/uiSlice";
+import Skeleton from "@/components/Shared/Skeleton";
 
 export default function StudentDashboard() {
     const { userInfo } = useSelector((state) => state.auth);
@@ -63,7 +64,19 @@ export default function StudentDashboard() {
                 {/* Left Column: Schedule & Next up */}
                 <div className="lg:col-span-8 space-y-8">
                     {/* Next Session Highlight */}
-                    {nextLecture && (
+                    {loading ? (
+                        <div className="p-8 bg-slate-900 border border-slate-800 rounded-[40px] relative overflow-hidden shadow-2xl">
+                             <div className="space-y-4">
+                                <Skeleton className="w-20 h-4 rounded-md" />
+                                <Skeleton className="w-64 h-10 rounded-xl" />
+                                <Skeleton className="w-48 h-4 rounded-md" />
+                                <div className="mt-8 flex space-x-6">
+                                    <Skeleton className="w-24 h-6 rounded-md" />
+                                    <Skeleton className="w-24 h-6 rounded-md" />
+                                </div>
+                             </div>
+                        </div>
+                    ) : nextLecture && (
                         <motion.div 
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -102,7 +115,21 @@ export default function StudentDashboard() {
 
                         <div className="space-y-6 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
                             {loading ? (
-                                <div className="py-20 text-center text-slate-500 animate-pulse font-bold tracking-widest uppercase text-xs italic">Syncing Curricular Data...</div>
+                                <>
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="flex items-center p-6 bg-slate-950/30 border border-slate-900 rounded-3xl">
+                                            <Skeleton className="w-14 h-14 rounded-2xl mr-6" />
+                                            <div className="flex-1 space-y-2">
+                                                <Skeleton className="w-40 h-4 rounded-md" />
+                                                <Skeleton className="w-24 h-3 rounded-md opacity-50" />
+                                            </div>
+                                            <div className="flex flex-col items-end space-y-2">
+                                                <Skeleton className="w-12 h-3 rounded-md" />
+                                                <Skeleton className="w-16 h-5 rounded-md" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>
                             ) : lectures.map((l, i) => (
                                 <motion.div 
                                     initial={{ opacity: 0, x: -10 }}
