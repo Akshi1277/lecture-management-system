@@ -143,26 +143,52 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
 
     // ─── Conflict Logic ──────────────────────────────────────────────────────
     const getConflict = (dayIdx, row) => {
-        if (row.type === 'break') return null;
+        if (!row || row.type === 'break') return null;
         
         const tentativeStart = new Date(buildFullISOTime(dayIdx, row.startTime));
         const tentativeEnd = new Date(buildFullISOTime(dayIdx, row.endTime));
 
-        return existingLectures.find(lec => {
+        // 1. Check against DB lectures
+        const dbConflict = existingLectures.find(lec => {
             const lecStart = new Date(lec.startTime);
             const lecEnd = new Date(lec.endTime);
             const overlaps = lecStart < tentativeEnd && lecEnd > tentativeStart;
             if (!overlaps) return false;
             
-            const isTeacherConflict = lec.teacher?._id === formData.teacher;
+            const isTeacherConflict = (lec.teacher?._id || lec.teacher) === formData.teacher;
             const isClassroomConflict = lec.classroom === formData.classroom;
-            const isBatchConflict = lec.batch?._id === formData.batch;
+            const isBatchConflict = (lec.batch?._id || lec.batch) === formData.batch;
             return isTeacherConflict || isClassroomConflict || isBatchConflict;
         });
+
+        if (dbConflict) return dbConflict;
+
+        // 2. Check against OTHER items in current selection (selectedSlots)
+        // This is crucial for multi-type booking
+        const selectionConflict = selectedSlots.find(s => {
+            if (s.day !== dayIdx) return false;
+            const sStart = new Date(buildFullISOTime(s.day, s.startTime));
+            const sEnd = new Date(buildFullISOTime(s.day, s.endTime));
+            const overlaps = sStart < tentativeEnd && sEnd > tentativeStart;
+            if (!overlaps) return false;
+
+            const isTeacherConflict = s.teacher === formData.teacher;
+            const isClassroomConflict = s.classroom === formData.classroom;
+            const isBatchConflict = s.batch === formData.batch;
+            return isTeacherConflict || isClassroomConflict || isBatchConflict;
+        });
+
+        return selectionConflict;
     };
 
-    const isSlotSelected = (dayIdx, rowId) => {
-        return selectedSlots.some(s => s.day === dayIdx && s.rowId === rowId);
+    const isSlotSelected = (dayIdx, row) => {
+        if (!row) return false;
+        return selectedSlots.some(s => s.day === dayIdx && s.startTime === row.startTime && s.endTime === row.endTime);
+    };
+
+    const findSelectedData = (dayIdx, row) => {
+        if (!row) return null;
+        return selectedSlots.find(s => s.day === dayIdx && s.startTime === row.startTime && s.endTime === row.endTime);
     };
 
     const getSlotStyle = (dayIdx, row) => {
@@ -186,7 +212,7 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
     const handleSlotClick = (dayIdx, row) => {
         if (!isDropdownsSelected || row.type === 'break') return;
 
-        const existingIdx = selectedSlots.findIndex(s => s.day === dayIdx && s.rowId === row.id);
+        const existingIdx = selectedSlots.findIndex(s => s.day === dayIdx && s.startTime === row.startTime && s.endTime === row.endTime);
         if (existingIdx !== -1) {
             const newSlots = [...selectedSlots];
             newSlots.splice(existingIdx, 1);
@@ -195,19 +221,20 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
         }
 
         if (getConflict(dayIdx, row)) {
-            dispatch(addToast({ type: 'error', message: `Conflict detected for this specifically calculated slot.` }));
+            dispatch(addToast({ type: 'warning', message: `Conflict detected. Part of this slot is already occupied.` }));
             return;
         }
 
         setSelectedSlots([...selectedSlots, {
             day: dayIdx,
-            rowId: row.id,
             startTime: row.startTime,
             endTime: row.endTime,
             subject: formData.subject,
             batch: formData.batch,
             type: formData.type,
             classroom: formData.classroom,
+            teacher: formData.teacher,
+            title: formData.title
         }]);
     };
 
@@ -216,7 +243,8 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
         let allSuccess = true;
         for (const slot of selectedSlots) {
             const payload = {
-                ...formData,
+                title: slot.title || formData.title,
+                teacher: slot.teacher || formData.teacher,
                 subject: slot.subject,
                 batch: slot.batch,
                 type: slot.type,
@@ -321,7 +349,7 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             </div>
                             <div className="space-y-1">
                                 <label className="text-[9px] font-black text-slate-500 uppercase ml-1">Batch Target</label>
-                                <select value={formData.batch} onChange={(e) => { setFormData({ ...formData, batch: e.target.value }); setSelectedSlots([]); }}
+                                <select value={formData.batch} onChange={(e) => { setFormData({ ...formData, batch: e.target.value }); }}
                                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:ring-1 focus:ring-teal-500">
                                     <option value="">Select Batch</option>
                                     {batches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
@@ -329,7 +357,7 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             </div>
                             <div className="space-y-1">
                                 <label className="text-[9px] font-black text-slate-500 uppercase ml-1">Type</label>
-                                <select value={formData.type} onChange={(e) => { setFormData({ ...formData, type: e.target.value, classroom: "" }); setSelectedSlots([]); }}
+                                <select value={formData.type} onChange={(e) => { setFormData({ ...formData, type: e.target.value, classroom: "" }); }}
                                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:ring-1 focus:ring-teal-500">
                                     <option value="Lecture">Lecture</option>
                                     <option value="Lab">Practical/Lab</option>
@@ -383,26 +411,27 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                                                 );
                                             }
 
-                                            const isSelected = isSlotSelected(dayIdx, row.id);
+                                            const slotSelected = isSlotSelected(dayIdx, row);
                                             const conflict = getConflict(dayIdx, row);
                                             const slotClass = getSlotStyle(dayIdx, row);
+                                            const selectedData = findSelectedData(dayIdx, row);
                                             
                                             return (
                                                 <button
-                                                    key={`${dayIdx}-${row.id}`}
+                                                    key={`${dayIdx}-${row.id || row.startTime}`}
                                                     onClick={() => handleSlotClick(dayIdx, row)}
                                                     className={`${isFullscreen ? 'h-28' : 'h-20'} border-r border-slate-800/50 relative transition-all group ${slotClass} overflow-hidden`}
                                                 >
-                                                    {isSelected && (
+                                                    {slotSelected && (
                                                         <div className="absolute inset-1 flex flex-col items-center justify-center text-center">
-                                                            <div className="w-7 h-7 bg-teal-500 text-slate-950 font-black rounded-lg flex items-center justify-center shadow-lg mb-1">{initials}</div>
-                                                            <span className="text-[8px] font-black text-white uppercase truncate px-1">{formData.subject}</span>
-                                                            <span className="text-[7px] text-teal-400 font-bold">{getBatchName(formData.batch)}</span>
+                                                            <div className="w-7 h-7 bg-teal-500 text-slate-950 font-black rounded-lg flex items-center justify-center shadow-lg mb-1">{getInitials(selectedData?.teacher === formData.teacher ? selectedTeacher?.name : 'Busy')}</div>
+                                                            <span className="text-[8px] font-black text-white uppercase truncate px-1">{selectedData?.subject}</span>
+                                                            <span className="text-[7px] text-teal-400 font-bold">{selectedData?.type}</span>
                                                         </div>
                                                     )}
-                                                    {conflict && !isSelected && (
+                                                    {conflict && !slotSelected && (
                                                         <div className="absolute inset-1 flex flex-col items-center justify-center text-center">
-                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${conflict.teacher?._id === formData.teacher ? 'bg-purple-500/20 text-purple-400' : 'bg-red-500/10 text-red-500'}`}>
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${conflict.teacher === formData.teacher || conflict.teacher?._id === formData.teacher ? 'bg-purple-500/20 text-purple-400' : 'bg-red-500/10 text-red-500'}`}>
                                                                 <AlertTriangle className="w-4 h-4" />
                                                             </div>
                                                             <span className="text-[7px] font-bold text-slate-600 uppercase">Occupied</span>
