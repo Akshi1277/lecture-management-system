@@ -15,7 +15,7 @@ import { ReportCardSkeleton, ChartSkeleton } from "@/components/Shared/Skeleton"
 export default function ReportsPage() {
     const { userInfo } = useSelector((state) => state.auth);
     const { list: lectures, loading: lectureLoading } = useSelector((state) => state.lecture);
-    const { users, facultyLoad, loading: dashboardLoading } = useSelector((state) => state.dashboard);
+    const { users, facultyLoad, securityStats, loading: dashboardLoading } = useSelector((state) => state.dashboard);
     const dispatch = useDispatch();
 
     const loading = lectureLoading || dashboardLoading;
@@ -34,8 +34,8 @@ export default function ReportsPage() {
         totalLectures: lectures.length,
         completedLectures: lectures.filter(l => l.status === 'Completed').length,
         cancelledLectures: lectures.filter(l => l.status === 'Cancelled').length,
-        facultyLoad: userInfo?.role === 'admin' ? (facultyLoad?.load || []) : [],
-        securityLockdowns: facultyLoad?.security?.lockdowns || 0,
+        facultyLoad: userInfo?.role === 'admin' ? facultyLoad : [],
+        securityLockdowns: securityStats.lockdowns || 0,
         totalUsers: {
             students: users.filter(u => u.role === 'student').length,
             teachers: users.filter(u => u.role === 'teacher').length

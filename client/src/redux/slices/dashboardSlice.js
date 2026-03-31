@@ -177,6 +177,7 @@ const dashboardSlice = createSlice({
         announcements: [],
         auditLogs: [],
         facultyLoad: [],
+        securityStats: { lockdowns: 0 },
         users: [],
         systemSettings: { attendanceThreshold: 75, labWeight: 4, systemName: "EduSync" },
         myStats: { totalLectures: 0, presentLectures: 0, absentLectures: 0, percentage: 0 },
@@ -217,7 +218,8 @@ const dashboardSlice = createSlice({
             })
             .addCase(fetchAuditLogs.rejected, (state) => { state.loading = false; })
             .addCase(fetchFacultyLoad.fulfilled, (state, action) => {
-                state.facultyLoad = action.payload;
+                state.facultyLoad = action.payload.load || [];
+                state.securityStats = action.payload.security || { lockdowns: 0 };
             })
             .addCase(fetchSystemSettings.fulfilled, (state, action) => {
                 state.systemSettings = action.payload;
