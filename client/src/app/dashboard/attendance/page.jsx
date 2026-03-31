@@ -39,6 +39,13 @@ export default function AttendancePage() {
         }
     }, [userInfo, threshold, dispatch]);
 
+    // Auto-select first batch for teachers
+    useEffect(() => {
+        if (userInfo?.role === 'teacher' && batches.length > 0 && !selectedBatch) {
+            setSelectedBatch(batches[0]._id);
+        }
+    }, [batches, selectedBatch, userInfo?.role]);
+
     // Sub-effect for teachers when selection changes
     useEffect(() => {
         if (userInfo?.role === 'teacher' && selectedBatch && selectedSubject) {
@@ -55,9 +62,15 @@ export default function AttendancePage() {
     useEffect(() => {
         if (userInfo?.role === 'teacher' && lectures.length > 0) {
             const uniqueSubjects = [...new Set(lectures.map(item => item.subject))];
-            setSubjects(uniqueSubjects.filter(Boolean));
+            const filtered = uniqueSubjects.filter(Boolean);
+            setSubjects(filtered);
+            
+            // Auto-select first subject
+            if (filtered.length > 0 && !selectedSubject) {
+                setSelectedSubject(filtered[0]);
+            }
         }
-    }, [lectures, userInfo?.role]);
+    }, [lectures, userInfo?.role, selectedSubject]);
 
     const handleExport = () => {
         if (defaulters.length === 0) return;

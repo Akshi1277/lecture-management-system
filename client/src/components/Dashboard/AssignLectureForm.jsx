@@ -55,7 +55,7 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
         const day = now.getDay(); // 0=Sun
         const targetDay = dayIndex + 1; // Mon=1
         let diff = targetDay - day;
-        if (diff <= 0) diff += 7;
+        if (diff < 0) diff += 7;
         const date = new Date(now);
         date.setDate(now.getDate() + diff);
         return date;

@@ -156,8 +156,20 @@ export default function AdminDashboard() {
                     <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
                         {lectureLoading ? (
                             <p className="text-slate-500 italic text-sm">Syncing with backend...</p>
-                        ) : lectures.length > 0 ? (
-                            lectures.map((l, i) => (
+                        ) : (lectures.filter(l => {
+                            const now = new Date();
+                            const lecDate = new Date(l.startTime);
+                            const nextWeek = new Date();
+                            nextWeek.setDate(now.getDate() + 7);
+                            return lecDate >= now && lecDate <= nextWeek;
+                        })).length > 0 ? (
+                            lectures.filter(l => {
+                                const now = new Date();
+                                const lecDate = new Date(l.startTime);
+                                const nextWeek = new Date();
+                                nextWeek.setDate(now.getDate() + 7);
+                                return lecDate >= now && lecDate <= nextWeek;
+                            }).map((l, i) => (
                                 <div key={i} className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between group hover:border-teal-500/30 transition-all">
                                     <div>
                                         <h4 className="font-bold text-sm group-hover:text-teal-400 transition-colors uppercase tracking-wide">{l.title}</h4>

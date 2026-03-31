@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Search, Filter, CalendarDays, Clock,
     MoreVertical, Edit, UserMinus, Plus, ShieldAlert,
-    XCircle, CheckCircle, RefreshCcw, BookOpen
+    XCircle, CheckCircle, RefreshCcw, BookOpen, AlertTriangle
 } from "lucide-react";
-import { fetchLectures } from "@/redux/slices/lectureSlice";
+import { fetchLectures, updateLecture, deleteLecture } from "@/redux/slices/lectureSlice";
 import { setActiveModal } from "@/redux/slices/uiSlice";
 import { useRouter } from "next/navigation";
 
@@ -54,7 +54,7 @@ export default function LecturesPage() {
     // Filtering Logic
     const filteredLectures = safeLectures.filter(lecture => {
         // Role-based filtering: Teachers only see their own lectures
-        const isOwner = userInfo?.role === 'admin' || lecture.teacher?._id === userInfo?._id;
+        const isOwner = userInfo?.role === 'admin' || (typeof lecture.teacher === 'object' ? lecture.teacher?._id === userInfo?._id : lecture.teacher === userInfo?._id);
         
         const matchesSearch =
             lecture.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -64,7 +64,7 @@ export default function LecturesPage() {
         const matchesStatus = statusFilter === "All" || lecture.status === statusFilter;
 
         return isOwner && matchesSearch && matchesStatus;
-    });
+    }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
     const getStatusStyle = (status) => {
         switch (status) {
@@ -218,10 +218,10 @@ export default function LecturesPage() {
             {/* Quick Stats Banner */}
             <div className="grid grid-cols-4 gap-4">
                 {[
-                    { label: "Total Registered", value: totalLectures, icon: <BookOpen className="text-slate-400" /> },
-                    { label: "Active Nodes", value: activeLectures, icon: <CheckCircle className="text-teal-400" /> },
+                    { label: "Total Lectures", value: totalLectures, icon: <BookOpen className="text-slate-400" /> },
+                    { label: "Active Lectures", value: activeLectures, icon: <CheckCircle className="text-teal-400" /> },
                     { label: "Relocated / Conflicts", value: relocatedLectures, icon: <RefreshCcw className="text-amber-500" /> },
-                    { label: "Cancelled Executions", value: cancelledLectures, icon: <XCircle className="text-red-500" /> }
+                    { label: "Cancelled Lectures", value: cancelledLectures, icon: <XCircle className="text-red-500" /> }
                 ].map((stat, idx) => (
                     <div key={idx} className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl flex items-center justify-between">
                         <div>
@@ -333,10 +333,11 @@ export default function LecturesPage() {
                                     )}
                                 </div>
                                 <div className="flex items-center justify-end space-x-2">
-                                    {lecture.status === 'Scheduled' && (
+                                    {userInfo?.role === 'admin' && (
                                         <button
                                             onClick={() => dispatch(setActiveModal({ type: 'findSubstitute', data: lecture }))}
-                                            className="p-2 bg-slate-800 hover:bg-orange-500/20 text-slate-400 hover:text-orange-400 rounded-lg transition-colors border border-transparent hover:border-orange-500/20 group relative"
+                                            disabled={lecture.status !== 'Scheduled'}
+                                            className={`p-2 rounded-lg transition-colors border ${lecture.status !== 'Scheduled' ? 'invisible pointer-events-none' : 'bg-slate-800 hover:bg-orange-500/20 text-slate-400 hover:text-orange-400 border-transparent hover:border-orange-500/20'} group relative`}
                                             title="Find Substitute"
                                         >
                                             <UserMinus className="w-4 h-4" />
@@ -345,7 +346,7 @@ export default function LecturesPage() {
                                     <div className="relative">
                                         <button 
                                             onClick={() => setActiveDropdown(activeDropdown === lecture._id ? null : lecture._id)}
-                                            className={`p-2 rounded-lg transition-all border ${activeDropdown === lecture._id ? 'bg-teal-500/10 border-teal-500/30 text-teal-400' : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-transparent hover:border-slate-600'}`}
+                                            className={`p-2 rounded-lg transition-all border ${lecture.status === 'Completed' ? 'invisible pointer-events-none' : (activeDropdown === lecture._id ? 'bg-teal-500/10 border-teal-500/30 text-teal-400' : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-transparent hover:border-slate-600')}`}
                                         >
                                             <MoreVertical className="w-4 h-4" />
                                         </button>

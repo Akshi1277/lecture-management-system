@@ -34,6 +34,7 @@ export default function DashboardLayout({ children }) {
     const isFullPage = pathname === "/dashboard/admin/schedule";
 
     const [hasMounted, setHasMounted] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     useEffect(() => {
         setHasMounted(true);
@@ -50,6 +51,7 @@ export default function DashboardLayout({ children }) {
     const handleLogout = () => {
         dispatch(logout());
         router.push("/login");
+        setShowLogoutConfirm(false);
     };
 
     if (!hasMounted || !userInfo) return null;
@@ -123,7 +125,7 @@ export default function DashboardLayout({ children }) {
 
                         <div className="p-4 border-t border-slate-800 mt-auto shrink-0 bg-slate-900/50 backdrop-blur-md">
                             <button
-                                onClick={handleLogout}
+                                onClick={() => setShowLogoutConfirm(true)}
                                 className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-400/10 transition-all font-bold text-sm"
                             >
                                 <LogOut className="w-4 h-4" />
@@ -167,6 +169,42 @@ export default function DashboardLayout({ children }) {
                     <ModalManager />
                 </main>
             </div>
+
+            {/* Logout Confirmation Modal */}
+            <AnimatePresence>
+                {showLogoutConfirm && (
+                    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-[32px] p-8 shadow-2xl text-center space-y-6"
+                        >
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
+                                <LogOut className="w-8 h-8" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-white italic tracking-tight uppercase">End Session?</h3>
+                                <p className="text-slate-500 text-sm mt-1">You are about to be redirected to the login portal.</p>
+                            </div>
+                            <div className="flex flex-col space-y-3">
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full py-4 bg-red-500 hover:bg-red-400 text-white font-black rounded-2xl shadow-xl shadow-red-500/20 transition-all uppercase tracking-widest text-xs"
+                                >
+                                    Logout Now
+                                </button>
+                                <button
+                                    onClick={() => setShowLogoutConfirm(false)}
+                                    className="w-full py-4 bg-slate-800 text-slate-400 font-bold rounded-2xl hover:bg-slate-700 transition-all uppercase tracking-widest text-xs"
+                                >
+                                    Stay Logged In
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

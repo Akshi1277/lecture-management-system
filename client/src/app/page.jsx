@@ -78,7 +78,7 @@ export default function Home() {
   if (userInfo) return null;
 
   return (
-    <div className="min-h-screen text-slate-200 selection:bg-teal-500/30 font-sans relative">
+    <div className="min-h-screen text-slate-200 selection:bg-teal-500/30 font-sans relative" suppressHydrationWarning>
       <GridBackground />
 
       {/* Hero Section */}

@@ -83,6 +83,7 @@ export const markAttendance = asyncHandler(async (req, res) => {
 // @route   GET /api/attendance/stats/:subject/:batchId
 // @access  Private/Teacher
 export const getAttendanceStats = asyncHandler(async (req, res) => {
+    const { subject, batchId } = req.params;
     // Get lab weight from settings
     const settings = await Settings.findOne() || { attendanceThreshold: 75, labWeight: 4 };
     const weight = settings.labWeight || 4;
@@ -278,7 +279,21 @@ export const getGlobalDefaulters = asyncHandler(async (req, res) => {
 // @route   GET /api/attendance/faculty-load
 // @access  Private/Admin
 export const getFacultyLoad = asyncHandler(async (req, res) => {
+    const now = new Date();
+    
+    // We look at the workload for the NEXT 30 days to show a realistic monthly capacity
+    const thirtyDaysFuture = new Date(now);
+    thirtyDaysFuture.setDate(now.getDate() + 30);
+
     const stats = await Lecture.aggregate([
+        {
+            $match: {
+                startTime: {
+                    $gte: now,
+                    $lt: thirtyDaysFuture
+                }
+            }
+        },
         {
             $group: {
                 _id: '$teacher',

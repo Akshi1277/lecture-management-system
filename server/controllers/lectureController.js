@@ -55,26 +55,32 @@ export const createLecture = asyncHandler(async (req, res) => {
         throw new Error('Batch not found');
     }
 
-    const { recurring, repeatUntil } = req.body;
+    const isRecurring = req.body.recurring !== 'none';
     let lecturesToCreate = [];
 
-    if (recurring && recurring !== 'none' && repeatUntil) {
+    if (isRecurring) {
+        const recurringType = req.body.recurring || 'weekly';
         let currentStart = new Date(startTime);
         let currentEnd = new Date(endTime);
-        const untilDate = new Date(repeatUntil);
+        
+        let untilDate = req.body.repeatUntil ? new Date(req.body.repeatUntil) : null;
+        if (!untilDate) {
+            untilDate = new Date(currentStart);
+            untilDate.setDate(untilDate.getDate() + (12 * 7)); // Default 12 weeks
+        }
 
         while (currentStart <= untilDate) {
             lecturesToCreate.push({
                 title, subject, teacher, classroom, batch, division, type,
-                department: batchData.department, // Auto assign from batch
+                department: batchData.department,
                 startTime: new Date(currentStart),
                 endTime: new Date(currentEnd)
             });
 
-            if (recurring === 'daily') {
+            if (recurringType === 'daily') {
                 currentStart.setDate(currentStart.getDate() + 1);
                 currentEnd.setDate(currentEnd.getDate() + 1);
-            } else if (recurring === 'weekly') {
+            } else {
                 currentStart.setDate(currentStart.getDate() + 7);
                 currentEnd.setDate(currentEnd.getDate() + 7);
             }
@@ -102,7 +108,7 @@ export const createLecture = asyncHandler(async (req, res) => {
         user: req.user._id,
         action: 'CREATE_LECTURE',
         entity: 'Lecture',
-        details: { count: createdLectures.length, subject, recurring },
+        details: { count: createdLectures.length, subject, recurring: req.body.recurring || 'weekly' },
         ipAddress: req.ip
     });
 

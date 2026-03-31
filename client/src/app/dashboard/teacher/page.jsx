@@ -49,7 +49,18 @@ export default function TeacherDashboard() {
                         <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                             {loading ? (
                                 <p className="text-slate-500 italic text-sm">Fetching your timetable...</p>
-                            ) : lectures.map((l, i) => (
+                            ) : (() => {
+                                const now = new Date();
+                                const nextWeek = new Date();
+                                nextWeek.setDate(now.getDate() + 7);
+                                
+                                return [...lectures]
+                                    .filter(l => {
+                                        const d = new Date(l.startTime);
+                                        return d >= now && d <= nextWeek;
+                                    })
+                                    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+                            })().map((l, i) => (
                                 <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-slate-900 border border-slate-800 rounded-2xl group hover:border-indigo-500/50 transition-all">
                                     <div>
                                         <h4 className="text-lg font-bold group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{l.title}</h4>

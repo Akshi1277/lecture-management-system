@@ -117,7 +117,7 @@ export const requestSubstitution = createAsyncThunk(
     async ({ lectureId, reason }, { getState, rejectWithValue }) => {
         try {
             const { auth: { userInfo } } = getState();
-            const { data } = await api.post(`/lectures/${lectureId}/request-substitution`, { reason }, getAuthHeader(userInfo));
+            const { data } = await api.post(`/lectures/${lectureId}/request-substitution`, { reason });
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

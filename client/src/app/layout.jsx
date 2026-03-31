@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className={`${outfit.className} min-h-screen flex flex-col bg-slate-950 antialiased`}>
+      <body className={`${outfit.className} min-h-screen flex flex-col bg-slate-950 antialiased`} suppressHydrationWarning>
         <ReduxProvider>
           <AnimatePresence>
             {!isLoaded && <UniversalLoader />}

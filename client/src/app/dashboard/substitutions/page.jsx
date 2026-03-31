@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,6 +13,9 @@ export default function SubstitutionsPage() {
     const { userInfo } = useSelector((state) => state.auth);
     const { list: allLectures, pendingSubstitutions, loading } = useSelector((state) => state.lecture);
     const dispatch = useDispatch();
+    const [showProxyModal, setShowProxyModal] = useState(false);
+    const [selectedLecture, setSelectedLecture] = useState(null);
+    const [proxyReason, setProxyReason] = useState("");
 
     const refreshFeed = () => {
         if (userInfo?.role === 'admin') {
@@ -22,9 +25,22 @@ export default function SubstitutionsPage() {
         }
     };
 
-    const pendingRequests = userInfo?.role === 'admin' 
-        ? pendingSubstitutions 
-        : allLectures.filter(l => l.status === 'Scheduled');
+    const pendingRequests = (() => {
+        const raw = userInfo?.role === 'admin' ? pendingSubstitutions : allLectures.filter(l => l.status === 'Scheduled');
+        
+        // Sorting chronologically
+        const sorted = [...raw].sort((a,b) => new Date(a.startTime) - new Date(b.startTime));
+        
+        // Filtering for next 7 days for Teachers/Admins to keep it focused
+        const now = new Date();
+        const nextWeek = new Date();
+        nextWeek.setDate(now.getDate() + 7);
+        
+        return sorted.filter(r => {
+            const d = new Date(r.startTime);
+            return d >= now && d <= nextWeek;
+        });
+    })();
 
     useEffect(() => {
         if (userInfo) {
@@ -36,14 +52,21 @@ export default function SubstitutionsPage() {
         }
     }, [userInfo, dispatch]); // only re-run when user changes
 
-    const handleTeacherRequest = async (lectureId) => {
-        const reason = window.prompt("Reason for substitution request?");
-        if (!reason) return;
+    const openProxyModal = (lecture) => {
+        setSelectedLecture(lecture);
+        setProxyReason("");
+        setShowProxyModal(true);
+    };
+
+    const handleTeacherRequest = async () => {
+        if (!proxyReason.trim()) return;
         
-        const resultAction = await dispatch(requestSubstitution({ lectureId, reason }));
+        const lectureId = selectedLecture._id;
+        const resultAction = await dispatch(requestSubstitution({ lectureId, reason: proxyReason }));
         if (requestSubstitution.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Substitution request sent to admin.' }));
             dispatch(fetchLectures());
+            setShowProxyModal(false);
         } else {
             dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to send request.' }));
         }
@@ -163,8 +186,8 @@ export default function SubstitutionsPage() {
                                                 <Clock className="w-3.5 h-3.5 mr-1 text-slate-400" />
                                                 {new Date(req.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
-                                            <p className="text-xs text-slate-500 mt-0.5 ml-4.5">
-                                                {new Date(req.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            <p className="text-[10px] text-teal-500 font-black uppercase mt-1">
+                                                {new Date(req.startTime).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
                                             </p>
                                         </div>
                                         <div>
@@ -187,7 +210,7 @@ export default function SubstitutionsPage() {
                                     ) : (
                                         <button 
                                             disabled={req.isSubstitutionRequested}
-                                            onClick={() => handleTeacherRequest(req._id)}
+                                            onClick={() => openProxyModal(req)}
                                             className={`w-full py-3 ${req.isSubstitutionRequested ? 'bg-slate-800 text-slate-500 border border-slate-700' : 'bg-rose-500 hover:bg-rose-400 text-white shadow-lg shadow-rose-500/20'} text-sm font-black rounded-xl transition-all active:scale-[0.98] flex items-center justify-center`}
                                         >
                                             <AlertCircle className="w-4 h-4 mr-2" />
@@ -200,6 +223,62 @@ export default function SubstitutionsPage() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Proxy Request Modal */}
+            <AnimatePresence>
+                {showProxyModal && (
+                    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-[32px] p-8 shadow-2xl space-y-6"
+                        >
+                            <div className="flex items-center space-x-4">
+                                <div className="p-4 bg-orange-500/10 rounded-2xl text-orange-400">
+                                    <ShieldAlert />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-white italic tracking-tight uppercase leading-none">Emergency Coverage</h3>
+                                    <p className="text-slate-500 text-[10px] uppercase font-black tracking-widest mt-1">Faculty Presence Portal</p>
+                                </div>
+                            </div>
+
+                            <div className="p-4 bg-slate-950/50 rounded-2xl border border-slate-800/50">
+                                <p className="text-[10px] text-slate-600 uppercase font-black tracking-widest mb-2">Lecture Identity</p>
+                                <p className="text-white font-bold text-sm tracking-tight">{selectedLecture?.title}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{selectedLecture?.subject} • {new Date(selectedLecture?.startTime).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest ml-1">Reason for Absence</label>
+                                <textarea
+                                    autoFocus
+                                    placeholder="Briefly describe the emergency or conflict..."
+                                    value={proxyReason}
+                                    onChange={(e) => setProxyReason(e.target.value)}
+                                    className="w-full h-32 bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:ring-1 focus:ring-orange-500 outline-none transition-all resize-none italic"
+                                />
+                                <div className="flex flex-col space-y-3 pt-2">
+                                    <button
+                                        onClick={handleTeacherRequest}
+                                        disabled={!proxyReason.trim()}
+                                        className="w-full py-4 bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:grayscale text-slate-950 font-black rounded-2xl shadow-xl shadow-orange-500/10 transition-all uppercase tracking-widest text-xs"
+                                    >
+                                        Broadcast Proxy Request
+                                    </button>
+                                    <button
+                                        onClick={() => setShowProxyModal(false)}
+                                        className="w-full py-4 bg-slate-800 text-slate-400 font-bold rounded-2xl hover:bg-slate-700 transition-all uppercase tracking-widest text-xs"
+                                    >
+                                        I can still attend
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

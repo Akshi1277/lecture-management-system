@@ -46,7 +46,7 @@ export default function SubstitutionFinder({ lecture, onClose }) {
             <div className="p-4 bg-teal-500/5 border border-teal-500/10 rounded-xl flex items-center mb-4">
                 <ShieldAlert className="w-4 h-4 text-teal-400 mr-3" />
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest leading-relaxed">
-                    AI logic ensures these teachers have <b>NO CONFLICTS</b> and matches their <b>SUBJECT SPECIALTIES</b>.
+                    Internal logic ensures these teachers have <b>NO CONFLICTS</b> and matches their <b>SUBJECT SPECIALTIES</b>.
                 </p>
             </div>
 
