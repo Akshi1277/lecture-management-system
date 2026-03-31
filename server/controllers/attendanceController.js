@@ -275,23 +275,15 @@ export const getGlobalDefaulters = asyncHandler(async (req, res) => {
     res.json(finalStats);
 });
 
-// @desc    Get faculty load stats (Total lectures per teacher)
+// @desc    Get faculty load stats (Total sessions per teacher across entire grid)
 // @route   GET /api/attendance/faculty-load
 // @access  Private/Admin
 export const getFacultyLoad = asyncHandler(async (req, res) => {
-    const now = new Date();
-    
-    // We look at the workload for the NEXT 30 days to show a realistic monthly capacity
-    const thirtyDaysFuture = new Date(now);
-    thirtyDaysFuture.setDate(now.getDate() + 30);
-
+    // Aggregating ALL non-cancelled lectures to show true institutional handling
     const stats = await Lecture.aggregate([
         {
             $match: {
-                startTime: {
-                    $gte: now,
-                    $lt: thirtyDaysFuture
-                }
+                status: { $ne: 'Cancelled' }
             }
         },
         {
@@ -314,9 +306,20 @@ export const getFacultyLoad = asyncHandler(async (req, res) => {
                 teacher: '$teacherInfo.name',
                 count: '$lectureCount'
             }
-        }
+        },
+        { $sort: { count: -1 } }
     ]);
-    res.json(stats);
+
+    // Also get security/lockdown (RoomBlock) statistics for the reports
+    const Lockdown = mongoose.model('RoomBlock');
+    const lockdownCount = await Lockdown.countDocuments({ status: 'Active' });
+
+    res.json({
+        load: stats,
+        security: {
+            lockdowns: lockdownCount
+        }
+    });
 });
 
 // @desc    Get logged in student attendance stats

@@ -34,12 +34,13 @@ export default function ReportsPage() {
         totalLectures: lectures.length,
         completedLectures: lectures.filter(l => l.status === 'Completed').length,
         cancelledLectures: lectures.filter(l => l.status === 'Cancelled').length,
-        facultyLoad: userInfo?.role === 'admin' ? facultyLoad : [],
+        facultyLoad: userInfo?.role === 'admin' ? (facultyLoad?.load || []) : [],
+        securityLockdowns: facultyLoad?.security?.lockdowns || 0,
         totalUsers: {
             students: users.filter(u => u.role === 'student').length,
             teachers: users.filter(u => u.role === 'teacher').length
         },
-        averageAttendance: 82 // Mocked for now
+        averageAttendance: Math.round(lectures.filter(l => l.status === 'Completed').reduce((acc, curr) => acc + (curr.attendanceTrend || 82), 0) / (lectures.filter(l => l.status === 'Completed').length || 1))
     };
 
     if (userInfo?.role === 'student') {
@@ -80,10 +81,10 @@ export default function ReportsPage() {
                     Array(4).fill(0).map((_, i) => <ReportCardSkeleton key={i} />)
                 ) : (
                     [
-                        { label: "Lecture Efficiency", value: `${stats.totalLectures ? Math.round((stats.completedLectures/stats.totalLectures)*100) : 0}%`, icon: <Activity className="text-teal-400" />, trend: "+2.4%", trendUp: true },
+                        { label: "Completion Rate", value: `${stats.totalLectures ? Math.round((stats.completedLectures/stats.totalLectures)*100) : 0}%`, icon: <Activity className="text-teal-400" />, trend: "+2.4%", trendUp: true },
                         { label: "Avg. Student Presence", value: `${stats.averageAttendance}%`, icon: <Users className="text-blue-400" />, trend: "-0.8%", trendUp: false },
-                        { label: "Faculty Utilization", value: "High", icon: <TrendingUp className="text-purple-400" />, trend: "Steady", trendUp: true },
-                        { label: "Security/Lockdowns", value: "03", icon: <ShieldCheck className="text-rose-500" />, trend: "Monthly", trendUp: true }
+                        { label: "Faculty Utilization", value: stats.facultyLoad.length > 0 ? "High" : "Low", icon: <TrendingUp className="text-purple-400" />, trend: "Steady", trendUp: true },
+                        { label: "Security/Lockdowns", value: stats.securityLockdowns.toString().padStart(2, '0'), icon: <ShieldCheck className="text-rose-500" />, trend: "Active", trendUp: true }
                     ].map((stat, idx) => (
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }}
@@ -130,13 +131,16 @@ export default function ReportsPage() {
                                         <div className="h-2 w-full bg-slate-800/50 rounded-full overflow-hidden">
                                             <motion.div 
                                                 initial={{ width: 0 }}
-                                                animate={{ width: `${(faculty.count / stats.totalLectures) * 100}%` }}
+                                                animate={{ width: `${(faculty.count / Math.max(...stats.facultyLoad.map(f => f.count))) * 100}%` }}
                                                 transition={{ duration: 1.5, ease: "circOut" }}
                                                 className="h-full bg-gradient-to-r from-teal-500 to-teal-400 rounded-full"
                                             />
                                         </div>
                                     </div>
                                 ))}
+                                {stats.facultyLoad.length === 0 && (
+                                    <div className="p-8 text-center text-slate-500 italic text-sm">No secondary instructor metrics available.</div>
+                                )}
                             </div>
                         </div>
                     )
