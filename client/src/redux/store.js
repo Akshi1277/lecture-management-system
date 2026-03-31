@@ -11,6 +11,7 @@ import dashboardReducer from './slices/dashboardSlice';
 import examReducer from './slices/examSlice';
 import syllabusReducer from './slices/syllabusSlice';
 import departmentReducer from './slices/departmentSlice';
+import settingsReducer from './slices/settingsSlice';
 
 export const store = configureStore({
     reducer: {
@@ -26,6 +27,7 @@ export const store = configureStore({
         exams: examReducer,
         syllabus: syllabusReducer,
         departments: departmentReducer,
+        settings: settingsReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

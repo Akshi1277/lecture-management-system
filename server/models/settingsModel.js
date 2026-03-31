@@ -12,7 +12,15 @@ const settingsSchema = mongoose.Schema({
     systemName: {
         type: String,
         default: 'EduSync'
-    }
+    },
+    batchDurations: [
+        {
+            batchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Batch' },
+            batchName: { type: String },
+            lectureDuration: { type: Number, default: 60 },  // minutes
+            labDuration: { type: Number, default: 120 },      // minutes
+        }
+    ]
 }, {
     timestamps: true
 });

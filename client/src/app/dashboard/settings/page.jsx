@@ -9,10 +9,12 @@ import {
 import { setActiveModal, addToast } from "@/redux/slices/uiSlice";
 import { updateUserProfile, changePassword } from "@/redux/slices/authSlice";
 import { fetchSystemSettings, updateSystemSettings, uploadProfilePhoto, sendAttendanceWarnings } from "@/redux/slices/dashboardSlice";
+import { fetchBatches } from "@/redux/slices/hierarchySlice";
 
 export default function SettingsPage() {
     const { userInfo } = useSelector((state) => state.auth);
     const { systemSettings } = useSelector((state) => state.dashboard);
+    const { batches } = useSelector((state) => state.hierarchy);
     const dispatch = useDispatch();
 
     const [activeTab, setActiveTab] = useState("profile");
@@ -21,7 +23,8 @@ export default function SettingsPage() {
     const [globalSettings, setGlobalSettings] = useState({
         attendanceThreshold: 75,
         labWeight: 4,
-        systemName: "EduSync"
+        systemName: "EduSync",
+        batchDurations: []
     });
     const [isSaving, setIsSaving] = useState(false);
     const [isSending, setIsSending] = useState(false);
@@ -38,6 +41,7 @@ export default function SettingsPage() {
     useEffect(() => {
         if (userInfo?.role === 'admin') {
             dispatch(fetchSystemSettings());
+            dispatch(fetchBatches());
         }
     }, [userInfo, dispatch]);
 
@@ -46,10 +50,33 @@ export default function SettingsPage() {
             setGlobalSettings({
                 attendanceThreshold: systemSettings.attendanceThreshold || 75,
                 labWeight: systemSettings.labWeight || 4,
-                systemName: systemSettings.systemName || "EduSync"
+                systemName: systemSettings.systemName || "EduSync",
+                batchDurations: systemSettings.batchDurations || []
             });
         }
     }, [systemSettings]);
+
+    const handleBatchDurationChange = (batchId, type, value) => {
+        setGlobalSettings(prev => {
+            const currentDurations = prev.batchDurations || [];
+            const index = currentDurations.findIndex(bd => bd.batchId === batchId);
+            const val = parseInt(value) || 0;
+            
+            if (index !== -1) {
+                const nextDurations = [...currentDurations];
+                nextDurations[index] = { ...nextDurations[index], [type]: val };
+                return { ...prev, batchDurations: nextDurations };
+            } else {
+                return {
+                    ...prev,
+                    batchDurations: [
+                        ...currentDurations,
+                        { batchId, lectureDuration: type === 'lectureDuration' ? val : 60, labDuration: type === 'labDuration' ? val : 120 }
+                    ]
+                };
+            }
+        });
+    };
 
     const handleSaveGlobalSettings = async () => {
         setIsSaving(true);
@@ -378,6 +405,57 @@ export default function SettingsPage() {
                                                  disabled={userInfo?.role !== 'superadmin'}
                                                  className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white font-black focus:ring-1 focus:ring-blue-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" 
                                              />
+                                         </div>
+                                     </div>
+
+                                     <div className="pt-6 border-t border-slate-800/50 space-y-6">
+                                         <div className="flex items-center space-x-3">
+                                             <Clock className="w-5 h-5 text-purple-400" />
+                                             <h4 className="text-sm font-black text-white uppercase italic tracking-wide">Academic Duration Policy</h4>
+                                         </div>
+                                         <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">Configure standard duration (in minutes) for custom batches. These values act as the source of truth for the Timetable Scheduler and will auto-block multi-hour sessions appropriately.</p>
+                                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                                             <div className="grid grid-cols-3 bg-slate-800/50 p-4 border-b border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-widest gap-4">
+                                                 <div>Batch Target</div>
+                                                 <div>Lecture Duration</div>
+                                                 <div>Lab/Practical Duration</div>
+                                             </div>
+                                             <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                                                 {batches?.map(batch => {
+                                                     const durationConfig = globalSettings.batchDurations?.find(bd => bd.batchId === batch._id) || { lectureDuration: 60, labDuration: 120 };
+                                                     return (
+                                                         <div key={batch._id} className="grid grid-cols-3 p-4 border-b border-slate-800/50 items-center text-sm text-white gap-4 hover:bg-slate-800/20 transition-colors">
+                                                             <div className="font-bold truncate flex items-center space-x-2">
+                                                                <span className="w-2 h-2 rounded-full bg-teal-500 p-0 shadow-[0_0_10px_rgba(20,184,166,0.5)]"></span>
+                                                                <span title={batch.name}>{batch.name}</span>
+                                                             </div>
+                                                             <div className="flex items-center space-x-2">
+                                                                 <input 
+                                                                     type="number" 
+                                                                     value={durationConfig.lectureDuration}
+                                                                     onChange={(e) => handleBatchDurationChange(batch._id, 'lectureDuration', e.target.value)}
+                                                                     disabled={userInfo?.role !== 'admin'}
+                                                                     className="w-20 bg-slate-950 border border-slate-700 rounded-lg p-2 text-center focus:ring-1 focus:ring-teal-500 outline-none disabled:opacity-50" 
+                                                                 />
+                                                                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">mins</span>
+                                                             </div>
+                                                             <div className="flex items-center space-x-2">
+                                                                 <input 
+                                                                     type="number" 
+                                                                     value={durationConfig.labDuration}
+                                                                     onChange={(e) => handleBatchDurationChange(batch._id, 'labDuration', e.target.value)}
+                                                                     disabled={userInfo?.role !== 'admin'}
+                                                                     className="w-20 bg-slate-950 border border-slate-700 rounded-lg p-2 text-center focus:ring-1 focus:ring-purple-500 outline-none disabled:opacity-50" 
+                                                                 />
+                                                                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">mins</span>
+                                                             </div>
+                                                         </div>
+                                                     );
+                                                 })}
+                                                 {(!batches || batches.length === 0) && (
+                                                     <div className="p-6 text-center text-xs font-bold uppercase tracking-widest text-slate-600">No organizational batches defined...</div>
+                                                 )}
+                                             </div>
                                          </div>
                                      </div>
 

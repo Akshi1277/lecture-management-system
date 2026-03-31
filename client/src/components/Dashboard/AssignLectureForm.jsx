@@ -1,12 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Plus, CheckCircle, AlertCircle, Info } from "lucide-react";
+import { X, Calendar, Plus, Clock, Info, AlertTriangle } from "lucide-react";
 import { fetchTeachers } from "@/redux/slices/userSlice";
 import { fetchBatches } from "@/redux/slices/hierarchySlice";
 import { addToast } from "@/redux/slices/uiSlice";
 import { createLecture, fetchLectures } from "@/redux/slices/lectureSlice";
+import { fetchSettings } from "@/redux/slices/settingsSlice";
 
 export default function AssignLectureForm({ lecture, onClose, isFullscreen = false }) {
     const dispatch = useDispatch();
@@ -14,6 +15,7 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
     const { teachers } = useSelector(state => state.users);
     const { batches } = useSelector(state => state.hierarchy);
     const { list: existingLectures } = useSelector(state => state.lecture);
+    const { data: settings } = useSelector(state => state.settings);
 
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
@@ -22,6 +24,9 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
         subject: "",
         startTime: "", endTime: "",
     });
+    const [selectedSlots, setSelectedSlots] = useState([]);
+    // Track hovered slot for preview
+    const [hoveredSlot, setHoveredSlot] = useState(null);
 
     useEffect(() => {
         if (lecture) {
@@ -37,23 +42,39 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
             });
         }
     }, [lecture]);
-    const [selectedSlots, setSelectedSlots] = useState([]);
 
     useEffect(() => {
         if (userInfo) {
             dispatch(fetchTeachers());
             dispatch(fetchBatches());
             dispatch(fetchLectures());
+            dispatch(fetchSettings());
         }
     }, [userInfo, dispatch]);
 
+    // ─── Duration Logic ──────────────────────────────────────────────────────
+    const getDurationMinutes = useMemo(() => {
+        if (!settings?.batchDurations || !formData.batch) {
+            // Fallback defaults
+            return formData.type === 'Lab' ? 120 : 60;
+        }
+        const batchConfig = settings.batchDurations.find(
+            bd => bd.batchId?.toString() === formData.batch?.toString()
+        );
+        if (!batchConfig) return formData.type === 'Lab' ? 120 : 60;
+        return formData.type === 'Lab' ? batchConfig.labDuration : batchConfig.lectureDuration;
+    }, [settings, formData.batch, formData.type]);
+
+    // How many 1-hr grid rows does this session span?
+    const slotSpan = Math.ceil(getDurationMinutes / 60);
+
     const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const HOURS = Array.from({ length: 9 }, (_, i) => i + 7); // 7 AM – 3 PM
+    const HOURS = Array.from({ length: 11 }, (_, i) => i + 7); // 7 AM – 5 PM
 
     const getNextWeekday = (dayIndex) => {
         const now = new Date();
-        const day = now.getDay(); // 0=Sun
-        const targetDay = dayIndex + 1; // Mon=1
+        const day = now.getDay();
+        const targetDay = dayIndex + 1;
         let diff = targetDay - day;
         if (diff < 0) diff += 7;
         const date = new Date(now);
@@ -72,12 +93,8 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
             startDate.setHours(slot.hour, 0, 0, 0);
         }
 
-        const endDate = new Date(date);
-        if (slot.hour === 7) {
-            endDate.setHours(8, 30, 0, 0);
-        } else {
-            endDate.setHours(slot.hour + 1, 0, 0, 0);
-        }
+        const endDate = new Date(startDate);
+        endDate.setMinutes(endDate.getMinutes() + getDurationMinutes);
 
         return {
             startTime: startDate.toISOString(),
@@ -85,12 +102,63 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
         };
     };
 
+    // Returns what hour rows are "spanned" by a session starting at (dayIdx, startHour)
+    const getSpannedHours = (dayIdx, startHour) => {
+        const spanned = [];
+        for (let i = 0; i < slotSpan; i++) {
+            const h = startHour + i;
+            if (HOURS.includes(h)) spanned.push({ day: dayIdx, hour: h });
+        }
+        return spanned;
+    };
+
     const isDropdownsSelected = !!(formData.subject && formData.batch && formData.type && formData.classroom);
 
-    const getSlotStyle = (dayIdx, h) => {
-        const isSelected = selectedSlots.some(s => s.day === dayIdx && s.hour === h);
-        if (isSelected) return 'bg-teal-500/20 shadow-[inset_0_0_20px_rgba(20,184,166,0.1)] border border-teal-500/30 active-selection';
+    // Check if an existing lecture occupies this (day, hour) slot
+    const getConflict = (dayIdx, hour) => {
+        const tentativeStart = buildTimesForSlot({ day: dayIdx, hour }).startTime;
+        // We check if any existing lecture's window overlaps with this hour
+        const slotHourStart = new Date(tentativeStart);
+        const slotHourEnd = new Date(slotHourStart);
+        slotHourEnd.setHours(slotHourEnd.getHours() + 1);
 
+        return existingLectures.find(lec => {
+            const lecStart = new Date(lec.startTime);
+            const lecEnd = new Date(lec.endTime);
+            const overlaps = lecStart < slotHourEnd && lecEnd > slotHourStart;
+            if (!overlaps) return false;
+            const isTeacherConflict = lec.teacher?._id === formData.teacher;
+            const isClassroomConflict = lec.classroom === formData.classroom;
+            const isBatchConflict = lec.batch?._id === formData.batch;
+            return isTeacherConflict || isClassroomConflict || isBatchConflict;
+        });
+    };
+
+    // Is this hour blocked by a SELECTED slot that spans into it?
+    const isBlockedBySelected = (dayIdx, hour) => {
+        return selectedSlots.some(slot => {
+            if (slot.day !== dayIdx) return false;
+            const spanned = getSpannedHours(slot.day, slot.hour);
+            return spanned.some(s => s.hour === hour);
+        });
+    };
+
+    // Is this hour part of the current hover preview?
+    const isInHoverPreview = (dayIdx, hour) => {
+        if (!hoveredSlot || hoveredSlot.day !== dayIdx) return false;
+        const spanned = getSpannedHours(hoveredSlot.day, hoveredSlot.hour);
+        return spanned.some(s => s.hour === hour);
+    };
+
+    // Is this hour the "anchor" (first) hour of a selected slot?
+    const isAnchorSelected = (dayIdx, hour) => {
+        return selectedSlots.some(s => s.day === dayIdx && s.hour === hour);
+    };
+
+    const getSlotStyle = (dayIdx, h) => {
+        if (isAnchorSelected(dayIdx, h) || isBlockedBySelected(dayIdx, h)) {
+            return 'bg-teal-500/20 shadow-[inset_0_0_20px_rgba(20,184,166,0.08)] border border-teal-500/30';
+        }
         const conflict = getConflict(dayIdx, h);
         if (conflict) {
             if (conflict.teacher?._id === formData.teacher) {
@@ -98,13 +166,52 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
             }
             return 'bg-red-500/5 cursor-not-allowed';
         }
-
+        if (isInHoverPreview(dayIdx, h)) {
+            return 'bg-teal-500/10 border border-teal-500/20';
+        }
         if (!isDropdownsSelected) return 'opacity-20 cursor-not-allowed pointer-events-none grayscale';
-
         return 'hover:bg-teal-500/10 cursor-pointer';
     };
 
     const step1Valid = formData.title && formData.teacher;
+
+    const handleSlotClick = (dayIdx, h) => {
+        if (!isDropdownsSelected) return;
+
+        // If clicking an already-selected anchor, deselect it
+        const existingIdx = selectedSlots.findIndex(s => s.day === dayIdx && s.hour === h);
+        if (existingIdx !== -1) {
+            const newSlots = [...selectedSlots];
+            newSlots.splice(existingIdx, 1);
+            setSelectedSlots(newSlots);
+            return;
+        }
+
+        // Check if the full duration span has any conflict
+        const spanned = getSpannedHours(dayIdx, h);
+        const hasConflictInSpan = spanned.some(s => getConflict(s.day, s.hour));
+        if (hasConflictInSpan) {
+            dispatch(addToast({ type: 'error', message: `Conflict: ${formData.type === 'Lab' ? getDurationMinutes + '-min lab' : getDurationMinutes + '-min lecture'} span overlaps an existing session.` }));
+            return;
+        }
+
+        // Check if span is already blocked by another selected slot
+        const blockedByOther = spanned.some(s => isBlockedBySelected(s.day, s.hour) && !isAnchorSelected(s.day, s.hour));
+        if (blockedByOther) {
+            dispatch(addToast({ type: 'error', message: 'This duration window overlaps with another slot you selected.' }));
+            return;
+        }
+
+        setSelectedSlots([...selectedSlots, {
+            day: dayIdx,
+            hour: h,
+            subject: formData.subject,
+            batch: formData.batch,
+            type: formData.type,
+            classroom: formData.classroom,
+            durationMinutes: getDurationMinutes,
+        }]);
+    };
 
     const handleSubmit = async () => {
         if (selectedSlots.length === 0) return;
@@ -116,14 +223,14 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                 subject: slot.subject,
                 batch: slot.batch,
                 type: slot.type,
-                division: 'A', // Default to A for departmental management
+                division: 'A',
                 classroom: slot.classroom,
                 startTime,
                 endTime
             };
             const resultAction = await dispatch(createLecture(payload));
             if (!createLecture.fulfilled.match(resultAction)) {
-                const errorMsg = resultAction.payload?.message || resultAction.payload || `Conflict detected on ${DAYS[slot.day]} at ${formatHour(slot.hour)}`;
+                const errorMsg = resultAction.payload?.message || resultAction.payload || `Conflict on ${DAYS[slot.day]} at ${formatHour(slot.hour)}`;
                 dispatch(addToast({ type: 'error', message: errorMsg }));
                 allSuccess = false;
             }
@@ -136,12 +243,10 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
 
     const selectedTeacher = teachers.find(t => t._id === formData.teacher);
     const getBatchName = (batchId) => batches.find(b => b._id === batchId)?.name || '---';
-
     const getInitials = (name) => {
         if (!name) return "";
         return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     };
-
     const initials = getInitials(selectedTeacher?.name);
 
     const formatHour = (h) => {
@@ -152,19 +257,11 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
         return `${display}:00 ${period}`;
     };
 
-    const getConflict = (dayIdx, hour) => {
-        const slotStart = buildTimesForSlot({ day: dayIdx, hour }).startTime;
-
-        return existingLectures.find(lec => {
-            const isSameTime = lec.startTime === slotStart;
-            if (!isSameTime) return false;
-
-            const isTeacherConflict = lec.teacher?._id === formData.teacher;
-            const isClassroomConflict = lec.classroom === formData.classroom;
-            const isBatchConflict = lec.batch?._id === formData.batch;
-
-            return isTeacherConflict || isClassroomConflict || isBatchConflict;
-        });
+    const formatDuration = (mins) => {
+        if (mins < 60) return `${mins}m`;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return m > 0 ? `${h}h ${m}m` : `${h}h`;
     };
 
     return (
@@ -213,7 +310,6 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             ))}
                         </select>
 
-
                         <button
                             onClick={() => step1Valid && setStep(2)}
                             className={`w-full py-4 font-black rounded-2xl transition-all flex items-center justify-center space-x-2 ${step1Valid ? 'bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-xl shadow-teal-500/20' : 'bg-slate-800 text-slate-600 cursor-not-allowed'}`}
@@ -251,7 +347,7 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             </div>
                             <div className="space-y-1">
                                 <label className="text-[9px] font-black text-slate-500 uppercase ml-1">Batch</label>
-                                <select value={formData.batch} onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                                <select value={formData.batch} onChange={(e) => { setFormData({ ...formData, batch: e.target.value }); setSelectedSlots([]); }}
                                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:ring-1 focus:ring-teal-500 appearance-none">
                                     <option value="">Select Batch</option>
                                     {batches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
@@ -259,7 +355,7 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             </div>
                             <div className="space-y-1">
                                 <label className="text-[9px] font-black text-slate-500 uppercase ml-1">Type</label>
-                                <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value, classroom: "" })}
+                                <select value={formData.type} onChange={(e) => { setFormData({ ...formData, type: e.target.value, classroom: "" }); setSelectedSlots([]); }}
                                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:ring-1 focus:ring-teal-500 appearance-none">
                                     <option value="Lecture">Lecture</option>
                                     <option value="Lab">Practical/Lab</option>
@@ -268,11 +364,8 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             <div className="space-y-1">
                                 <label className="text-[9px] font-black text-slate-500 uppercase ml-1">Venue / Room No.</label>
                                 {formData.type === 'Lab' ? (
-                                    <select
-                                        value={formData.classroom}
-                                        onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:ring-1 focus:ring-teal-500 appearance-none"
-                                    >
+                                    <select value={formData.classroom} onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
+                                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:ring-1 focus:ring-teal-500 appearance-none">
                                         <option value="">Select Lab</option>
                                         <option value="IT Lab">IT Lab</option>
                                         <option value="CS Lab">CS Lab</option>
@@ -291,6 +384,19 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             </div>
                         </div>
 
+                        {/* Duration badge */}
+                        {isDropdownsSelected && (
+                            <div className="flex items-center space-x-2 px-4 py-2 bg-teal-500/10 border border-teal-500/20 rounded-xl w-fit">
+                                <Clock className="w-3.5 h-3.5 text-teal-400" />
+                                <span className="text-[11px] font-black text-teal-400 uppercase tracking-wider">
+                                    {formData.type} Duration: <span className="text-white">{formatDuration(getDurationMinutes)}</span>
+                                    {!settings?.batchDurations?.find(bd => bd.batchId?.toString() === formData.batch) && (
+                                        <span className="text-amber-400 ml-2">(default — configure in Settings)</span>
+                                    )}
+                                </span>
+                            </div>
+                        )}
+
                         {/* Timetable Grid */}
                         <div className={`bg-slate-900 border border-slate-800 rounded-[24px] overflow-hidden ${isFullscreen ? 'flex-1 shadow-2xl' : ''}`}>
                             <div className="grid grid-cols-[100px_repeat(6,1fr)] bg-slate-800/30 sticky top-0 z-20 border-b border-slate-800">
@@ -308,54 +414,47 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                                             {formatHour(h)}
                                         </div>
                                         {DAYS.map((_, dayIdx) => {
-                                            const activeSlot = selectedSlots.find(s => s.day === dayIdx && s.hour === h);
-                                            const isSelected = !!activeSlot;
+                                            const anchorSelected = isAnchorSelected(dayIdx, h);
+                                            const blockedBySelected = isBlockedBySelected(dayIdx, h);
                                             const conflict = getConflict(dayIdx, h);
                                             const slotClass = getSlotStyle(dayIdx, h);
+                                            const isDisabled = !isDropdownsSelected || (!!conflict && !anchorSelected && !blockedBySelected);
 
                                             return (
                                                 <button
                                                     key={`${dayIdx}-${h}`}
                                                     type="button"
-                                                    disabled={!isDropdownsSelected || (!!conflict && !isSelected)}
-                                                    onClick={() => {
-                                                        const existingSlotIndex = selectedSlots.findIndex(s => s.day === dayIdx && s.hour === h);
-                                                        if (existingSlotIndex !== -1) {
-                                                            const newSlots = [...selectedSlots];
-                                                            newSlots.splice(existingSlotIndex, 1);
-                                                            setSelectedSlots(newSlots);
-                                                        } else {
-                                                            setSelectedSlots([...selectedSlots, {
-                                                                day: dayIdx,
-                                                                hour: h,
-                                                                subject: formData.subject,
-                                                                batch: formData.batch,
-                                                                type: formData.type,
-                                                                classroom: formData.classroom
-                                                            }]);
-                                                        }
-                                                    }}
+                                                    disabled={isDisabled}
+                                                    onClick={() => handleSlotClick(dayIdx, h)}
+                                                    onMouseEnter={() => isDropdownsSelected && !conflict && setHoveredSlot({ day: dayIdx, hour: h })}
+                                                    onMouseLeave={() => setHoveredSlot(null)}
                                                     className={`${isFullscreen ? 'h-28' : 'h-16'} border-r border-slate-800/50 relative transition-all group ${slotClass}`}
                                                 >
-                                                    {isSelected && (
+                                                    {anchorSelected && (
                                                         <div className="absolute inset-1 flex flex-col items-center justify-center text-center overflow-hidden">
                                                             <div className={`${isFullscreen ? 'w-9 h-9 text-[11px]' : 'w-6 h-6 text-[8px]'} bg-teal-500 text-slate-950 font-black rounded-full flex items-center justify-center shadow-lg shadow-teal-500/20 mb-0.5 shrink-0`}>
                                                                 {initials}
                                                             </div>
                                                             <div className="flex flex-col leading-none">
                                                                 <span className={`${isFullscreen ? 'text-[10px]' : 'text-[7px]'} font-black text-white uppercase truncate px-1`}>
-                                                                    {activeSlot.subject}
+                                                                    {selectedSlots.find(s => s.day === dayIdx && s.hour === h)?.subject}
                                                                 </span>
                                                                 <span className={`${isFullscreen ? 'text-[9px]' : 'text-[6px]'} font-bold text-teal-400 mt-0.5`}>
-                                                                    {getBatchName(activeSlot.batch)}
+                                                                    {getBatchName(selectedSlots.find(s => s.day === dayIdx && s.hour === h)?.batch)}
                                                                 </span>
-                                                                <span className={`${isFullscreen ? 'text-[8px]' : 'text-[5px]'} font-black text-slate-400 mt-0.5 uppercase tracking-tighter bg-slate-800/50 px-1 rounded`}>
-                                                                    {activeSlot.type === 'Lab' ? activeSlot.classroom : `Room ${activeSlot.classroom}`}
+                                                                <span className={`${isFullscreen ? 'text-[8px]' : 'text-[5px]'} font-black text-amber-400 mt-0.5 uppercase tracking-tighter bg-slate-800/50 px-1 rounded`}>
+                                                                    {formatDuration(getDurationMinutes)}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                     )}
-                                                    {conflict && !isSelected && (
+                                                    {/* Show "continuation" indicator for spanned slots */}
+                                                    {!anchorSelected && blockedBySelected && (
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <div className="w-1 h-6 bg-teal-500/40 rounded-full" />
+                                                        </div>
+                                                    )}
+                                                    {conflict && !anchorSelected && !blockedBySelected && (
                                                         <div className="absolute inset-1.5 flex flex-col items-center justify-center text-center">
                                                             <div className={`${isFullscreen ? 'w-9 h-9 text-[10px]' : 'w-7 h-7 text-[10px]'} font-black rounded-full flex items-center justify-center mb-0.5 ${conflict.teacher?._id === formData.teacher ? 'bg-purple-500/30 text-purple-400' : 'bg-red-500/20 text-red-500'}`}>
                                                                 {getInitials(conflict.teacher?.name)}
@@ -365,12 +464,28 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                                                             </span>
                                                         </div>
                                                     )}
+                                                    {/* Hover preview label on first hovered row */}
+                                                    {isInHoverPreview(dayIdx, h) && !anchorSelected && !blockedBySelected && hoveredSlot?.day === dayIdx && hoveredSlot?.hour === h && (
+                                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                            <span className="text-[9px] font-black text-teal-400 uppercase tracking-wider">
+                                                                {formatDuration(getDurationMinutes)}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </button>
-                                            )
+                                            );
                                         })}
                                     </div>
                                 ))}
                             </div>
+                        </div>
+
+                        {/* Legend */}
+                        <div className="flex items-center space-x-4 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                            <span className="flex items-center space-x-1"><span className="w-3 h-3 rounded bg-teal-500/20 border border-teal-500/30 inline-block" /> <span>Selected</span></span>
+                            <span className="flex items-center space-x-1"><span className="w-3 h-3 rounded bg-purple-500/20 border border-purple-500/30 inline-block" /> <span>Teacher Busy</span></span>
+                            <span className="flex items-center space-x-1"><span className="w-3 h-3 rounded bg-red-500/10 border border-red-500/20 inline-block" /> <span>Room/Batch Conflict</span></span>
+                            <span className="flex items-center space-x-1"><span className="w-3 h-3 rounded bg-teal-500/10 border border-teal-500/20 inline-block" /> <span>Duration Preview</span></span>
                         </div>
 
                         {/* Action Bar */}
@@ -387,10 +502,10 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[12px] font-black text-teal-400">
-                                        {selectedSlots.length > 0 ? `${selectedSlots.length} Mixed Slot(s)` : '---'}
+                                        {selectedSlots.length > 0 ? `${selectedSlots.length} Session(s) • ${formatDuration(getDurationMinutes)} each` : '---'}
                                     </p>
                                     <p className="text-[10px] text-slate-500">
-                                        {selectedSlots.length > 0 ? 'Batch/subject preserved per slot' : 'Select details above'}
+                                        {selectedSlots.length > 0 ? 'Spans auto-blocked in grid' : 'Select details above, then click slots'}
                                     </p>
                                 </div>
                             </div>

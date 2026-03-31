@@ -16,7 +16,7 @@ export const getSettings = asyncHandler(async (req, res) => {
 // @route   PUT /api/settings
 // @access  Private/Admin
 export const updateSettings = asyncHandler(async (req, res) => {
-    const { attendanceThreshold, labWeight, systemName } = req.body;
+    const { attendanceThreshold, labWeight, systemName, batchDurations } = req.body;
 
     let settings = await Settings.findOne();
     if (!settings) {
@@ -26,6 +26,7 @@ export const updateSettings = asyncHandler(async (req, res) => {
     if (attendanceThreshold !== undefined) settings.attendanceThreshold = attendanceThreshold;
     if (labWeight !== undefined) settings.labWeight = labWeight;
     if (systemName !== undefined) settings.systemName = systemName;
+    if (batchDurations !== undefined) settings.batchDurations = batchDurations;
 
     const updatedSettings = await settings.save();
     res.json(updatedSettings);
