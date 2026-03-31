@@ -21,21 +21,40 @@ export default function NotificationBell() {
                              (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '') : "http://localhost:5000");
             const socket = io(socketUrl);
             
-            socket.on('new_announcement', (data) => {
-                // Check if target is relevant for current user role/batch
-                const isRelevant = 
-                    data.targetAudience === 'all' || 
-                    (userInfo.role === 'student' && (data.targetAudience === 'students' && (!data.targetBatch || data.targetBatch === userInfo.batch))) ||
-                    (userInfo.role === 'teacher' && data.targetAudience === 'teachers') ||
-                    userInfo.role === 'admin';
+                socket.on('new_announcement', (data) => {
+                    // Check if target is relevant for current user role/batch
+                    const isRelevant = 
+                        data.targetAudience === 'all' || 
+                        (userInfo.role === 'student' && (data.targetAudience === 'students' && (!data.targetBatch || data.targetBatch === userInfo.batch))) ||
+                        (userInfo.role === 'teacher' && data.targetAudience === 'teachers') ||
+                        userInfo.role === 'admin';
 
-                if (isRelevant) {
-                    dispatch(addNotification({
-                        ...data,
-                        createdAt: new Date().toISOString()
-                    }));
-                }
-            });
+                    if (isRelevant) {
+                        dispatch(addNotification({
+                            ...data,
+                            createdAt: new Date().toISOString(),
+                            priority: data.priority || 'medium'
+                        }));
+                    }
+                });
+
+                // NEW: Listen for Venue Overrides (Cancellations/Relocations)
+                socket.on('lectureNotification', (data) => {
+                    const isTargeted = 
+                        (userInfo.role === 'student' && data.batchId === userInfo.batch) ||
+                        (userInfo.role === 'teacher' && data.teacherId === userInfo._id) ||
+                        userInfo.role === 'admin';
+
+                    if (isTargeted) {
+                        dispatch(addNotification({
+                            title: data.type === 'CANCELLATION' ? '⚠️ Lecture Cancelled' : '📍 Venue Relocated',
+                            content: data.message,
+                            priority: 'high',
+                            createdAt: new Date().toISOString(),
+                            author: { name: 'Institutional Logistics' }
+                        }));
+                    }
+                });
 
             return () => socket.disconnect();
         }
@@ -55,6 +74,7 @@ export default function NotificationBell() {
         setIsOpen(!isOpen);
         if (!isOpen) {
             dispatch(markAllAsRead());
+            localStorage.setItem('notifications_last_seen', Date.now().toString());
         }
     };
 

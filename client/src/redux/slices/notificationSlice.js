@@ -43,12 +43,13 @@ const notificationSlice = createSlice({
             .addCase(fetchNotifications.fulfilled, (state, action) => {
                 state.loading = false;
                 state.items = action.payload;
-                state.unreadCount = action.payload.filter(n => {
-                    // Simple logic: if fetched after last login/seen, it's unread
-                    // For now, let's treat all fetched items as 'read' initially 
-                    // or implement a simple local 'seen' flag
-                    return false; 
-                }).length;
+                
+                // UNREAD LOGIC: Compare item timestamp with locally stored 'Last Seen' time
+                if (typeof window !== 'undefined') {
+                    const lastSeen = localStorage.getItem('notifications_last_seen') || 0;
+                    state.unreadCount = action.payload.filter(n => new Date(n.createdAt).getTime() > Number(lastSeen)).length;
+                }
+                
                 state.lastFetched = Date.now();
             })
             .addCase(fetchNotifications.rejected, (state, action) => {

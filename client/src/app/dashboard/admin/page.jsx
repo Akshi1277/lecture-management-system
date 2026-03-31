@@ -156,20 +156,26 @@ export default function AdminDashboard() {
                     <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
                         {lectureLoading ? (
                             <p className="text-slate-500 italic text-sm">Syncing with backend...</p>
-                        ) : (lectures.filter(l => {
+                        ) : (() => {
                             const now = new Date();
-                            const lecDate = new Date(l.startTime);
                             const nextWeek = new Date();
                             nextWeek.setDate(now.getDate() + 7);
-                            return lecDate >= now && lecDate <= nextWeek;
-                        })).length > 0 ? (
-                            lectures.filter(l => {
-                                const now = new Date();
+                            
+                            const upcoming = (lectures || []).filter(l => {
                                 const lecDate = new Date(l.startTime);
-                                const nextWeek = new Date();
-                                nextWeek.setDate(now.getDate() + 7);
-                                return lecDate >= now && lecDate <= nextWeek;
-                            }).map((l, i) => (
+                                return lecDate >= now && lecDate <= nextWeek && l.status !== 'Cancelled';
+                            });
+
+                            if (upcoming.length === 0) {
+                                return (
+                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-50">
+                                        <Activity className="w-12 h-12 mb-4" />
+                                        <p className="italic text-sm">No active sessions scheduled in the next 7 days.</p>
+                                    </div>
+                                );
+                            }
+
+                            return upcoming.map((l, i) => (
                                 <div key={i} className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between group hover:border-teal-500/30 transition-all">
                                     <div>
                                         <h4 className="font-bold text-sm group-hover:text-teal-400 transition-colors uppercase tracking-wide">{l.title}</h4>
@@ -196,13 +202,8 @@ export default function AdminDashboard() {
                                         </button>
                                     </div>
                                 </div>
-                            ))
-                        ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-50">
-                                <Activity className="w-12 h-12 mb-4" />
-                                <p className="italic text-sm">No lectures pending in the queue.</p>
-                            </div>
-                        )}
+                            ));
+                        })()}
                     </div>
                 </div>
             </div>
