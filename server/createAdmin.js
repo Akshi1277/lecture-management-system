@@ -1,45 +1,36 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
 import User from './models/userModel.js';
-import connectDB from './config/db.js';
+import dotenv from 'dotenv';
 
-// Load env vars
 dotenv.config();
 
 const createAdmin = async () => {
-    // Connect to database
-    await connectDB();
-
-    const adminData = {
-        name: 'System Admin',
-        email: 'admin@lms.com',
-        password: 'adminPassword123', // This will be hashed by the userModel pre-save hook
-        role: 'admin'
-    };
-
     try {
-        // Check if admin already exists
-        const adminExists = await User.findOne({ email: adminData.email });
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('Connected to MongoDB');
 
-        if (adminExists) {
-            console.log('Admin user with this email already exists.');
-            process.exit();
-        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash('admin123', salt);
 
-        const user = await User.create(adminData);
+        const admin = await User.findOneAndUpdate(
+            { email: 'admin@rizvi.edu' },
+            {
+                name: 'Super Admin',
+                email: 'admin@rizvi.edu',
+                password: hashedPassword,
+                role: 'admin',
+                department: ['IT', 'CS']
+            },
+            { upsert: true, new: true }
+        );
 
-        if (user) {
-            console.log('-----------------------------------');
-            console.log('SUCCESS: Admin User Created!');
-            console.log(`Email: ${adminData.email}`);
-            console.log(`Password: ${adminData.password}`);
-            console.log('-----------------------------------');
-            console.log('IMPORTANT: Please delete this script after use for security.');
-        }
-
+        console.log('Admin account ready!');
+        console.log('Email: admin@rizvi.edu');
+        console.log('Password: admin123');
         process.exit();
     } catch (error) {
-        console.error(`Error: ${error.message}`);
+        console.error('Error creating admin:', error);
         process.exit(1);
     }
 };

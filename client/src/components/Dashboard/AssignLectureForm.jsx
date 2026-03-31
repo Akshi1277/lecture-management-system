@@ -305,6 +305,10 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                                         <option value="">Select Lab</option>
                                         <option value="IT Lab">IT Lab</option>
                                         <option value="CS Lab">CS Lab</option>
+                                        <option value="BMS Lab">BMS Lab</option>
+                                        <option value="Media Studio">BAMMC/Media Studio</option>
+                                        <option value="Hospitality Suite">Hospitality Suite</option>
+                                        <option value="Accounts Lab">BAF/B.Com Lab</option>
                                     </select>
                                 ) : (
                                     <input type="text" placeholder="e.g. 402"

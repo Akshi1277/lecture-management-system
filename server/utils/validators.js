@@ -6,8 +6,8 @@ export const userSchema = Joi.object({
     password: Joi.string().min(6).optional(),
     role: Joi.string().valid('teacher', 'student').default('student'),
     department: Joi.alternatives().try(
-        Joi.array().items(Joi.string().valid('IT', 'CS')),
-        Joi.string().valid('IT', 'CS')
+        Joi.array().items(Joi.string()),
+        Joi.string()
     ),
     batch: Joi.string().hex().length(24).allow('', null),
     subjects: Joi.array().items(Joi.string()).optional(),

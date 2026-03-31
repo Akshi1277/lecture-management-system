@@ -8,7 +8,6 @@ const batchSchema = mongoose.Schema({
     },
     department: {
         type: String,
-        enum: ['IT', 'CS'],
         required: true
     },
     year: {

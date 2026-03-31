@@ -1,5 +1,6 @@
 "use client";
 import { fetchBatches, createBatch, deleteBatch } from "@/redux/slices/hierarchySlice";
+import { fetchDepartments } from "@/redux/slices/departmentSlice";
 import { addToast } from "@/redux/slices/uiSlice";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -8,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function BatchManager() {
     const { batches } = useSelector((state) => state.hierarchy);
-    const departments = ['IT', 'CS'];
+    const { list: departments } = useSelector((state) => state.departments);
     const [newBatch, setNewBatch] = useState({ name: "", year: new Date().getFullYear(), department: "", studentCount: 60 });
     const { userInfo } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
@@ -16,11 +17,16 @@ export default function BatchManager() {
     useEffect(() => {
         if (userInfo) {
             dispatch(fetchBatches());
+            dispatch(fetchDepartments());
         }
     }, [userInfo, dispatch]);
 
     const handleCreate = async (e) => {
         e.preventDefault();
+        if (!newBatch.department) {
+            dispatch(addToast({ type: 'error', message: 'Please select a department' }));
+            return;
+        }
         const resultAction = await dispatch(createBatch(newBatch));
         if (createBatch.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Batch Created Successfully' }));
@@ -62,7 +68,7 @@ export default function BatchManager() {
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter px-2">Identification</label>
                                 <input
                                     type="text"
-                                    placeholder="Batch Name (e.g. FYCS-A)"
+                                    placeholder="Batch Name (e.g. FYBMS-A)"
                                     className="w-full bg-slate-900 border border-slate-700 rounded-2xl p-4 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-teal-500/50 transition-all outline-none"
                                     value={newBatch.name}
                                     onChange={(e) => setNewBatch({ ...newBatch, name: e.target.value })}
@@ -96,20 +102,21 @@ export default function BatchManager() {
 
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter px-2">Department Allocation</label>
-                                <div className="flex gap-2">
+                                <div className="grid grid-cols-2 gap-2">
                                     {departments.map((d) => (
                                         <button
-                                            key={d}
+                                            key={d._id}
                                             type="button"
-                                            onClick={() => setNewBatch({ ...newBatch, department: d })}
-                                            className={`flex-1 py-3 rounded-2xl text-xs font-bold transition-all border ${newBatch.department === d
+                                            onClick={() => setNewBatch({ ...newBatch, department: d.code })}
+                                            className={`py-3 rounded-2xl text-[9px] font-black tracking-widest transition-all border uppercase ${newBatch.department === d.code
                                                 ? 'bg-teal-500 border-teal-400 text-slate-950 shadow-lg shadow-teal-500/20'
-                                                : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
+                                                : 'bg-slate-900 border-slate-700 text-slate-500 hover:bg-slate-800'
                                                 }`}
                                         >
-                                            {d}
+                                            {d.code}
                                         </button>
                                     ))}
+                                    {departments.length === 0 && <p className="text-[10px] text-slate-600 font-bold italic col-span-2">No departments yet.</p>}
                                 </div>
                             </div>
 

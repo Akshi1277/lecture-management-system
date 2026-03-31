@@ -17,6 +17,7 @@ import hierarchyRoutes from './routes/hierarchyRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 
 dotenv.config();
@@ -86,6 +87,7 @@ app.use('/api/hierarchy', hierarchyRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/departments', departmentRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

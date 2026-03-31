@@ -12,9 +12,11 @@ import ResourceUploadForm from "./ResourceUploadForm";
 import SubstitutionFinder from "./SubstitutionFinder";
 import ExamSchedulerForm from "./ExamSchedulerForm";
 import AssignLectureForm from "./AssignLectureForm";
+import { fetchDepartments } from "@/redux/slices/departmentSlice";
 import RoomBlocker from "./RoomBlocker";
 import ReportGenerator from "./ReportGenerator";
 import AuditLogViewer from "./AuditLogViewer";
+import DepartmentManager from "./DepartmentManager";
 
 export default function ModalManager() {
     const { activeModal, activeModalData, toasts } = useSelector((state) => state.ui);
@@ -32,6 +34,7 @@ export default function ModalManager() {
         blockRoom: <RoomBlocker onClose={closeModal} />,
         generateReport: <ReportGenerator onClose={closeModal} />,
         viewAuditLogs: <AuditLogViewer onClose={closeModal} />,
+        manageDepartments: <DepartmentManager onClose={closeModal} />,
     };
 
     return (
@@ -50,7 +53,7 @@ export default function ModalManager() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className={`relative w-full ${activeModal === 'manageBatches' || activeModal === 'assignLecture' || activeModal === 'viewAuditLogs' || activeModal === 'generateReport' ? 'max-w-5xl' : 'max-w-lg'} max-h-[90vh] flex flex-col bg-slate-900 border border-slate-800 rounded-[32px] overflow-hidden shadow-2xl transition-all duration-300`}
+                            className={`relative w-full ${activeModal === 'manageBatches' || activeModal === 'assignLecture' || activeModal === 'viewAuditLogs' || activeModal === 'generateReport' || activeModal === 'manageDepartments' ? 'max-w-5xl' : 'max-w-lg'} max-h-[90vh] flex flex-col bg-slate-900 border border-slate-800 rounded-[32px] overflow-hidden shadow-2xl transition-all duration-300`}
                         >
                             <div className="absolute top-6 right-8 z-20">
                                 <button onClick={closeModal} className="p-2 bg-slate-900/50 backdrop-blur-md hover:bg-slate-800 rounded-xl transition-all text-slate-400 hover:text-white border border-slate-800">
@@ -122,11 +125,11 @@ function EnrollUserForm({ onClose }) {
     });
     const [file, setFile] = useState(null);
     const { batches } = useSelector(state => state.hierarchy);
+    const { list: departments, loading: deptsLoading } = useSelector(state => state.departments);
     const { subjects: existingSubjects, enrollLoading: isProcessing } = useSelector(state => state.users);
     const [subjectInput, setSubjectInput] = useState("");
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    const departments = ['IT', 'CS'];
     const dispatch = useDispatch();
     const { userInfo } = useSelector(state => state.auth);
 
@@ -134,6 +137,7 @@ function EnrollUserForm({ onClose }) {
         if (userInfo) {
             dispatch(fetchBatches());
             dispatch(fetchExistingSubjects());
+            dispatch(fetchDepartments());
         }
     }, [userInfo, dispatch]);
 
@@ -391,14 +395,15 @@ function EnrollUserForm({ onClose }) {
                                 <div className="flex flex-wrap gap-3">
                                     {departments.map((dept) => (
                                         <button
-                                            key={dept}
+                                            key={dept._id}
                                             type="button"
-                                            onClick={() => handleDeptToggle(dept)}
-                                            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${Array.isArray(formData.department) && formData.department.includes(dept) ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800 hover:border-slate-700'}`}
+                                            onClick={() => handleDeptToggle(dept.code)}
+                                            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${Array.isArray(formData.department) && formData.department.includes(dept.code) ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800 hover:border-slate-700'}`}
                                         >
-                                            {dept} Dept
+                                            {dept.code} Dept
                                         </button>
                                     ))}
+                                    {departments.length === 0 && <p className="text-[10px] text-slate-600 font-bold italic">No departments registered. Add from dashboard first.</p>}
                                 </div>
                             </div>
                         )}

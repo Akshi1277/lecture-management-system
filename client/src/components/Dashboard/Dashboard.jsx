@@ -115,7 +115,8 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 gap-4">
                 {(user?.role === "admin" ? [
                   { title: "Schedule Lecture", icon: <Plus />, color: "bg-teal-500", modalId: "assignLecture" },
-                  { title: "Enroll User", icon: <Users />, color: "bg-blue-500", modalId: "manageUsers" }
+                  { title: "Enroll User", icon: <Users />, color: "bg-blue-500", modalId: "manageUsers" },
+                  { title: "Manage Departments", icon: <BookOpen />, color: "bg-indigo-500", modalId: "manageDepartments" }
                 ] : user?.role === "teacher" ? [
                   { title: "Mark Attendance", icon: <CheckCircle />, color: "bg-emerald-500", modalId: "markAttendance" },
                   { title: "Update Schedule", icon: <Calendar />, color: "bg-teal-500", modalId: "assignLecture" }

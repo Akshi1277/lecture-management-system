@@ -4,19 +4,19 @@ const departmentSchema = mongoose.Schema({
     name: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        trim: true
     },
     code: {
         type: String,
         required: true,
-        unique: true
-    },
-    hod: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        unique: true,
+        uppercase: true,
+        trim: true
     },
     description: {
-        type: String
+        type: String,
+        required: false
     }
 }, {
     timestamps: true

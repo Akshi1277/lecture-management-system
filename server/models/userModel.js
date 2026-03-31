@@ -13,7 +13,7 @@ const userSchema = mongoose.Schema({
     },
     department: [{
         type: String,
-        enum: ['IT', 'CS']
+        required: true
     }],
     subjects: [String],
     batch: {
