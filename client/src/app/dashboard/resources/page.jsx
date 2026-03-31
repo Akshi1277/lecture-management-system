@@ -103,18 +103,40 @@ export default function ResourcesPage() {
                                         className="bg-slate-900 border border-slate-800 rounded-[32px] p-6 group hover:border-teal-500/30 transition-all shadow-xl shadow-black/20"
                                     >
                                         <div className="flex items-start justify-between mb-6">
-                                            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-teal-400 group-hover:bg-teal-500 group-hover:text-slate-950 transition-all">
+                                            <div className={`p-4 rounded-2xl border text-teal-400 group-hover:bg-teal-500 group-hover:text-slate-950 transition-all ${res.type === 'Link' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400 group-hover:bg-orange-500' : 'bg-slate-950 border-slate-800'}`}>
                                                 <FileText className="w-6 h-6" />
                                             </div>
-                                            <button 
-                                                onClick={() => window.open(res.url, '_blank')}
-                                                className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-white transition-colors border border-slate-800"
-                                            >
-                                                <ExternalLink className="w-4 h-4" />
-                                            </button>
+
+                                            {/* Context-aware top-right button */}
+                                            {res.type === 'Link' ? (
+                                                // For links: open the URL directly
+                                                <a
+                                                    href={res.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-orange-400 transition-colors border border-slate-800"
+                                                    title="Open Link"
+                                                >
+                                                    <ExternalLink className="w-4 h-4" />
+                                                </a>
+                                            ) : (
+                                                // For files: open in Google Docs Viewer for in-browser preview
+                                                <a
+                                                    href={`https://docs.google.com/viewer?url=${encodeURIComponent(res.url)}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-teal-400 transition-colors border border-slate-800"
+                                                    title="View in Browser"
+                                                >
+                                                    <ExternalLink className="w-4 h-4" />
+                                                </a>
+                                            )}
                                         </div>
                                         
-                                        <h3 className="text-lg font-black text-white leading-tight mb-2 group-hover:text-teal-400 transition-colors uppercase italic">{res.name}</h3>
+                                        <h3 className="text-lg font-black text-white leading-tight mb-1 group-hover:text-teal-400 transition-colors uppercase italic">{res.name}</h3>
+                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md mb-3 inline-block ${res.type === 'Link' ? 'bg-orange-500/10 text-orange-400' : 'bg-teal-500/10 text-teal-400'}`}>
+                                            {res.type || 'File'}
+                                        </span>
                                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none mb-6">Shared by {res.teacher}</p>
                                         
                                         <div className="pt-6 border-t border-slate-800 flex items-center justify-between">
@@ -122,13 +144,16 @@ export default function ResourcesPage() {
                                                 <Clock className="w-3 h-3" />
                                                 <span>{new Date(res.date).toLocaleDateString()}</span>
                                             </div>
-                                            <a 
-                                                href={res.url} 
-                                                download 
-                                                className="text-[10px] font-black text-teal-500 uppercase tracking-widest hover:underline flex items-center"
-                                            >
-                                                Download <Download className="w-3 h-3 ml-2" />
-                                            </a>
+                                            {/* Download only shown for actual files, not links */}
+                                            {res.type !== 'Link' && (
+                                                <a 
+                                                    href={res.url} 
+                                                    download 
+                                                    className="text-[10px] font-black text-teal-500 uppercase tracking-widest hover:underline flex items-center"
+                                                >
+                                                    Download <Download className="w-3 h-3 ml-2" />
+                                                </a>
+                                            )}
                                         </div>
                                     </motion.div>
                                 ))}

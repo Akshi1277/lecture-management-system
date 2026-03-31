@@ -199,20 +199,22 @@ export default function LecturesPage() {
                             : "Your personalized weekly agenda and academic sessions."}
                     </p>
                 </div>
-                <div className="flex space-x-3">
-                    <button
-                        onClick={() => dispatch(setActiveModal('blockRoom'))}
-                        className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-red-500 text-sm font-bold transition-all flex items-center"
-                    >
-                        <ShieldAlert className="w-4 h-4 mr-2" /> Lockdown Venue
-                    </button>
-                    <button
-                        onClick={() => router.push('/dashboard/admin/schedule')}
-                        className="px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-xl text-sm font-black transition-all shadow-lg shadow-teal-500/20 flex items-center"
-                    >
-                        <Plus className="w-4 h-4 mr-2" /> Schedule Lecture
-                    </button>
-                </div>
+                {userInfo?.role === 'admin' && (
+                    <div className="flex space-x-3">
+                        <button
+                            onClick={() => dispatch(setActiveModal('blockRoom'))}
+                            className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-red-500 text-sm font-bold transition-all flex items-center"
+                        >
+                            <ShieldAlert className="w-4 h-4 mr-2" /> Lockdown Venue
+                        </button>
+                        <button
+                            onClick={() => router.push('/dashboard/admin/schedule')}
+                            className="px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-xl text-sm font-black transition-all shadow-lg shadow-teal-500/20 flex items-center"
+                        >
+                            <Plus className="w-4 h-4 mr-2" /> Schedule Lecture
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Quick Stats Banner */}

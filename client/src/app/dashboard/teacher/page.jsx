@@ -123,7 +123,10 @@ export default function TeacherDashboard() {
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
-                        <button className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl flex items-center space-x-4 hover:border-teal-500/50 transition-all">
+                        <button
+                            onClick={() => router.push('/dashboard/resources')}
+                            className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl flex items-center space-x-4 hover:border-teal-500/50 transition-all text-left"
+                        >
                             <div className="p-3 bg-teal-500/10 rounded-xl text-teal-400">
                                 <FilePlus />
                             </div>
@@ -132,7 +135,10 @@ export default function TeacherDashboard() {
                                 <p className="text-xs text-slate-500">PDFs, Notes, Assignments</p>
                             </div>
                         </button>
-                        <button className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl flex items-center space-x-4 hover:border-orange-500/50 transition-all">
+                        <button
+                            onClick={() => router.push('/dashboard/notices')}
+                            className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl flex items-center space-x-4 hover:border-orange-500/50 transition-all text-left"
+                        >
                             <div className="p-3 bg-orange-500/10 rounded-xl text-orange-400">
                                 <MessageSquare />
                             </div>

@@ -21,6 +21,8 @@ const storage = new CloudinaryStorage({
         return {
             folder: `edusync/lectures/${req.params.id}/resources`,
             resource_type: resourceType,
+            type: 'upload',           // Explicitly public delivery (fixes 401)
+            access_mode: 'public',    // Ensure publicly accessible without auth
             // Keep original filename in Cloudinary
             public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`,
             // Allow broad set of formats
