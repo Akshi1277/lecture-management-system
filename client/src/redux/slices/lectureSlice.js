@@ -190,11 +190,29 @@ const lectureSlice = createSlice({
                 const pIndex = state.pendingSubstitutions.findIndex(l => l._id === action.payload._id);
                 if (pIndex !== -1) state.pendingSubstitutions[pIndex] = action.payload;
             })
+            .addCase(deleteResource.fulfilled, (state, action) => {
+                const index = state.list.findIndex(l => l._id === action.payload.lectureId);
+                if (index !== -1 && state.list[index].resources) {
+                    state.list[index].resources = state.list[index].resources.filter(r => r._id !== action.payload.resourceId);
+                }
+            })
             .addCase(deleteLecture.fulfilled, (state, action) => {
                 state.list = state.list.filter(l => l._id !== action.payload);
                 state.pendingSubstitutions = state.pendingSubstitutions.filter(l => l._id !== action.payload);
             });
     },
 });
+
+export const deleteResource = createAsyncThunk(
+    'lectures/deleteResource',
+    async ({ lectureId, resourceId }, { getState, rejectWithValue }) => {
+        try {
+            await api.delete(`/lectures/${lectureId}/resources/${resourceId}`);
+            return { lectureId, resourceId };
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message);
+        }
+    }
+);
 
 export default lectureSlice.reducer;

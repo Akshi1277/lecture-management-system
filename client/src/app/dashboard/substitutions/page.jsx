@@ -38,8 +38,8 @@ export default function SubstitutionsPage() {
         
         return sorted.filter(r => {
             const d = new Date(r.startTime);
-            return d >= now && d <= nextWeek;
-        });
+            return d >= now && d <= nextWeek && r.status !== 'Cancelled';
+        }).slice(0, 7);
     })();
 
     useEffect(() => {

@@ -57,9 +57,10 @@ export default function TeacherDashboard() {
                                 return [...lectures]
                                     .filter(l => {
                                         const d = new Date(l.startTime);
-                                        return d >= now && d <= nextWeek;
+                                        return d >= now && d <= nextWeek && l.status !== 'Cancelled';
                                     })
-                                    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+                                    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+                                    .slice(0, 7);
                             })().map((l, i) => (
                                 <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-slate-900 border border-slate-800 rounded-2xl group hover:border-indigo-500/50 transition-all">
                                     <div>

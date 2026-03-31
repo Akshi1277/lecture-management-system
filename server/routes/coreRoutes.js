@@ -1,5 +1,5 @@
 import express from 'express';
-import { createLecture, getLectures, getMyLectures, getLectureById, uploadResource, updateLecture, deleteLecture } from '../controllers/lectureController.js';
+import { createLecture, getLectures, getMyLectures, getLectureById, uploadResource, updateLecture, deleteLecture, deleteResource } from '../controllers/lectureController.js';
 import { suggestSubstitutes, getPendingSubstitutions, requestSubstitution } from '../controllers/substitutionController.js';
 import { createExam, getExams } from '../controllers/examController.js';
 import { blockRoom, getActiveBlocks } from '../controllers/roomController.js';
@@ -32,6 +32,9 @@ router.route('/lectures/:id')
     .get(protect, getLectureById)
     .put(protect, admin, updateLecture)
     .delete(protect, admin, deleteLecture);
+router.route('/lectures/:id/resources/:resourceId')
+    .delete(protect, deleteResource);
+
 router.post('/lectures/:id/resources', protect, teacher, uploadToCloudinary.single('file'), uploadResource);
 router.get('/lectures/substitutes/:lectureId', protect, admin, suggestSubstitutes);
 router.get('/lectures/substitutions/pending', protect, admin, getPendingSubstitutions);

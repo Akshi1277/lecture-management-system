@@ -4,6 +4,7 @@ import Batch from '../models/batchModel.js';
 import Classroom from '../models/classroomModel.js';
 import AuditLog from '../models/auditLogModel.js';
 import { lectureSchema } from '../utils/validators.js';
+import cloudinary from '../config/cloudinary.js';
 
 // Helper to check for scheduling conflicts
 const checkForConflicts = async (data, excludeId = null) => {
@@ -287,4 +288,45 @@ export const deleteLecture = asyncHandler(async (req, res) => {
         res.status(404);
         throw new Error('Lecture not found');
     }
+});
+
+// @desc    Delete resource from lecture
+// @route   DELETE /api/lectures/:id/resources/:resourceId
+// @access  Private (Teacher who owns lecture OR Admin)
+export const deleteResource = asyncHandler(async (req, res) => {
+    const lecture = await Lecture.findById(req.params.id);
+
+    if (!lecture) {
+        res.status(404);
+        throw new Error('Lecture not found');
+    }
+
+    // Security Check: Admin OR Owner Teacher
+    const isOwner = lecture.teacher.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+        res.status(403);
+        throw new Error('Not authorized to delete resources for this lecture');
+    }
+
+    const resource = lecture.resources.id(req.params.resourceId);
+    if (!resource) {
+        res.status(404);
+        throw new Error('Resource not found');
+    }
+
+    // Delete from Cloudinary if it's a file with publicId
+    if (resource.publicId) {
+        try {
+            await cloudinary.uploader.destroy(resource.publicId);
+        } catch (error) {
+            console.error('Cloudinary Deletion Error:', error);
+        }
+    }
+
+    resource.remove();
+    await lecture.save();
+
+    res.json({ message: 'Resource deleted successfully' });
 });

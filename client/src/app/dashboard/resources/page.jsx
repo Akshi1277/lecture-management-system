@@ -4,9 +4,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { motion } from "framer-motion";
 import { 
     BookOpen, Search, Download, FileText, 
-    ExternalLink, Filter, FolderKanban, Clock
+    ExternalLink, Filter, FolderKanban, Clock, Trash2
 } from "lucide-react";
-import { fetchLectures } from "@/redux/slices/lectureSlice";
+import { fetchLectures, deleteResource } from "@/redux/slices/lectureSlice";
+import { addToast } from "@/redux/slices/uiSlice";
 
 export default function ResourcesPage() {
     const { userInfo } = useSelector((state) => state.auth);
@@ -23,10 +24,13 @@ export default function ResourcesPage() {
         if (lecture.resources && lecture.resources.length > 0) {
             const resourcesWithMeta = lecture.resources.map(r => ({
                 ...r,
+                lectureId: lecture._id,
+                resourceId: r._id,
                 subject: lecture.subject,
                 course: lecture.course?.name || lecture.subject,
                 teacher: lecture.teacher?.name,
-                date: lecture.createdAt,
+                teacherId: lecture.teacher?._id || lecture.teacher,
+                date: r.createdAt || lecture.createdAt,
                 lectureTitle: lecture.title
             }));
             return [...acc, ...resourcesWithMeta];
@@ -39,6 +43,17 @@ export default function ResourcesPage() {
         (res.subject?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
         (res.teacher?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     );
+
+    const handleDelete = async (lectureId, resourceId) => {
+        if (window.confirm("Are you sure you want to remove this academic resource? This action cannot be undone.")) {
+            const resultAction = await dispatch(deleteResource({ lectureId, resourceId }));
+            if (deleteResource.fulfilled.match(resultAction)) {
+                dispatch(addToast({ type: 'success', message: 'Resource permanently removed from the vault.' }));
+            } else {
+                dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to delete resource' }));
+            }
+        }
+    };
 
     // Grouping by Subject for a more organized view
     const groupedBySubject = filteredResources.reduce((acc, res) => {
@@ -108,29 +123,39 @@ export default function ResourcesPage() {
                                             </div>
 
                                             {/* Context-aware top-right button */}
-                                            {res.type === 'Link' ? (
-                                                // For links: open the URL directly
-                                                <a
-                                                    href={res.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-orange-400 transition-colors border border-slate-800"
-                                                    title="Open Link"
-                                                >
-                                                    <ExternalLink className="w-4 h-4" />
-                                                </a>
-                                            ) : (
-                                                // For files: open in Google Docs Viewer for in-browser preview
-                                                <a
-                                                    href={`https://docs.google.com/viewer?url=${encodeURIComponent(res.url)}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-teal-400 transition-colors border border-slate-800"
-                                                    title="View in Browser"
-                                                >
-                                                    <ExternalLink className="w-4 h-4" />
-                                                </a>
-                                            )}
+                                            <div className="flex items-center space-x-2">
+                                                {res.type === 'Link' ? (
+                                                    <a
+                                                        href={res.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-orange-400 transition-colors border border-slate-800"
+                                                        title="Open Link"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                    </a>
+                                                ) : (
+                                                    <a
+                                                        href={`https://docs.google.com/viewer?url=${encodeURIComponent(res.url)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-teal-400 transition-colors border border-slate-800"
+                                                        title="View in Browser"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                    </a>
+                                                )}
+
+                                                {(userInfo?.role === 'admin' || userInfo?._id === res.teacherId) && (
+                                                    <button
+                                                        onClick={() => handleDelete(res.lectureId, res.resourceId)}
+                                                        className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-red-400 transition-colors border border-slate-800"
+                                                        title="Delete Resource"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                         
                                         <h3 className="text-lg font-black text-white leading-tight mb-1 group-hover:text-teal-400 transition-colors uppercase italic">{res.name}</h3>
