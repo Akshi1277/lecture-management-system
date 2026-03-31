@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { fetchLectures, updateLecture, deleteLecture } from "@/redux/slices/lectureSlice";
 import { setActiveModal } from "@/redux/slices/uiSlice";
+import { fetchBatches } from "@/redux/slices/hierarchySlice";
 import { useRouter } from "next/navigation";
 
 export default function LecturesPage() {
@@ -19,8 +20,12 @@ export default function LecturesPage() {
     const [hasMounted, setHasMounted] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
+    const [batchFilter, setBatchFilter] = useState("All");
+    const [typeFilter, setTypeFilter] = useState("All");
     const [selectedDay, setSelectedDay] = useState(new Date().getDay()); // 0-6
     const [activeDropdown, setActiveDropdown] = useState(null);
+
+    const { batches } = useSelector((state) => state.hierarchy);
 
     const handleCancel = async (id) => {
         if (window.confirm("Are you sure you want to cancel this lecture?")) {
@@ -39,6 +44,7 @@ export default function LecturesPage() {
     useEffect(() => {
         setHasMounted(true);
         dispatch(fetchLectures());
+        dispatch(fetchBatches());
     }, [dispatch]);
 
     if (!hasMounted || !userInfo) return null;
@@ -62,8 +68,10 @@ export default function LecturesPage() {
             lecture.classroom?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesStatus = statusFilter === "All" || lecture.status === statusFilter;
+        const matchesBatch = batchFilter === "All" || (typeof lecture.batch === 'object' ? lecture.batch?._id === batchFilter : lecture.batch === batchFilter);
+        const matchesType = typeFilter === "All" || (lecture.type || 'Lecture') === typeFilter;
 
-        return isOwner && matchesSearch && matchesStatus;
+        return isOwner && matchesSearch && matchesStatus && matchesBatch && matchesType;
     }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
     const getStatusStyle = (status) => {
@@ -236,27 +244,75 @@ export default function LecturesPage() {
             </div>
 
             {/* Controls Bar */}
-            <div className="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <div className="flex items-center space-x-4 flex-1">
-                    <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Search Field */}
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-teal-400 transition-colors" />
                         <input
                             type="text"
-                            placeholder="Search by title, teacher, or room..."
+                            placeholder="Identify session by subject title, faculty name, or classroom venue..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-4 py-4 text-sm text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/50 outline-none transition-all placeholder:text-slate-600 font-medium"
                         />
                     </div>
 
-                    <div className="relative">
-                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    {/* Quick Clear */}
+                    {(searchTerm || statusFilter !== "All" || batchFilter !== "All" || typeFilter !== "All") && (
+                        <button 
+                            onClick={() => {
+                                setSearchTerm("");
+                                setStatusFilter("All");
+                                setBatchFilter("All");
+                                setTypeFilter("All");
+                            }}
+                            className="px-4 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all"
+                        >
+                            Reset System Filters
+                        </button>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800/50 pt-4">
+                    {/* Batch Filter */}
+                    <div className="relative group">
+                        <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-teal-400 transition-colors pointer-events-none" />
+                        <select
+                            value={batchFilter}
+                            onChange={(e) => setBatchFilter(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-10 py-3 text-xs font-bold text-slate-300 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/50 outline-none appearance-none cursor-pointer transition-all uppercase tracking-wide"
+                        >
+                            <option value="All">All Academic Batches</option>
+                            {batches?.map(batch => (
+                                <option key={batch._id} value={batch._id}>{batch.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Session Type Filter */}
+                    <div className="relative group">
+                        <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-teal-400 transition-colors pointer-events-none" />
+                        <select
+                            value={typeFilter}
+                            onChange={(e) => setTypeFilter(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-10 py-3 text-xs font-bold text-slate-300 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/50 outline-none appearance-none cursor-pointer transition-all uppercase tracking-wide"
+                        >
+                            <option value="All">All Session Types</option>
+                            <option value="Lecture">Standard Lectures</option>
+                            <option value="Lab">Lab / Practicals</option>
+                        </select>
+                    </div>
+
+                    {/* Operational Status Filter */}
+                    <div className="relative group">
+                        <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-teal-400 transition-colors pointer-events-none" />
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-2 text-sm text-white focus:ring-1 focus:ring-teal-500 outline-none appearance-none"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-10 py-3 text-xs font-bold text-slate-300 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/50 outline-none appearance-none cursor-pointer transition-all uppercase tracking-wide"
                         >
-                            <option value="All">All Statuses</option>
+                            <option value="All">All Logistics Statuses</option>
                             <option value="Scheduled">Scheduled</option>
                             <option value="Relocated">Relocated</option>
                             <option value="Cancelled">Cancelled</option>
