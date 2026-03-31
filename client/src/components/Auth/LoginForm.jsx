@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -29,11 +29,24 @@ export default function LoginForm() {
 
   const dispatch = useDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { userInfo, loading, error } = useSelector((state) => state.auth);
 
   useEffect(() => {
     // Ping to wake up the server (Cold Start prevention)
     api.get('/users/ping').catch(() => {});
+
+    // Check for authorization error from middleware
+    const authError = searchParams.get('error');
+    if (authError === 'auth_required' && !hasShownToast && !userInfo) {
+      setHasShownToast(true);
+      dispatch(addToast({
+        type: 'warning',
+        message: 'Security protocol: Authentication is mandatory to access institutional nodes. Please login to continue.'
+      }));
+      // Remove query param from URL
+      router.replace('/login');
+    }
 
     if (userInfo && !hasShownToast) {
       setHasShownToast(true);
@@ -45,7 +58,7 @@ export default function LoginForm() {
       router.push("/dashboard");
     }
     return () => dispatch(clearError());
-  }, [userInfo, router, dispatch, hasShownToast]);
+  }, [userInfo, router, dispatch, hasShownToast, searchParams]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

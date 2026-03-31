@@ -2,15 +2,12 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ShieldCheck, ArrowLeft, Lock, Eye, FileText, Scale } from "lucide-react";
-import Navbar from "@/components/Shared/Navbar";
-import Footer from "@/components/Shared/Footer";
 import GridBackground from "@/components/Shared/GridBackground";
 
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-300 font-sans relative selection:bg-teal-500/30">
       <GridBackground />
-      <Navbar />
 
       <main className="relative z-10 pt-32 pb-20 px-6 max-w-4xl mx-auto">
         <motion.div
@@ -98,7 +95,6 @@ export default function PrivacyPolicy() {
         </motion.div>
       </main>
 
-      <Footer />
     </div>
   );
 }

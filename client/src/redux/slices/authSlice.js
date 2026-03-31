@@ -1,10 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../api';
+import Cookies from 'js-cookie';
 
 export const login = createAsyncThunk('auth/login', async (userData, { rejectWithValue }) => {
     try {
         const response = await api.post('/users/login', userData);
         localStorage.setItem('userInfo', JSON.stringify(response.data));
+        Cookies.set('auth_token', response.data.token, { expires: 30 }); // 30-day persistence
         return response.data; 
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);
@@ -15,6 +17,7 @@ export const register = createAsyncThunk('auth/register', async (userData, { rej
     try {
         const response = await api.post('/users', userData);
         localStorage.setItem('userInfo', JSON.stringify(response.data));
+        Cookies.set('auth_token', response.data.token, { expires: 30 });
         return response.data;
     } catch (error) {
         return rejectWithValue(error.response.data.message || error.message);
@@ -39,6 +42,7 @@ export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValu
     try {
         await api.post('/users/logout');
         localStorage.removeItem('userInfo');
+        Cookies.remove('auth_token');
         return null;
     } catch (error) {
         localStorage.removeItem('userInfo'); // Still clear locally even if server fails
@@ -75,6 +79,7 @@ export const resetPassword = createAsyncThunk('auth/resetPassword', async ({ ema
 
 const initialState = {
     userInfo: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('userInfo')) : null,
+    isAuthenticated: typeof window !== 'undefined' ? !!Cookies.get('auth_token') : false,
     loading: false,
     error: null,
 };
@@ -96,6 +101,7 @@ const authSlice = createSlice({
             .addCase(login.fulfilled, (state, action) => {
                 state.loading = false;
                 state.userInfo = action.payload;
+                state.isAuthenticated = true;
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
@@ -108,6 +114,7 @@ const authSlice = createSlice({
             .addCase(register.fulfilled, (state, action) => {
                 state.loading = false;
                 state.userInfo = action.payload;
+                state.isAuthenticated = true;
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
@@ -118,6 +125,7 @@ const authSlice = createSlice({
             })
             .addCase(logout.fulfilled, (state) => {
                 state.userInfo = null;
+                state.isAuthenticated = false;
                 state.loading = false;
             })
             .addCase(logout.pending, (state) => {
@@ -125,7 +133,9 @@ const authSlice = createSlice({
             })
             .addCase(logout.rejected, (state) => {
                 state.userInfo = null;
+                state.isAuthenticated = false;
                 state.loading = false;
+                Cookies.remove('auth_token');
             });
     },
 });

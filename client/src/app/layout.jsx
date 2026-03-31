@@ -15,6 +15,7 @@ const outfit = Outfit({
 import { useState, useEffect } from "react";
 import UniversalLoader from "@/components/Shared/UniversalLoader";
 import { AnimatePresence } from "framer-motion";
+import GlobalToast from "@/components/Shared/GlobalToast";
 
 export default function RootLayout({ children }) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
             {!isLoaded && <UniversalLoader />}
           </AnimatePresence>
           <ConditionalNavbar />
+          <GlobalToast />
           <main className="flex-1">{children}</main>
           <ConditionalFooter />
         </ReduxProvider>
