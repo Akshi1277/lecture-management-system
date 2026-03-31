@@ -56,22 +56,39 @@ export default function SettingsPage() {
         }
     }, [systemSettings]);
 
-    const handleBatchDurationChange = (batchId, type, value) => {
+    const handleBatchDurationChange = (batchId, type, value, breakIndex = null, breakField = null) => {
         setGlobalSettings(prev => {
             const currentDurations = prev.batchDurations || [];
             const index = currentDurations.findIndex(bd => bd.batchId === batchId);
-            const val = parseInt(value) || 0;
+            const val = value;
             
             if (index !== -1) {
                 const nextDurations = [...currentDurations];
-                nextDurations[index] = { ...nextDurations[index], [type]: val };
+                const target = { ...nextDurations[index] };
+
+                if (breakIndex !== null) {
+                    // Update specific break
+                    const nextBreaks = [...(target.breaks || [])];
+                    if (breakField === 'delete') {
+                        nextBreaks.splice(breakIndex, 1);
+                    } else {
+                        nextBreaks[breakIndex] = { ...nextBreaks[breakIndex], [breakField]: val };
+                    }
+                    target.breaks = nextBreaks;
+                } else if (type === 'addBreak') {
+                    target.breaks = [...(target.breaks || []), { label: "Lunch Break", startTime: "09:30", duration: 30 }];
+                } else {
+                    target[type] = val;
+                }
+
+                nextDurations[index] = target;
                 return { ...prev, batchDurations: nextDurations };
             } else {
                 return {
                     ...prev,
                     batchDurations: [
                         ...currentDurations,
-                        { batchId, lectureDuration: type === 'lectureDuration' ? val : 60, labDuration: type === 'labDuration' ? val : 120 }
+                        { batchId, lectureDuration: 60, labDuration: 120, startTime: "07:30", endTime: "17:00", breaks: [] }
                     ]
                 };
             }
@@ -415,40 +432,93 @@ export default function SettingsPage() {
                                          </div>
                                          <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">Configure standard duration (in minutes) for custom batches. These values act as the source of truth for the Timetable Scheduler and will auto-block multi-hour sessions appropriately.</p>
                                          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-                                             <div className="grid grid-cols-3 bg-slate-800/50 p-4 border-b border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-widest gap-4">
+                                             <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_0.5fr] bg-slate-800/50 p-4 border-b border-slate-800 text-[9px] font-black uppercase text-slate-500 tracking-widest gap-4">
                                                  <div>Batch Target</div>
-                                                 <div>Lecture Duration</div>
-                                                 <div>Lab/Practical Duration</div>
+                                                 <div>Start Time</div>
+                                                 <div>End Time</div>
+                                                 <div>Lec (m)</div>
+                                                 <div>Lab (m)</div>
+                                                 <div>Breaks</div>
                                              </div>
-                                             <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                                             <div className="max-h-[450px] overflow-y-auto custom-scrollbar">
                                                  {batches?.map(batch => {
-                                                     const durationConfig = globalSettings.batchDurations?.find(bd => bd.batchId === batch._id) || { lectureDuration: 60, labDuration: 120 };
+                                                     const durationConfig = globalSettings.batchDurations?.find(bd => bd.batchId === batch._id) || { lectureDuration: 60, labDuration: 120, startTime: "07:30", endTime: "17:00", breaks: [] };
                                                      return (
-                                                         <div key={batch._id} className="grid grid-cols-3 p-4 border-b border-slate-800/50 items-center text-sm text-white gap-4 hover:bg-slate-800/20 transition-colors">
-                                                             <div className="font-bold truncate flex items-center space-x-2">
-                                                                <span className="w-2 h-2 rounded-full bg-teal-500 p-0 shadow-[0_0_10px_rgba(20,184,166,0.5)]"></span>
-                                                                <span title={batch.name}>{batch.name}</span>
+                                                         <div key={batch._id} className="border-b border-slate-800/50 hover:bg-slate-800/10 transition-colors">
+                                                             <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_0.5fr] p-4 items-center text-sm text-white gap-4">
+                                                                <div className="font-bold truncate flex items-center space-x-2">
+                                                                    <span title={batch.name}>{batch.name}</span>
+                                                                </div>
+                                                                <div>
+                                                                    <input 
+                                                                        type="time" 
+                                                                        value={durationConfig.startTime}
+                                                                        onChange={(e) => handleBatchDurationChange(batch._id, 'startTime', e.target.value)}
+                                                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-[10px] text-white outline-none" 
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <input 
+                                                                        type="time" 
+                                                                        value={durationConfig.endTime || "17:00"}
+                                                                        onChange={(e) => handleBatchDurationChange(batch._id, 'endTime', e.target.value)}
+                                                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-[10px] text-white outline-none" 
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        value={durationConfig.lectureDuration}
+                                                                        onChange={(e) => handleBatchDurationChange(batch._id, 'lectureDuration', parseInt(e.target.value))}
+                                                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-center text-xs outline-none" 
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        value={durationConfig.labDuration}
+                                                                        onChange={(e) => handleBatchDurationChange(batch._id, 'labDuration', parseInt(e.target.value))}
+                                                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-center text-xs outline-none" 
+                                                                    />
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleBatchDurationChange(batch._id, 'addBreak')}
+                                                                    className="p-1 px-2 border border-slate-700 rounded-lg hover:bg-slate-800 text-[9px] text-slate-500 hover:text-white uppercase font-black"
+                                                                >
+                                                                    + Break
+                                                                </button>
                                                              </div>
-                                                             <div className="flex items-center space-x-2">
-                                                                 <input 
-                                                                     type="number" 
-                                                                     value={durationConfig.lectureDuration}
-                                                                     onChange={(e) => handleBatchDurationChange(batch._id, 'lectureDuration', e.target.value)}
-                                                                     disabled={userInfo?.role !== 'admin'}
-                                                                     className="w-20 bg-slate-950 border border-slate-700 rounded-lg p-2 text-center focus:ring-1 focus:ring-teal-500 outline-none disabled:opacity-50" 
-                                                                 />
-                                                                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">mins</span>
-                                                             </div>
-                                                             <div className="flex items-center space-x-2">
-                                                                 <input 
-                                                                     type="number" 
-                                                                     value={durationConfig.labDuration}
-                                                                     onChange={(e) => handleBatchDurationChange(batch._id, 'labDuration', e.target.value)}
-                                                                     disabled={userInfo?.role !== 'admin'}
-                                                                     className="w-20 bg-slate-950 border border-slate-700 rounded-lg p-2 text-center focus:ring-1 focus:ring-purple-500 outline-none disabled:opacity-50" 
-                                                                 />
-                                                                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">mins</span>
-                                                             </div>
+
+                                                             {/* Breaks List Sub-Section */}
+                                                             {durationConfig.breaks?.length > 0 && (
+                                                                <div className="px-10 pb-4 space-y-2">
+                                                                    {durationConfig.breaks.map((brk, bidx) => (
+                                                                        <div key={bidx} className="flex items-center space-x-3 bg-slate-950/40 p-2 rounded-xl border border-slate-800/50">
+                                                                            <input 
+                                                                                type="text" value={brk.label} placeholder="Label"
+                                                                                onChange={(e) => handleBatchDurationChange(batch._id, null, e.target.value, bidx, 'label')}
+                                                                                className="flex-1 bg-transparent border-none text-[10px] font-bold text-slate-400 focus:text-white focus:ring-0" 
+                                                                            />
+                                                                            <input 
+                                                                                type="time" value={brk.startTime}
+                                                                                onChange={(e) => handleBatchDurationChange(batch._id, null, e.target.value, bidx, 'startTime')}
+                                                                                className="bg-slate-900 border border-slate-800 rounded-md p-1 text-[9px] text-white" 
+                                                                            />
+                                                                            <div className="flex items-center space-x-1">
+                                                                                <input 
+                                                                                    type="number" value={brk.duration}
+                                                                                    onChange={(e) => handleBatchDurationChange(batch._id, null, parseInt(e.target.value), bidx, 'duration')}
+                                                                                    className="w-12 bg-slate-900 border border-slate-800 rounded-md p-1 text-[9px] text-center text-white" 
+                                                                                />
+                                                                                <span className="text-[8px] font-black text-slate-600 uppercase">Min</span>
+                                                                            </div>
+                                                                            <button onClick={() => handleBatchDurationChange(batch._id, null, null, bidx, 'delete')} className="p-1.5 hover:text-red-500 transition-colors">
+                                                                                <X className="w-3 h-3" />
+                                                                            </button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                             )}
                                                          </div>
                                                      );
                                                  })}

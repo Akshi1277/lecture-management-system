@@ -19,6 +19,15 @@ const settingsSchema = mongoose.Schema({
             batchName: { type: String },
             lectureDuration: { type: Number, default: 60 },  // minutes
             labDuration: { type: Number, default: 120 },      // minutes
+            startTime: { type: String, default: "07:30" },   // e.g. "07:30"
+            endTime: { type: String, default: "17:00" },     // e.g. "17:00"
+            breaks: [
+                {
+                    label: { type: String, default: "Lunch Break" },
+                    startTime: { type: String }, // e.g. "09:30"
+                    duration: { type: Number, default: 30 } // minutes
+                }
+            ]
         }
     ]
 }, {
