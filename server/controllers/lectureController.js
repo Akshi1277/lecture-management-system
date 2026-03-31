@@ -114,11 +114,8 @@ export const createLecture = asyncHandler(async (req, res) => {
 // @access  Private
 // @access  Private
 export const getLectures = asyncHandler(async (req, res) => {
-    const isSuperAdmin = req.user.role === 'superadmin';
     const isAdmin = req.user.role === 'admin';
-    
-    // Admins and SuperAdmins see all lectures to avoid resource conflicts
-    const filter = (isSuperAdmin || isAdmin) ? {} : { department: { $in: req.user.department } };
+    const filter = isAdmin ? {} : { department: { $in: req.user.department } };
     
     const lectures = await Lecture.find(filter)
         .populate('teacher', 'name email')

@@ -3,9 +3,9 @@ import AuditLog from '../models/auditLogModel.js';
 
 // @desc    Get all audit logs
 // @route   GET /api/audit
-// @access  Private/SuperAdmin
+// @access  Private/Admin
 export const getAuditLogs = asyncHandler(async (req, res) => {
-    if (req.user.role !== 'superadmin') {
+    if (req.user.role !== 'admin') {
         res.status(403);
         throw new Error('Not authorized to view system logs');
     }

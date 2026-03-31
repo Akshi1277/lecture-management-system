@@ -72,7 +72,7 @@ export default function AdminDashboard() {
                     {/* Logistical Controls */}
                     <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl space-y-6 flex-1">
                         <h3 className="text-xl font-bold text-white mb-2">Logistical Controls</h3>
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
                             <button
                                 onClick={() => router.push('/dashboard/admin/schedule')}
                                 className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-teal-500/50 transition-all group"
@@ -112,16 +112,6 @@ export default function AdminDashboard() {
                                 </div>
                                 <span className="font-bold text-sm text-red-500">Lockdown Venue</span>
                                 <span className="text-[10px] text-slate-500 mt-1">Override schedules for Exams</span>
-                            </button>
-                            <button
-                                onClick={() => dispatch(setActiveModal('manageDepartments'))}
-                                className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-indigo-500/50 transition-all group"
-                            >
-                                <div className="p-4 bg-indigo-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform text-indigo-400">
-                                    <BookOpen className="w-6 h-6" />
-                                </div>
-                                <span className="font-bold text-sm text-white">Manage Depts</span>
-                                <span className="text-[10px] text-slate-500 mt-1">Add/Edit divisions</span>
                             </button>
                         </div>
                     </div>

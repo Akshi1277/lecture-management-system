@@ -1,12 +1,21 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../api';
+ 
+const getAuthOptions = (getState) => {
+    const { auth: { userInfo } } = getState();
+    return {
+        headers: {
+            Authorization: `Bearer ${userInfo?.token}`
+        }
+    };
+};
 
 
 export const fetchAdminDashboard = createAsyncThunk(
     'dashboard/fetchAdmin',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/dashboard/admin`);
+            const { data } = await api.get(`/dashboard/admin`, getAuthOptions(getState));
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);

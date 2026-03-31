@@ -25,6 +25,7 @@ export default function NoticeBoard() {
         priority: "medium",
         targetBatch: ""
     });
+    const [deleteId, setDeleteId] = useState(null);
 
     useEffect(() => {
         dispatch(fetchAnnouncements());
@@ -45,13 +46,15 @@ export default function NoticeBoard() {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to remove this notice?")) return;
-        const resultAction = await dispatch(deleteAnnouncement(id));
+    const handleDelete = async () => {
+        if (!deleteId) return;
+        const resultAction = await dispatch(deleteAnnouncement(deleteId));
         if (deleteAnnouncement.fulfilled.match(resultAction)) {
             dispatch(addToast({ type: 'success', message: 'Notice removed.' }));
+            setDeleteId(null);
         } else {
             dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to delete notice.' }));
+            setDeleteId(null);
         }
     };
 
@@ -203,7 +206,7 @@ export default function NoticeBoard() {
                                 </div>
                                 { (userInfo?.role === 'admin' || notice.author?._id === userInfo?._id) && (
                                     <button 
-                                        onClick={() => handleDelete(notice._id)}
+                                        onClick={() => setDeleteId(notice._id)}
                                         className="p-3 bg-slate-950/50 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all border border-slate-800/50"
                                     >
                                         <Trash2 className="w-4 h-4" />
@@ -233,6 +236,47 @@ export default function NoticeBoard() {
                     ))
                 )}
             </div>
+            <AnimatePresence>
+                {deleteId && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setDeleteId(null)}
+                            className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-[32px] p-8 shadow-2xl text-center space-y-6"
+                        >
+                            <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto text-rose-500">
+                                <AlertTriangle className="w-8 h-8" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-white italic">Confirm Removal</h3>
+                                <p className="text-slate-500 text-sm mt-1">This announcement will be permanently wiped from the broadcast history.</p>
+                            </div>
+                            <div className="flex flex-col space-y-3">
+                                <button
+                                    onClick={handleDelete}
+                                    className="w-full py-4 bg-rose-500 hover:bg-rose-400 text-white font-black rounded-2xl shadow-xl shadow-rose-500/20 transition-all uppercase tracking-widest text-xs"
+                                >
+                                    Confirm Deletion
+                                </button>
+                                <button
+                                    onClick={() => setDeleteId(null)}
+                                    className="w-full py-4 bg-slate-800 text-slate-400 font-bold rounded-2xl hover:bg-slate-700 transition-all uppercase tracking-widest text-xs"
+                                >
+                                    Abandone Request
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

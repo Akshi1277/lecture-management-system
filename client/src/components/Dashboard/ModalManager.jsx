@@ -382,12 +382,28 @@ function EnrollUserForm({ onClose }) {
                                     {showSuggestions && subjectInput && (
                                         <div className="absolute z-10 w-full mt-2 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar">
                                             {existingSubjects.filter(s => s.toLowerCase().includes(subjectInput.toLowerCase()) && !formData.subjects.includes(s)).map(s => (
-                                                <button key={s} type="button" onClick={() => addSubject(s)} className="w-full px-4 py-3 text-left text-slate-300 hover:bg-slate-800 transition-colors text-xs font-bold uppercase tracking-tight">
+                                                <button 
+                                                    key={s} 
+                                                    type="button" 
+                                                    onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                        addSubject(s);
+                                                    }}
+                                                    className="w-full px-4 py-3 text-left text-slate-300 hover:bg-slate-800 transition-colors text-xs font-bold uppercase tracking-tight"
+                                                >
                                                     {s}
                                                 </button>
                                             ))}
-                                            <button type="button" onClick={() => addSubject(subjectInput)} className="w-full px-4 py-3 text-left text-blue-400 hover:bg-slate-800 transition-colors text-xs font-black italic">
-                                                + Create "{subjectInput}"
+                                            <button 
+                                                type="button" 
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault(); // Prevent blur from closing suggestions before click
+                                                    addSubject(subjectInput);
+                                                }}
+                                                className="w-full px-4 py-3 text-left text-blue-400 hover:bg-slate-800 transition-colors text-xs font-black italic flex items-center justify-between"
+                                            >
+                                                <span>+ Create "{subjectInput}"</span>
+                                                <Plus className="w-3 h-3" />
                                             </button>
                                         </div>
                                     )}

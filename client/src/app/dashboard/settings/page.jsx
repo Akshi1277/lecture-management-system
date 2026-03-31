@@ -400,7 +400,7 @@ export default function SettingsPage() {
                                          </div>
                                      </div>
 
-                                     {userInfo?.role === 'superadmin' && (
+                                     {userInfo?.role === 'admin' && (
                                          <button 
                                              onClick={handleSaveGlobalSettings}
                                              disabled={isSaving}
@@ -411,10 +411,10 @@ export default function SettingsPage() {
                                          </button>
                                      )}
                                      
-                                     {userInfo?.role !== 'superadmin' && (
+                                     {userInfo?.role !== 'admin' && (
                                          <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl text-center">
                                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                                 Institutional parameters are locked. Contact Super Admin to modify global rules.
+                                                 Institutional parameters are locked. Contact Admin to modify global rules.
                                              </p>
                                          </div>
                                      )}
@@ -444,7 +444,7 @@ export default function SettingsPage() {
                                     <p className="font-black text-sm text-white uppercase italic tracking-wider">Batch Architecture</p>
                                     <p className="text-xs text-slate-500 mt-2 leading-relaxed">Configure structural nodes, divisions, and year mappings (FY, SY, TY).</p>
                                 </button>
-                                {userInfo?.role === 'superadmin' && (
+                                {userInfo?.role === 'admin' && (
                                     <button
                                         onClick={() => dispatch(setActiveModal('viewAuditLogs'))}
                                         className="p-8 bg-slate-950/50 border border-slate-800 rounded-[32px] text-left hover:border-slate-600 transition-all group relative overflow-hidden active:scale-95 shadow-xl hover:shadow-2xl"
