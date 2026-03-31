@@ -20,6 +20,13 @@ export default function RoomBlocker({ onClose }) {
     const dispatch = useDispatch();
     const { userInfo } = useSelector(state => state.auth);
 
+    const { list: lectures } = useSelector(state => state.lecture);
+
+    // Dynamic Room Extraction: Pull all unique rooms currently in the system
+    const existingRooms = [...new Set(lectures.map(l => l.classroom))].sort();
+    const commonLabs = ["IT Lab", "CS Lab", "Main Hall", "Lab 1", "Lab 2"];
+    const allRooms = [...new Set([...existingRooms, ...commonLabs])].filter(Boolean);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -41,7 +48,7 @@ export default function RoomBlocker({ onClose }) {
             if (blockRoom.fulfilled.match(resultAction)) {
                 dispatch(addToast({
                     type: 'success',
-                    message: `Room blocked successfully. ${resultAction.payload.affectedCount} lecture(s) ${resultAction.payload.actionTaken}.`
+                    message: `Room blocked successfully. ${resultAction.payload.affectedCount} academic session(s) (Lectures/Labs) ${resultAction.payload.actionTaken}.`
                 }));
                 dispatch(fetchLectures());
                 if (onClose) onClose();
@@ -75,8 +82,7 @@ export default function RoomBlocker({ onClose }) {
                 <div>
                     <h4 className="text-sm font-bold text-amber-500">Warning: Destructive Action</h4>
                     <p className="text-xs text-amber-500/80 mt-1">
-                        Blocking a room will automatically override any existing lectures scheduled during this window.
-                        Affected teachers and students will be notified via WebSocket immediately.
+                        Blocking a room will automatically override any existing sessions (Lectures or Practicals) scheduled during this window.
                     </p>
                 </div>
             </div>
@@ -85,11 +91,17 @@ export default function RoomBlocker({ onClose }) {
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase ml-1">Room to Block</label>
-                        <input
-                            type="text" required placeholder="e.g. Room 402 or Main Hall"
-                            value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })}
-                            className="w-full bg-slate-800 border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-red-500 outline-none"
-                        />
+                        <select 
+                            required 
+                            value={formData.room} 
+                            onChange={e => setFormData({ ...formData, room: e.target.value })}
+                            className="w-full bg-slate-800 border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-red-500 outline-none appearance-none"
+                        >
+                            <option value="">Select Target Venue</option>
+                            {allRooms.map(r => (
+                                <option key={r} value={r}>{r}</option>
+                            ))}
+                        </select>
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase ml-1">Date</label>
@@ -158,11 +170,17 @@ export default function RoomBlocker({ onClose }) {
                 {formData.action === 'relocate' && (
                     <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
                         <label className="text-xs font-black text-blue-400 uppercase ml-1">Backup Venue / Relocated To</label>
-                        <input
-                            type="text" required placeholder="e.g. Room 501"
-                            value={formData.newRoom} onChange={e => setFormData({ ...formData, newRoom: e.target.value })}
-                            className="w-full bg-blue-500/5 border-blue-500/30 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none placeholder-blue-500/30"
-                        />
+                        <select 
+                            required 
+                            value={formData.newRoom} 
+                            onChange={e => setFormData({ ...formData, newRoom: e.target.value })}
+                            className="w-full bg-blue-500/5 border-blue-500/30 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                        >
+                            <option value="">Select Backup Venue</option>
+                            {allRooms.filter(r => r !== formData.room).map(r => (
+                                <option key={r} value={r}>{r}</option>
+                            ))}
+                        </select>
                     </div>
                 )}
 
