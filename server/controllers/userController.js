@@ -6,6 +6,7 @@ import Subject from '../models/subjectModel.js';
 import generateToken from '../utils/generateToken.js';
 import AuditLog from '../models/auditLogModel.js';
 import { userSchema } from '../utils/validators.js';
+import crypto from 'crypto';
 import generateRandomPassword from '../utils/passGenerator.js';
 import { sendEnrollmentEmail, sendPasswordResetEmail } from '../utils/emailService.js';
 import xlsx from 'xlsx';

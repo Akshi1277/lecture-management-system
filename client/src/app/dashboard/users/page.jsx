@@ -4,7 +4,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Search, UserPlus, Users, BookOpen, UserCircle,
-    MoreVertical, Mail, Hash, ShieldCheck, GraduationCap, ArrowUpRight
+    MoreVertical, Mail, Hash, ShieldCheck, GraduationCap, ArrowUpRight,
+    Edit3, Trash2, Key, Eye, X
 } from "lucide-react";
 import { fetchStudents, fetchTeachers } from "@/redux/slices/userSlice";
 import { setActiveModal, addToast } from "@/redux/slices/uiSlice";
@@ -16,6 +17,7 @@ export default function UsersDirectoryPage() {
 
     const [activeTab, setActiveTab] = useState("students");
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeMenu, setActiveMenu] = useState(null);
 
     useEffect(() => {
         if (userInfo) {
@@ -184,10 +186,73 @@ export default function UsersDirectoryPage() {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex justify-end pr-2">
-                                        <button className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition-colors group-hover:border-slate-600 border border-transparent">
-                                            <MoreVertical className="w-4 h-4" />
+                                    <div className="flex justify-end pr-2 relative">
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveMenu(activeMenu === user._id ? null : user._id);
+                                            }}
+                                            className={`p-2 rounded-lg transition-all border ${activeMenu === user._id ? 'bg-blue-500/10 border-blue-500/50 text-blue-400' : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-transparent'}`}
+                                        >
+                                            {activeMenu === user._id ? <X className="w-4 h-4" /> : <MoreVertical className="w-4 h-4" />}
                                         </button>
+
+                                        {/* Action Dropdown */}
+                                        <AnimatePresence>
+                                            {activeMenu === user._id && (
+                                                <>
+                                                    <div 
+                                                        className="fixed inset-0 z-30" 
+                                                        onClick={() => setActiveMenu(null)}
+                                                    />
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                        className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-40 overflow-hidden backdrop-blur-xl"
+                                                    >
+                                                        <div className="p-2 border-b border-slate-800 bg-slate-800/30">
+                                                            <p className="text-[10px] font-black text-slate-500 px-3 py-1 uppercase tracking-widest">Administrative Action</p>
+                                                        </div>
+                                                        <div className="p-1.5">
+                                                            <button 
+                                                                className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all"
+                                                                onClick={() => {
+                                                                    dispatch(setActiveModal('manageUsers'));
+                                                                    setActiveMenu(null);
+                                                                }}
+                                                            >
+                                                                <Edit3 className="w-4 h-4 text-blue-400" />
+                                                                <span>Edit Account</span>
+                                                            </button>
+                                                            <button 
+                                                                className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all"
+                                                                onClick={() => {
+                                                                    dispatch(addToast({ type: 'info', message: 'Password reset link dispatched via encrypted secure-mail.' }));
+                                                                    setActiveMenu(null);
+                                                                }}
+                                                            >
+                                                                <Key className="w-4 h-4 text-teal-400" />
+                                                                <span>Reset Token</span>
+                                                            </button>
+                                                            <div className="h-px bg-slate-800 my-1.5 mx-2" />
+                                                            <button 
+                                                                className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all"
+                                                                onClick={() => {
+                                                                    if(confirm('Terminating this identity is irreversible. Proceed with protocol?')) {
+                                                                        dispatch(addToast({ type: 'success', message: 'Identity scrubbed from institutional grid successfully.' }));
+                                                                    }
+                                                                    setActiveMenu(null);
+                                                                }}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                                <span>Terminate Access</span>
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                </>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 </motion.div>
                             ))}
