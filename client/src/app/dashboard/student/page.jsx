@@ -146,9 +146,15 @@ export default function StudentDashboard() {
                                         <h4 className="font-bold text-white group-hover:text-teal-400 transition-colors uppercase tracking-tight leading-none mb-1">{l.title}</h4>
                                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{l.teacher?.name} • Room {l.classroom}</p>
                                     </div>
-                                    <div className="text-right flex flex-col items-end">
-                                        <span className="px-2 py-0.5 bg-slate-800 rounded-md text-[9px] font-black text-slate-400 mb-1 group-hover:bg-teal-500/20 group-hover:text-teal-400 transition-all">{l.status}</span>
-                                        <p className="text-xs font-bold text-white">{new Date(l.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                    <div className="text-right flex flex-col items-end space-y-1">
+                                        <span className="px-2 py-0.5 bg-slate-800 rounded-md text-[9px] font-black text-slate-400 group-hover:bg-teal-500/20 group-hover:text-teal-400 transition-all uppercase tracking-tighter">
+                                            {new Date(l.startTime).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                        </span>
+                                        <div className="flex items-center space-x-1.5 font-bold text-white text-xs">
+                                            <Clock className="w-3 h-3 text-slate-500" />
+                                            <span>{new Date(l.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
+                                        <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{l.status}</span>
                                     </div>
                                 </motion.div>
                             ))}

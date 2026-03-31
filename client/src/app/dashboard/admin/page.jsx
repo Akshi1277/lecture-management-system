@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Clock, Users, ArrowUpRight, UserPlus, BookOpen, Layers, Settings, Plus, FileText,Activity, AlertTriangle, PlayCircle, ShieldAlert } from "lucide-react";
+import { Clock, Users, ArrowUpRight, UserPlus, BookOpen, Layers, Settings, Plus, FileText,Activity, AlertTriangle, PlayCircle, ShieldAlert, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { setActiveModal } from "@/redux/slices/uiSlice";
 import { fetchLectures } from "@/redux/slices/lectureSlice";
@@ -173,9 +173,18 @@ export default function AdminDashboard() {
                                 <div key={i} className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between group hover:border-teal-500/30 transition-all">
                                     <div>
                                         <h4 className="font-bold text-sm group-hover:text-teal-400 transition-colors uppercase tracking-wide">{l.title}</h4>
-                                        <p className="text-[10px] text-slate-500 mt-1 flex items-center font-medium">
-                                            <Clock className="w-3 h-3 mr-1 text-teal-500/50" /> {new Date(l.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Room {l.classroom}
-                                        </p>
+                                        <div className="flex flex-col space-y-1 mt-1.5">
+                                            <p className="text-[10px] text-slate-400 flex items-center font-bold">
+                                                <Calendar className="w-3 h-3 mr-1.5 text-teal-500/50" />
+                                                {new Date(l.startTime).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 flex items-center font-medium">
+                                                <Clock className="w-3 h-3 mr-1.5 text-slate-500/50" />
+                                                {new Date(l.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                <span className="mx-1.5 opacity-30">•</span>
+                                                <span className="text-teal-500/80 font-bold">Room {l.classroom}</span>
+                                            </p>
+                                        </div>
                                     </div>
                                     <div className="text-right flex flex-col items-end space-y-1.5">
                                         <p className="text-[10px] font-black text-teal-400 uppercase italic tracking-widest">{l.teacher?.name}</p>
