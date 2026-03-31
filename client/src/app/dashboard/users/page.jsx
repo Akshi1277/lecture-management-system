@@ -115,7 +115,7 @@ export default function UsersDirectoryPage() {
             </div>
 
             {/* Data Grid */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden">
+            <div className="bg-slate-900/50 border border-slate-800 rounded-3xl">
                 <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-4 p-4 border-b border-slate-800 bg-slate-800/30 text-xs font-black text-slate-500 uppercase tracking-widest">
                     <div>Identity</div>
                     <div>Contact Vector</div>
@@ -206,10 +206,10 @@ export default function UsersDirectoryPage() {
                                                         onClick={() => setActiveMenu(null)}
                                                     />
                                                     <motion.div
-                                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                        initial={{ opacity: 0, scale: 0.95, y: i > filteredUsers.length - 3 ? -10 : 10 }}
                                                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                                        className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-40 overflow-hidden backdrop-blur-xl"
+                                                        exit={{ opacity: 0, scale: 0.95, y: i > filteredUsers.length - 3 ? -10 : 10 }}
+                                                        className={`absolute right-0 ${i > filteredUsers.length - 3 && filteredUsers.length > 3 ? 'bottom-full mb-2' : 'top-full mt-2'} w-48 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-40 overflow-hidden backdrop-blur-xl`}
                                                     >
                                                         <div className="p-2 border-b border-slate-800 bg-slate-800/30">
                                                             <p className="text-[10px] font-black text-slate-500 px-3 py-1 uppercase tracking-widest">Administrative Action</p>

@@ -323,7 +323,7 @@ export default function LecturesPage() {
             </div>
 
             {/* Master Data Grid */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden">
+            <div className="bg-slate-900/50 border border-slate-800 rounded-3xl">
                 <div className="grid grid-cols-[2fr_1.5fr_1.5fr_1fr_1fr_auto] gap-4 p-4 border-b border-slate-800 bg-slate-800/20 text-xs font-black text-slate-500 uppercase tracking-widest">
                     <div>Subject & Batch</div>
                     <div>Faculty</div>
@@ -414,10 +414,10 @@ export default function LecturesPage() {
                                                 <>
                                                     <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)} />
                                                     <motion.div
-                                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                        initial={{ opacity: 0, y: i > filteredLectures.length - 3 ? -10 : 10, scale: 0.95 }}
                                                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                        className="absolute right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-20 overflow-hidden"
+                                                        exit={{ opacity: 0, y: i > filteredLectures.length - 3 ? -10 : 10, scale: 0.95 }}
+                                                        className={`absolute right-0 ${i > filteredLectures.length - 3 && filteredLectures.length > 3 ? 'bottom-full mb-2' : 'top-full mt-2'} w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-20 overflow-hidden`}
                                                     >
                                                         <div className="p-2 space-y-1">
                                                             {userInfo.role === 'admin' && (
