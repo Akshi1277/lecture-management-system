@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import {
     Settings, ShieldCheck, User, Key, Bell, Clock,
     Database, Sliders, Globe, Server, ChevronRight,
-    Save, Mail, Percent, Loader2
+    Save, Mail, Percent, Loader2, X
 } from "lucide-react";
 import { setActiveModal, addToast } from "@/redux/slices/uiSlice";
 import { updateUserProfile, changePassword } from "@/redux/slices/authSlice";
