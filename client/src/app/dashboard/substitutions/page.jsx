@@ -38,7 +38,7 @@ export default function SubstitutionsPage() {
         
         return sorted.filter(r => {
             const d = new Date(r.startTime);
-            return d >= now && d <= nextWeek && r.status !== 'Cancelled';
+            return d >= now && r.status !== 'Cancelled';
         }).slice(0, 7);
     })();
 

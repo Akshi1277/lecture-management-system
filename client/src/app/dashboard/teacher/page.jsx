@@ -57,7 +57,7 @@ export default function TeacherDashboard() {
                                 return [...lectures]
                                     .filter(l => {
                                         const d = new Date(l.startTime);
-                                        return d >= now && d <= nextWeek && l.status !== 'Cancelled';
+                                        return d >= now && l.status !== 'Cancelled';
                                     })
                                     .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
                                     .slice(0, 7);

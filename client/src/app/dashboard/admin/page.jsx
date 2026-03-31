@@ -163,8 +163,8 @@ export default function AdminDashboard() {
                             
                             const upcoming = (lectures || []).filter(l => {
                                 const lecDate = new Date(l.startTime);
-                                return lecDate >= now && lecDate <= nextWeek && l.status !== 'Cancelled';
-                            }).slice(0, 7);
+                                return lecDate >= now && l.status !== 'Cancelled';
+                            }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime)).slice(0, 7);
 
                             if (upcoming.length === 0) {
                                 return (
