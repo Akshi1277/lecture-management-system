@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Search, Filter, CalendarDays, Clock,
     MoreVertical, Edit, UserMinus, Plus, ShieldAlert,
-    XCircle, CheckCircle, RefreshCcw, BookOpen, AlertTriangle
+    XCircle, CheckCircle, RefreshCcw, BookOpen, AlertTriangle, Users
 } from "lucide-react";
 import { fetchLectures, updateLecture, deleteLecture } from "@/redux/slices/lectureSlice";
 import { setActiveModal } from "@/redux/slices/uiSlice";
