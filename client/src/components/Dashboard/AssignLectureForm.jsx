@@ -371,7 +371,6 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                                         <option value="">Select Lab</option>
                                         <option value="IT Lab">IT Lab</option>
                                         <option value="CS Lab">CS Lab</option>
-                                        <option value="BMS Lab">BMS Lab</option>
                                     </select>
                                 ) : (
                                     <input type="text" placeholder="Room No." className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none" value={formData.classroom} onChange={(e) => setFormData({ ...formData, classroom: e.target.value })} />
