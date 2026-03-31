@@ -22,11 +22,11 @@ export const createDepartment = asyncHandler(async (req, res) => {
 // @route   GET /api/departments
 // @access  Private
 export const getDepartments = asyncHandler(async (req, res) => {
-    const departments = await Department.find({});
+    const isSuperAdmin = req.user.role === 'superadmin';
+    const filter = isSuperAdmin ? {} : { code: { $in: req.user.department } };
+    const departments = await Department.find(filter).sort({ name: 1 });
     res.json(departments);
 });
-
-
 
 // @desc    Create new batch
 // @route   POST /api/batches
@@ -41,6 +41,8 @@ export const createBatch = asyncHandler(async (req, res) => {
 // @route   GET /api/batches
 // @access  Private
 export const getBatches = asyncHandler(async (req, res) => {
-    const batches = await Batch.find({});
+    const isSuperAdmin = req.user.role === 'superadmin';
+    const filter = isSuperAdmin ? {} : { department: { $in: req.user.department } };
+    const batches = await Batch.find(filter).sort({ year: -1, name: 1 });
     res.json(batches);
 });

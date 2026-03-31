@@ -72,46 +72,56 @@ export default function AdminDashboard() {
                     {/* Logistical Controls */}
                     <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl space-y-6 flex-1">
                         <h3 className="text-xl font-bold text-white mb-2">Logistical Controls</h3>
-                        <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                             <button
                                 onClick={() => router.push('/dashboard/admin/schedule')}
                                 className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-teal-500/50 transition-all group"
                             >
-                                <div className="p-4 bg-teal-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                                    <Plus className="text-teal-400 w-6 h-6" />
+                                <div className="p-4 bg-teal-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform text-teal-400">
+                                    <Plus className="w-6 h-6" />
                                 </div>
-                                <span className="font-bold text-sm">Assign Lecture</span>
+                                <span className="font-bold text-sm text-white">Assign Lecture</span>
                                 <span className="text-[10px] text-slate-500 mt-1">Conflict-free scheduling</span>
                             </button>
                             <button
                                 onClick={() => dispatch(setActiveModal('manageUsers'))}
                                 className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-blue-500/50 transition-all group"
                             >
-                                <div className="p-4 bg-blue-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                                    <UserPlus className="text-blue-400 w-6 h-6" />
+                                <div className="p-4 bg-blue-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform text-blue-400">
+                                    <UserPlus className="w-6 h-6" />
                                 </div>
-                                <span className="font-bold text-sm">Enroll User</span>
+                                <span className="font-bold text-sm text-white">Enroll User</span>
                                 <span className="text-[10px] text-slate-500 mt-1">Student & Faculty accounts</span>
                             </button>
                             <button
                                 onClick={() => dispatch(setActiveModal('manageBatches'))}
                                 className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-purple-500/50 transition-all group"
                             >
-                                <div className="p-4 bg-purple-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                                    <Users className="text-purple-400 w-6 h-6" />
+                                <div className="p-4 bg-purple-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform text-purple-400">
+                                    <Users className="w-6 h-6" />
                                 </div>
-                                <span className="font-bold text-sm">Manage Batches</span>
+                                <span className="font-bold text-sm text-white">Manage Batches</span>
                                 <span className="text-[10px] text-slate-500 mt-1">FY, SY, TY Groups</span>
                             </button>
                             <button
                                 onClick={() => dispatch(setActiveModal('blockRoom'))}
                                 className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-red-500/50 transition-all group "
                             >
-                                <div className="p-4 bg-red-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                                    <ShieldAlert className="text-red-500 w-6 h-6" />
+                                <div className="p-4 bg-red-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform text-red-500">
+                                    <ShieldAlert className="w-6 h-6" />
                                 </div>
                                 <span className="font-bold text-sm text-red-500">Lockdown Venue</span>
                                 <span className="text-[10px] text-slate-500 mt-1">Override schedules for Exams</span>
+                            </button>
+                            <button
+                                onClick={() => dispatch(setActiveModal('manageDepartments'))}
+                                className="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center text-center hover:border-indigo-500/50 transition-all group"
+                            >
+                                <div className="p-4 bg-indigo-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform text-indigo-400">
+                                    <BookOpen className="w-6 h-6" />
+                                </div>
+                                <span className="font-bold text-sm text-white">Manage Depts</span>
+                                <span className="text-[10px] text-slate-500 mt-1">Add/Edit divisions</span>
                             </button>
                         </div>
                     </div>

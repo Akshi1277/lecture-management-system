@@ -83,9 +83,11 @@ export const markAttendance = asyncHandler(async (req, res) => {
 // @route   GET /api/attendance/stats/:subject/:batchId
 // @access  Private/Teacher
 export const getAttendanceStats = asyncHandler(async (req, res) => {
-    const { subject, batchId } = req.params;
+    // Get lab weight from settings
+    const settings = await Settings.findOne() || { attendanceThreshold: 75, labWeight: 4 };
+    const weight = settings.labWeight || 4;
 
-    // Aggregate to calculate percentages (with weight: Lab=4, Lecture=1)
+    // Aggregate to calculate percentages (with dynamic weight from settings)
     const stats = await Attendance.aggregate([
         { $match: { subject: subject, batch: new mongoose.Types.ObjectId(batchId) } },
         {
@@ -104,13 +106,13 @@ export const getAttendanceStats = asyncHandler(async (req, res) => {
                 // Physical counts (Unweighted) for UI display
                 totalCount: { $sum: 1 },
                 presentCount: { $sum: { $cond: [{ $eq: ['$students.status', 'present'] }, 1, 0] } },
-                // Weights for Percentage Calculation (Lab=4, Lecture=1)
-                totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] } },
+                // Weights for Percentage Calculation based on settings
+                totalWeight: { $sum: { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, weight, 1] } },
                 presentWeight: {
                     $sum: {
                         $cond: [
                             { $eq: ['$students.status', 'present'] },
-                            { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, 4, 1] },
+                            { $cond: [{ $eq: ['$lectureInfo.type', 'Lab'] }, weight, 1] },
                             0
                         ]
                     }

@@ -4,7 +4,7 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', getDepartments);
+router.get('/', protect, getDepartments);
 router.post('/', protect, admin, createDepartment);
 router.delete('/:id', protect, admin, deleteDepartment);
 

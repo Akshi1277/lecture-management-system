@@ -50,17 +50,9 @@ export const createLecture = asyncHandler(async (req, res) => {
 
     // Capacity Check
     const batchData = await Batch.findById(batch);
-    // In a real system you'd also fetch the classroom doc to check capacity. 
-    // For now we assume the frontend passes the room name string, but to be robust
-    // we should really be passing a Classroom ID. 
-    // However, sticking to the current string 'classroom' implementation for MVP speed:
-    const roomDoc = await Classroom.findOne({ name: classroom });
-
-    if (batchData && roomDoc) {
-        if (batchData.studentCount > roomDoc.capacity) {
-            res.status(400);
-            throw new Error(`Capacity Warning: Room ${classroom} (Cap: ${roomDoc.capacity}) is too small for ${batchData.name} (${batchData.studentCount} students).`);
-        }
+    if (!batchData) {
+        res.status(404);
+        throw new Error('Batch not found');
     }
 
     const { recurring, repeatUntil } = req.body;
@@ -74,6 +66,7 @@ export const createLecture = asyncHandler(async (req, res) => {
         while (currentStart <= untilDate) {
             lecturesToCreate.push({
                 title, subject, teacher, classroom, batch, division, type,
+                department: batchData.department, // Auto assign from batch
                 startTime: new Date(currentStart),
                 endTime: new Date(currentEnd)
             });
@@ -88,7 +81,8 @@ export const createLecture = asyncHandler(async (req, res) => {
         }
     } else {
         lecturesToCreate.push({
-            title, subject, teacher, startTime, endTime, classroom, batch, division, type
+            title, subject, teacher, startTime, endTime, classroom, batch, division, type, 
+            department: batchData.department
         });
     }
 
@@ -118,8 +112,15 @@ export const createLecture = asyncHandler(async (req, res) => {
 // @desc    Get all lectures
 // @route   GET /api/lectures
 // @access  Private
+// @access  Private
 export const getLectures = asyncHandler(async (req, res) => {
-    const lectures = await Lecture.find({})
+    const isSuperAdmin = req.user.role === 'superadmin';
+    const isAdmin = req.user.role === 'admin';
+    
+    // Admins and SuperAdmins see all lectures to avoid resource conflicts
+    const filter = (isSuperAdmin || isAdmin) ? {} : { department: { $in: req.user.department } };
+    
+    const lectures = await Lecture.find(filter)
         .populate('teacher', 'name email')
         .populate('batch', 'name')
         .sort({ startTime: 1 });
@@ -130,7 +131,16 @@ export const getLectures = asyncHandler(async (req, res) => {
 // @route   GET /api/lectures/my
 // @access  Private
 export const getMyLectures = asyncHandler(async (req, res) => {
-    const query = req.user.role === 'teacher' ? { teacher: req.user._id } : {};
+    let query = {};
+    if (req.user.role === 'teacher') {
+        query = { teacher: req.user._id };
+    } else if (req.user.role === 'admin') {
+        query = { department: { $in: req.user.department } };
+    } else if (req.user.role === 'student') {
+        query = { batch: req.user.batch };
+    }
+    // superadmin sees everything naturally if query remains {}
+
     const lectures = await Lecture.find(query)
         .populate('teacher', 'name email')
         .populate('batch', 'name');

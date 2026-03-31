@@ -42,7 +42,7 @@ export const protect = async (req, res, next) => {
 };
 
 export const admin = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') {
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'superadmin')) {
         next();
     } else {
         res.status(401).json({ message: 'Not authorized as an admin' });
@@ -50,7 +50,7 @@ export const admin = (req, res, next) => {
 };
 
 export const teacher = (req, res, next) => {
-    if (req.user && (req.user.role === 'teacher' || req.user.role === 'admin')) {
+    if (req.user && (req.user.role === 'teacher' || req.user.role === 'admin' || req.user.role === 'superadmin')) {
         next();
     } else {
         res.status(401).json({ message: 'Not authorized as a teacher' });

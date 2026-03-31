@@ -258,7 +258,7 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="space-y-3 md:col-span-2">
                                     <label className="text-[10px] font-black text-slate-500 uppercase ml-1 tracking-widest">Department & Role</label>
-                                    <div className="w-full bg-slate-950/50 border border-slate-800/50 rounded-2xl p-4 text-sm text-slate-500 flex items-center justify-between">
+                                    <div className="w-full bg-slate-950/50 border border-slate-800/50 rounded-2xl p-4 text-sm text-slate-500 cursor-not-allowed flex items-center justify-between">
                                         <span className="uppercase font-bold tracking-wider">{userInfo?.department?.length > 0 ? userInfo.department.join(', ') : 'Not Assigned'}</span>
                                         <span className="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-teal-400 uppercase text-[9px] font-black italic">{userInfo?.role}</span>
                                     </div>
@@ -347,65 +347,77 @@ export default function SettingsPage() {
                             <div className="space-y-4">
                                <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-8 space-y-8">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center space-x-3 text-white">
-                                                <Percent className="w-5 h-5 text-teal-400" />
-                                                <span className="font-black text-sm uppercase italic">Attendance Threshold</span>
-                                            </div>
-                                            <p className="text-xs text-slate-500 leading-relaxed">Required minimum percentage for students before warning triggers are activated.</p>
-                                            <div className="flex items-center space-x-3">
-                                                <input 
-                                                    type="number" 
-                                                    value={globalSettings.attendanceThreshold}
-                                                    onChange={(e) => setGlobalSettings({...globalSettings, attendanceThreshold: parseInt(e.target.value)})}
-                                                    className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white font-black focus:ring-1 focus:ring-teal-500 outline-none" 
-                                                />
-                                                <span className="text-slate-500 font-bold">%</span>
-                                            </div>
-                                        </div>
+                                         <div className="space-y-4">
+                                             <div className="flex items-center space-x-3 text-white">
+                                                 <Percent className="w-5 h-5 text-teal-400" />
+                                                 <span className="font-black text-sm uppercase italic">Attendance Threshold</span>
+                                             </div>
+                                             <p className="text-xs text-slate-500 leading-relaxed">Required minimum percentage for students before warning triggers are activated.</p>
+                                             <div className="flex items-center space-x-3">
+                                                 <input 
+                                                     type="number" 
+                                                     value={globalSettings.attendanceThreshold}
+                                                     onChange={(e) => setGlobalSettings({...globalSettings, attendanceThreshold: parseInt(e.target.value)})}
+                                                     disabled={userInfo?.role !== 'superadmin'}
+                                                     className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white font-black focus:ring-1 focus:ring-teal-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" 
+                                                 />
+                                                 <span className="text-slate-500 font-bold">%</span>
+                                             </div>
+                                         </div>
 
-                                        <div className="space-y-4">
-                                            <div className="flex items-center space-x-3 text-white">
-                                                <Clock className="w-5 h-5 text-blue-400" />
-                                                <span className="font-black text-sm uppercase italic">Practical Session Weight</span>
-                                            </div>
-                                            <p className="text-xs text-slate-500 leading-relaxed">The multiplier applied to Lab sessions relative to standard lectures (current: {globalSettings.labWeight}x).</p>
-                                            <input 
-                                                type="number" 
-                                                value={globalSettings.labWeight}
-                                                onChange={(e) => setGlobalSettings({...globalSettings, labWeight: parseInt(e.target.value)})}
-                                                className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white font-black focus:ring-1 focus:ring-blue-500 outline-none" 
-                                            />
-                                        </div>
-                                    </div>
+                                         <div className="space-y-4">
+                                             <div className="flex items-center space-x-3 text-white">
+                                                 <Clock className="w-5 h-5 text-blue-400" />
+                                                 <span className="font-black text-sm uppercase italic">Practical Session Weight</span>
+                                             </div>
+                                             <p className="text-xs text-slate-500 leading-relaxed">The multiplier applied to Lab sessions relative to standard lectures (current: {globalSettings.labWeight}x).</p>
+                                             <input 
+                                                 type="number" 
+                                                 value={globalSettings.labWeight}
+                                                 onChange={(e) => setGlobalSettings({...globalSettings, labWeight: parseInt(e.target.value)})}
+                                                 disabled={userInfo?.role !== 'superadmin'}
+                                                 className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white font-black focus:ring-1 focus:ring-blue-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" 
+                                             />
+                                         </div>
+                                     </div>
 
-                                    <div className="pt-6 border-t border-slate-800/50 space-y-6">
-                                        <div className="flex items-center space-x-3">
-                                            <Mail className="w-5 h-5 text-red-400" />
-                                            <h4 className="text-sm font-black text-white uppercase italic tracking-wide">Emergency Communication</h4>
-                                        </div>
-                                        <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                                            <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-md">
-                                                Instantly dispatch warning notifications to parents of all students whose current weighted attendance is below the <strong>{globalSettings.attendanceThreshold}%</strong> threshold.
-                                            </p>
-                                            <button 
-                                                onClick={handleSendWarnings}
-                                                disabled={isSending}
-                                                className="shrink-0 px-6 py-3 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all rounded-xl font-black uppercase text-[10px] tracking-widest disabled:opacity-50"
-                                            >
-                                                {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Execute Dispatch"}
-                                            </button>
-                                        </div>
-                                    </div>
+                                     <div className="pt-6 border-t border-slate-800/50 space-y-6">
+                                         <div className="flex items-center space-x-3">
+                                             <Mail className="w-5 h-5 text-red-400" />
+                                             <h4 className="text-sm font-black text-white uppercase italic tracking-wide">Emergency Communication</h4>
+                                         </div>
+                                         <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                                             <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-md">
+                                                 Instantly dispatch warning notifications to parents of {userInfo?.role === 'admin' ? 'your department\'s' : 'all'} students whose current weighted attendance is below the <strong>{globalSettings.attendanceThreshold}%</strong> threshold.
+                                             </p>
+                                             <button 
+                                                 onClick={handleSendWarnings}
+                                                 disabled={isSending}
+                                                 className="shrink-0 px-6 py-3 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all rounded-xl font-black uppercase text-[10px] tracking-widest disabled:opacity-50"
+                                             >
+                                                 {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Execute Dispatch"}
+                                             </button>
+                                         </div>
+                                     </div>
 
-                                    <button 
-                                        onClick={handleSaveGlobalSettings}
-                                        disabled={isSaving}
-                                        className="w-full py-5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black rounded-2xl shadow-2xl shadow-teal-500/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-3 disabled:opacity-50 uppercase tracking-[0.2em] text-xs"
-                                    >
-                                        {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                                        <span>Update System Parameters</span>
-                                    </button>
+                                     {userInfo?.role === 'superadmin' && (
+                                         <button 
+                                             onClick={handleSaveGlobalSettings}
+                                             disabled={isSaving}
+                                             className="w-full py-5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black rounded-2xl shadow-2xl shadow-teal-500/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-3 disabled:opacity-50 uppercase tracking-[0.2em] text-xs"
+                                         >
+                                             {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                             <span>Update System Parameters</span>
+                                         </button>
+                                     )}
+                                     
+                                     {userInfo?.role !== 'superadmin' && (
+                                         <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl text-center">
+                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                                 Institutional parameters are locked. Contact Super Admin to modify global rules.
+                                             </p>
+                                         </div>
+                                     )}
                                </div>
                             </div>
                         </div>
@@ -432,19 +444,21 @@ export default function SettingsPage() {
                                     <p className="font-black text-sm text-white uppercase italic tracking-wider">Batch Architecture</p>
                                     <p className="text-xs text-slate-500 mt-2 leading-relaxed">Configure structural nodes, divisions, and year mappings (FY, SY, TY).</p>
                                 </button>
-                                <button
-                                    onClick={() => dispatch(setActiveModal('viewAuditLogs'))}
-                                    className="p-8 bg-slate-950/50 border border-slate-800 rounded-[32px] text-left hover:border-slate-600 transition-all group relative overflow-hidden active:scale-95 shadow-xl hover:shadow-2xl"
-                                >
-                                    <div className="absolute top-0 right-0 p-8 text-slate-800 group-hover:text-slate-700 transition-colors">
-                                        <Server className="w-16 h-16" />
-                                    </div>
-                                    <div className="p-4 bg-slate-900/50 rounded-2xl inline-block mb-6 group-hover:bg-slate-800 transition-colors border border-slate-800">
-                                        <Server className="w-6 h-6 text-emerald-400" />
-                                    </div>
-                                    <p className="font-black text-sm text-white uppercase italic tracking-wider">Diagnostic Logs</p>
-                                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">View system diagnostic telemetry and environment integrity heartbeats.</p>
-                                </button>
+                                {userInfo?.role === 'superadmin' && (
+                                    <button
+                                        onClick={() => dispatch(setActiveModal('viewAuditLogs'))}
+                                        className="p-8 bg-slate-950/50 border border-slate-800 rounded-[32px] text-left hover:border-slate-600 transition-all group relative overflow-hidden active:scale-95 shadow-xl hover:shadow-2xl"
+                                    >
+                                        <div className="absolute top-0 right-0 p-8 text-slate-800 group-hover:text-slate-700 transition-colors">
+                                            <Server className="w-16 h-16" />
+                                        </div>
+                                        <div className="p-4 bg-slate-900/50 rounded-2xl inline-block mb-6 group-hover:bg-slate-800 transition-colors border border-slate-800">
+                                            <Server className="w-6 h-6 text-emerald-400" />
+                                        </div>
+                                        <p className="font-black text-sm text-white uppercase italic tracking-wider">Diagnostic Logs</p>
+                                        <p className="text-xs text-slate-500 mt-2 leading-relaxed">View system diagnostic telemetry and environment integrity heartbeats.</p>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     )}

@@ -17,6 +17,6 @@ router.route('/departments')
 
 router.route('/batches')
     .post(protect, admin, createBatch)
-    .get(getBatches);
+    .get(protect, getBatches);
 
 export default router;

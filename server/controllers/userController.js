@@ -1,5 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/userModel.js';
+import Batch from '../models/batchModel.js';
+import mongoose from 'mongoose';
 import Subject from '../models/subjectModel.js';
 import generateToken from '../utils/generateToken.js';
 import AuditLog from '../models/auditLogModel.js';
@@ -180,6 +182,13 @@ export const bulkRegisterUsers = asyncHandler(async (req, res) => {
     const sheet = workbook.Sheets[sheetName];
     const studentsData = xlsx.utils.sheet_to_json(sheet);
 
+    const batch = await mongoose.model('Batch').findById(batchId);
+    if (!batch) {
+        res.status(404);
+        throw new Error('Batch not found');
+    }
+    const department = [batch.department];
+
     if (studentsData.length > 200) {
         res.status(400);
         throw new Error('Maximum 200 students can be registered at once to prevent server timeout.');
@@ -213,6 +222,7 @@ export const bulkRegisterUsers = asyncHandler(async (req, res) => {
                 password,
                 role: 'student',
                 batch: batchId,
+                department: department, // Use batch's department
                 parentEmail: ParentEmail ? ParentEmail.toLowerCase().trim() : undefined
             });
 
@@ -250,12 +260,16 @@ export const bulkRegisterUsers = asyncHandler(async (req, res) => {
 // @route   GET /api/users
 // @access  Private (Admin)
 export const getUsers = asyncHandler(async (req, res) => {
-    const users = await User.find({});
+    const isSuperAdmin = req.user.role === 'superadmin';
+    const filter = isSuperAdmin ? {} : { department: { $in: req.user.department } };
+    const users = await User.find(filter);
     res.json(users);
 });
 
 export const getTeachers = asyncHandler(async (req, res) => {
-    const teachers = await User.find({ role: 'teacher' });
+    const isSuperAdmin = req.user.role === 'superadmin';
+    const filter = isSuperAdmin ? { role: 'teacher' } : { role: 'teacher', department: { $in: req.user.department } };
+    const teachers = await User.find(filter);
     res.json(teachers);
 });
 
@@ -268,7 +282,9 @@ export const getStudentsByBatch = asyncHandler(async (req, res) => {
 });
 
 export const getStudents = asyncHandler(async (req, res) => {
-    const students = await User.find({ role: 'student' }).populate('batch', 'name');
+    const isSuperAdmin = req.user.role === 'superadmin';
+    const filter = isSuperAdmin ? { role: 'student' } : { role: 'student', department: { $in: req.user.department } };
+    const students = await User.find(filter).populate('batch', 'name');
     res.json(students);
 });
 

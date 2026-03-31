@@ -19,6 +19,10 @@ const lectureSchema = mongoose.Schema({
         ref: 'Batch',
         required: true
     },
+    department: {
+        type: String, // Code e.g. 'IT', 'BMS'
+        required: true
+    },
     division: {
         type: String,
         enum: ['A', 'B', 'C', 'D', 'All'],

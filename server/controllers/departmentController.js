@@ -2,11 +2,16 @@ import asyncHandler from 'express-async-handler';
 import Department from '../models/departmentModel.js';
 import AuditLog from '../models/auditLogModel.js';
 
-// @desc    Get all departments
+// @desc    Get all departments (Filtered by user role)
 // @route   GET /api/departments
-// @access  Public
+// @access  Private
 export const getDepartments = asyncHandler(async (req, res) => {
-    const departments = await Department.find({}).sort({ name: 1 });
+    const isSuperAdmin = req.user.role === 'superadmin';
+    
+    // Filter: Super Admin gets all, others get only their assigned departments
+    const query = isSuperAdmin ? {} : { code: { $in: req.user.department } };
+    
+    const departments = await Department.find(query).sort({ name: 1 });
     res.json(departments);
 });
 

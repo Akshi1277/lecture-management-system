@@ -141,6 +141,16 @@ function EnrollUserForm({ onClose }) {
         }
     }, [userInfo, dispatch]);
 
+    // Auto-select department if only one is available (e.g. for HODs)
+    useEffect(() => {
+        if (departments.length === 1 && formData.role !== 'student') {
+            const deptCode = departments[0].code;
+            if (!formData.department.includes(deptCode)) {
+                setFormData(prev => ({ ...prev, department: [deptCode] }));
+            }
+        }
+    }, [departments, formData.role, formData.department]);
+
     const handleSubjectInput = (e) => {
         setSubjectInput(e.target.value);
         setShowSuggestions(true);
@@ -314,7 +324,15 @@ function EnrollUserForm({ onClose }) {
                             {formData.role === 'student' ? (
                                 <select
                                     value={formData.batch}
-                                    onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                                    onChange={(e) => {
+                                        const batch = batches.find(b => b._id === e.target.value);
+                                        const newDepts = batch ? [batch.department] : [];
+                                        setFormData(prev => ({ 
+                                            ...prev, 
+                                            batch: e.target.value,
+                                            department: newDepts
+                                        }));
+                                    }}
                                     className="w-full bg-slate-800 border border-slate-700/50 rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 appearance-none outline-none font-medium"
                                     required
                                 >
@@ -389,7 +407,7 @@ function EnrollUserForm({ onClose }) {
                             </div>
                         )}
 
-                        {formData.role === 'admin' && (
+                        {(formData.role === 'admin' || formData.role === 'teacher') && (
                             <div className="bg-slate-800/40 p-5 rounded-3xl border border-slate-800/50 space-y-4">
                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Select Jurisdiction</p>
                                 <div className="flex flex-wrap gap-3">

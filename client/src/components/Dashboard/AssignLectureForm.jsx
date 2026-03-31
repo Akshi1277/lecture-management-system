@@ -21,8 +21,6 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
         type: "Lecture", classroom: "",
         subject: "",
         startTime: "", endTime: "",
-        recurring: "none", // none, daily, weekly
-        repeatUntil: "",
     });
 
     useEffect(() => {
@@ -36,8 +34,6 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                 subject: lecture.subject || "",
                 startTime: lecture.startTime || "",
                 endTime: lecture.endTime || "",
-                recurring: "none",
-                repeatUntil: "",
             });
         }
     }, [lecture]);
@@ -120,13 +116,15 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                 subject: slot.subject,
                 batch: slot.batch,
                 type: slot.type,
+                division: 'A', // Default to A for departmental management
                 classroom: slot.classroom,
                 startTime,
                 endTime
             };
             const resultAction = await dispatch(createLecture(payload));
             if (!createLecture.fulfilled.match(resultAction)) {
-                dispatch(addToast({ type: 'error', message: resultAction.payload || `Failed to assign ${slot.subject} on ${DAYS[slot.day]} at ${formatHour(slot.hour)}` }));
+                const errorMsg = resultAction.payload?.message || resultAction.payload || `Conflict detected on ${DAYS[slot.day]} at ${formatHour(slot.hour)}`;
+                dispatch(addToast({ type: 'error', message: errorMsg }));
                 allSuccess = false;
             }
         }
@@ -215,33 +213,6 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             ))}
                         </select>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Recurring Pattern</label>
-                                <select 
-                                    value={formData.recurring} 
-                                    onChange={(e) => setFormData({ ...formData, recurring: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white appearance-none outline-none focus:ring-2 focus:ring-teal-500"
-                                >
-                                    <option value="none">One-time Session</option>
-                                    <option value="daily">Daily Repeat</option>
-                                    <option value="weekly">Weekly Repeat</option>
-                                </select>
-                            </div>
-                            {formData.recurring !== 'none' && (
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Repeat Until</label>
-                                    <input 
-                                        type="date" 
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white outline-none focus:ring-2 focus:ring-teal-500"
-                                        value={formData.repeatUntil}
-                                        onChange={(e) => setFormData({ ...formData, repeatUntil: e.target.value })}
-                                        min={new Date().toISOString().split('T')[0]}
-                                        required
-                                    />
-                                </div>
-                            )}
-                        </div>
 
                         <button
                             onClick={() => step1Valid && setStep(2)}

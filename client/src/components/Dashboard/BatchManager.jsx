@@ -21,6 +21,13 @@ export default function BatchManager() {
         }
     }, [userInfo, dispatch]);
 
+    // Auto-select department if only one is available (e.g. for HODs)
+    useEffect(() => {
+        if (departments.length === 1 && !newBatch.department) {
+            setNewBatch(prev => ({ ...prev, department: departments[0].code }));
+        }
+    }, [departments, newBatch.department]);
+
     const handleCreate = async (e) => {
         e.preventDefault();
         if (!newBatch.department) {
