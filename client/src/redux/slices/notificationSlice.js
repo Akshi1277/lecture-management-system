@@ -6,7 +6,9 @@ export const fetchNotifications = createAsyncThunk(
     async (_, { getState, rejectWithValue }) => {
         try {
             const { data } = await api.get(`/announcements`);
-            return data;
+            // Pass the userId from the state so the reducer can use it
+            const { auth: { userInfo } } = getState();
+            return { data, userId: userInfo?._id };
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
         }
@@ -41,13 +43,14 @@ const notificationSlice = createSlice({
                 state.loading = true;
             })
             .addCase(fetchNotifications.fulfilled, (state, action) => {
+                const { data, userId } = action.payload;
                 state.loading = false;
-                state.items = action.payload;
+                state.items = data;
                 
-                // UNREAD LOGIC: Compare item timestamp with locally stored 'Last Seen' time
-                if (typeof window !== 'undefined') {
-                    const lastSeen = localStorage.getItem('notifications_last_seen') || 0;
-                    state.unreadCount = action.payload.filter(n => new Date(n.createdAt).getTime() > Number(lastSeen)).length;
+                // UNREAD LOGIC: Compare item timestamp with USER-SPECIFIC 'Last Seen' time
+                if (typeof window !== 'undefined' && userId) {
+                    const lastSeen = localStorage.getItem(`notifications_last_seen_${userId}`) || 0;
+                    state.unreadCount = data.filter(n => new Date(n.createdAt).getTime() > Number(lastSeen)).length;
                 }
                 
                 state.lastFetched = Date.now();

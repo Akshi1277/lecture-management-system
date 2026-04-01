@@ -74,7 +74,9 @@ export default function NotificationBell() {
         setIsOpen(!isOpen);
         if (!isOpen) {
             dispatch(markAllAsRead());
-            localStorage.setItem('notifications_last_seen', Date.now().toString());
+            if (userInfo?._id) {
+                localStorage.setItem(`notifications_last_seen_${userInfo._id}`, Date.now().toString());
+            }
         }
     };
 

@@ -24,7 +24,7 @@ function ToastItem({ toast, onClose }) {
     useEffect(() => {
         const timer = setTimeout(() => {
             onClose(toast.id);
-        }, 5000); // 5 seconds for better readability
+        }, 3000); // 3 seconds for more responsive feedback
         return () => clearTimeout(timer);
     }, [toast.id, onClose]);
 
