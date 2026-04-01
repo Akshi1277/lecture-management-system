@@ -87,10 +87,41 @@ export default function LecturesPage() {
 
     const groupLecturesByDay = () => {
         const grouped = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+        
+        // Find the start of the current week (Sunday)
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 7);
+
         safeLectures.forEach(l => {
-            const day = new Date(l.startTime).getDay();
-            grouped[day].push(l);
+            // 1. Filter by Batch (Critical for students)
+            const lectureBatchId = typeof l.batch === 'object' ? l.batch?._id : l.batch;
+            const studentBatchId = userInfo?.batch;
+            
+            if (userInfo?.role === 'student' && lectureBatchId !== studentBatchId) return;
+
+            const lectureDate = new Date(l.startTime);
+            
+            // 2. Filter by Current Week Window
+            if (lectureDate < startOfWeek || lectureDate >= endOfWeek) return;
+
+            const day = lectureDate.getDay();
+            
+            // 3. Simple Deduplication (Prevents showing same repeating lecture multiple times in one day view)
+            const isDuplicate = grouped[day].some(existing => 
+                existing.title === l.title && 
+                new Date(existing.startTime).getTime() === new Date(l.startTime).getTime()
+            );
+
+            if (!isDuplicate) {
+                grouped[day].push(l);
+            }
         });
+
         // Sort each day by time
         Object.keys(grouped).forEach(day => {
             grouped[day].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
@@ -101,13 +132,21 @@ export default function LecturesPage() {
     if (userInfo?.role === 'student') {
         const grouped = groupLecturesByDay();
         const currentDayLectures = grouped[selectedDay] || [];
+        
+        // Calculate the actual calendar date for the selected day in the current week
+        const now = new Date();
+        const displayDate = new Date(now);
+        displayDate.setDate(now.getDate() - now.getDay() + selectedDay);
+        const dateString = displayDate.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
 
         return (
             <div className="space-y-10">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <h1 className="text-4xl font-black text-white italic tracking-tight uppercase">My Timetable</h1>
-                        <p className="text-slate-400 mt-1 uppercase text-[10px] font-black tracking-widest leading-none">Weekly Curricular Mapping & Agenda</p>
+                        <p className="text-slate-400 mt-1 uppercase text-[10px] font-black tracking-widest leading-none">
+                            Weekly Curricular Mapping & Agenda • <span className="text-teal-400">{dateString}</span>
+                        </p>
                     </div>
                 </div>
 
