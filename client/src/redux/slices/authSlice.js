@@ -39,14 +39,18 @@ export const updateUserProfile = createAsyncThunk('auth/updateProfile', async (u
 });
 
 export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+    // Brute force clear everything locally FIRST
+    localStorage.removeItem('userInfo');
+    // Clear cookies with common configurations to ensure it works across environments
+    Cookies.remove('auth_token', { path: '/' });
+    Cookies.remove('auth_token', { path: '', domain: window.location.hostname });
+    
     try {
         await api.post('/users/logout');
-        localStorage.removeItem('userInfo');
-        Cookies.remove('auth_token');
         return null;
     } catch (error) {
-        localStorage.removeItem('userInfo'); // Still clear locally even if server fails
-        return rejectWithValue(error.response?.data?.message || error.message);
+        // Even if server fails, local status remains logged out
+        return null;
     }
 });
 
