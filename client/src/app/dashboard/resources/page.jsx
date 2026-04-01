@@ -1,19 +1,47 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
     BookOpen, Search, Download, FileText, 
-    ExternalLink, Filter, FolderKanban, Clock, Trash2
+    ExternalLink, Eye, FolderKanban, Clock, Trash2, X
 } from "lucide-react";
 import { fetchLectures, deleteResource } from "@/redux/slices/lectureSlice";
 import { addToast } from "@/redux/slices/uiSlice";
+
+// Returns the correct file extension from a URL
+function getExtensionFromUrl(url) {
+    if (!url) return 'file';
+    try {
+        // Get the last path segment before any query params
+        const path = url.split('?')[0];
+        const lastSegment = path.split('/').pop();
+        const parts = lastSegment.split('.');
+        if (parts.length > 1) return parts.pop().toLowerCase();
+    } catch {}
+    return 'file';
+}
+
+// Determines if a file can be previewed natively in the browser
+function canPreview(url, fileType) {
+    const ext = getExtensionFromUrl(url);
+    const previewable = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'txt'];
+    if (previewable.includes(ext)) return true;
+    if (fileType && (fileType.startsWith('image/') || fileType === 'application/pdf' || fileType === 'text/plain')) return true;
+    return false;
+}
+
+function isImageFile(url, fileType) {
+    const ext = getExtensionFromUrl(url);
+    return ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext) || (fileType && fileType.startsWith('image/'));
+}
 
 export default function ResourcesPage() {
     const { userInfo } = useSelector((state) => state.auth);
     const { list: lectures, loading } = useSelector((state) => state.lecture);
     const dispatch = useDispatch();
     const [searchTerm, setSearchTerm] = useState("");
+    const [previewResource, setPreviewResource] = useState(null);
 
     useEffect(() => {
         dispatch(fetchLectures());
@@ -55,7 +83,27 @@ export default function ResourcesPage() {
         }
     };
 
-    // Grouping by Subject for a more organized view
+    const handleDownload = async (res) => {
+        const ext = getExtensionFromUrl(res.url);
+        const filename = res.name ? `${res.name}.${ext}` : `resource.${ext}`;
+        try {
+            const response = await fetch(res.url);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+        } catch (err) {
+            // Fallback: open in new tab
+            window.open(res.url, '_blank');
+        }
+    };
+
+    // Grouping by Subject
     const groupedBySubject = filteredResources.reduce((acc, res) => {
         const key = res.subject || 'Uncategorized';
         if (!acc[key]) acc[key] = [];
@@ -111,96 +159,159 @@ export default function ResourcesPage() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {resources.map((res, ridx) => (
-                                    <motion.div 
-                                        whileHover={{ y: -5 }}
-                                        key={ridx}
-                                        className="bg-slate-900 border border-slate-800 rounded-[32px] p-6 group hover:border-teal-500/30 transition-all shadow-xl shadow-black/20"
-                                    >
-                                        <div className="flex items-start justify-between mb-6">
-                                            <div className={`p-4 rounded-2xl border text-teal-400 group-hover:bg-teal-500 group-hover:text-slate-950 transition-all ${res.type === 'Link' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400 group-hover:bg-orange-500' : 'bg-slate-950 border-slate-800'}`}>
-                                                <FileText className="w-6 h-6" />
+                                {resources.map((res, ridx) => {
+                                    const ext = getExtensionFromUrl(res.url);
+                                    const previable = res.type !== 'Link' && canPreview(res.url, res.fileType);
+                                    return (
+                                        <motion.div 
+                                            whileHover={{ y: -5 }}
+                                            key={ridx}
+                                            className="bg-slate-900 border border-slate-800 rounded-[32px] p-6 group hover:border-teal-500/30 transition-all shadow-xl shadow-black/20"
+                                        >
+                                            <div className="flex items-start justify-between mb-6">
+                                                <div className={`p-4 rounded-2xl border text-teal-400 group-hover:bg-teal-500 group-hover:text-slate-950 transition-all ${res.type === 'Link' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400 group-hover:bg-orange-500' : 'bg-slate-950 border-slate-800'}`}>
+                                                    <FileText className="w-6 h-6" />
+                                                </div>
+
+                                                <div className="flex items-center space-x-2">
+                                                    {res.type === 'Link' ? (
+                                                        <a
+                                                            href={res.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-orange-400 transition-colors border border-slate-800"
+                                                            title="Open Link"
+                                                        >
+                                                            <ExternalLink className="w-4 h-4" />
+                                                        </a>
+                                                    ) : previable ? (
+                                                        <button
+                                                            onClick={() => setPreviewResource(res)}
+                                                            className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-teal-400 transition-colors border border-slate-800"
+                                                            title="Preview"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </button>
+                                                    ) : (
+                                                        <a
+                                                            href={res.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-teal-400 transition-colors border border-slate-800"
+                                                            title="Open File"
+                                                        >
+                                                            <ExternalLink className="w-4 h-4" />
+                                                        </a>
+                                                    )}
+
+                                                    {(userInfo?.role === 'admin' || userInfo?._id === res.teacherId) && (
+                                                        <button
+                                                            onClick={() => handleDelete(res.lectureId, res.resourceId)}
+                                                            className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-red-400 transition-colors border border-slate-800"
+                                                            title="Delete Resource"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
-
-                                            {/* Context-aware top-right button */}
-                                            <div className="flex items-center space-x-2">
-                                                {res.type === 'Link' ? (
-                                                    <a
-                                                        href={res.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-orange-400 transition-colors border border-slate-800"
-                                                        title="Open Link"
+                                            
+                                            <h3 className="text-lg font-black text-white leading-tight mb-1 group-hover:text-teal-400 transition-colors uppercase italic">{res.name}</h3>
+                                            <div className="flex items-center space-x-2 mb-3">
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md inline-block ${res.type === 'Link' ? 'bg-orange-500/10 text-orange-400' : 'bg-teal-500/10 text-teal-400'}`}>
+                                                    {res.type === 'Link' ? 'Link' : ext.toUpperCase()}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none mb-6">Shared by {res.teacher}</p>
+                                            
+                                            <div className="pt-6 border-t border-slate-800 flex items-center justify-between">
+                                                <div className="flex items-center space-x-2 text-[10px] text-slate-600 font-black uppercase">
+                                                    <Clock className="w-3 h-3" />
+                                                    <span>{new Date(res.date).toLocaleDateString()}</span>
+                                                </div>
+                                                {res.type !== 'Link' && (
+                                                    <button 
+                                                        onClick={() => handleDownload(res)}
+                                                        className="text-[10px] font-black text-teal-500 uppercase tracking-widest hover:underline flex items-center"
                                                     >
-                                                        <ExternalLink className="w-4 h-4" />
-                                                    </a>
-                                                ) : (
-                                                    <a
-                                                        href={`https://docs.google.com/viewer?url=${encodeURIComponent(res.url)}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-teal-400 transition-colors border border-slate-800"
-                                                        title="View in Browser"
-                                                    >
-                                                        <ExternalLink className="w-4 h-4" />
-                                                    </a>
-                                                )}
-
-                                                {(userInfo?.role === 'admin' || userInfo?._id === res.teacherId) && (
-                                                    <button
-                                                        onClick={() => handleDelete(res.lectureId, res.resourceId)}
-                                                        className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-red-400 transition-colors border border-slate-800"
-                                                        title="Delete Resource"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
+                                                        Download <Download className="w-3 h-3 ml-2" />
                                                     </button>
                                                 )}
                                             </div>
-                                        </div>
-                                        
-                                        <h3 className="text-lg font-black text-white leading-tight mb-1 group-hover:text-teal-400 transition-colors uppercase italic">{res.name}</h3>
-                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md mb-3 inline-block ${res.type === 'Link' ? 'bg-orange-500/10 text-orange-400' : 'bg-teal-500/10 text-teal-400'}`}>
-                                            {res.type || 'File'}
-                                        </span>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none mb-6">Shared by {res.teacher}</p>
-                                        
-                                        <div className="pt-6 border-t border-slate-800 flex items-center justify-between">
-                                            <div className="flex items-center space-x-2 text-[10px] text-slate-600 font-black uppercase">
-                                                <Clock className="w-3 h-3" />
-                                                <span>{new Date(res.date).toLocaleDateString()}</span>
-                                            </div>
-                                            {/* Download only shown for actual files, not links */}
-                                            {res.type !== 'Link' && (
-                                                <button 
-                                                    onClick={async () => {
-                                                        try {
-                                                            const response = await fetch(res.url);
-                                                            const blob = await response.blob();
-                                                            const blobUrl = URL.createObjectURL(blob);
-                                                            const a = document.createElement('a');
-                                                            a.href = blobUrl;
-                                                            a.download = res.name || 'resource';
-                                                            document.body.appendChild(a);
-                                                            a.click();
-                                                            document.body.removeChild(a);
-                                                            URL.revokeObjectURL(blobUrl);
-                                                        } catch (err) {
-                                                            window.open(res.url, '_blank');
-                                                        }
-                                                    }}
-                                                    className="text-[10px] font-black text-teal-500 uppercase tracking-widest hover:underline flex items-center"
-                                                >
-                                                    Download <Download className="w-3 h-3 ml-2" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                        </motion.div>
+                                    );
+                                })}
                             </div>
                         </motion.section>
                     ))}
                 </div>
             )}
+
+            {/* Inline Preview Modal */}
+            <AnimatePresence>
+                {previewResource && (
+                    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 md:p-8">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setPreviewResource(null)}
+                            className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-5xl h-[85vh] bg-slate-900 border border-slate-700 rounded-[32px] overflow-hidden shadow-2xl flex flex-col"
+                        >
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 shrink-0">
+                                <div>
+                                    <p className="text-white font-black text-sm uppercase italic tracking-tight">{previewResource.name}</p>
+                                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">
+                                        {getExtensionFromUrl(previewResource.url).toUpperCase()} · Shared by {previewResource.teacher}
+                                    </p>
+                                </div>
+                                <div className="flex items-center space-x-3">
+                                    <button
+                                        onClick={() => handleDownload(previewResource)}
+                                        className="px-4 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-black rounded-xl transition-all flex items-center space-x-2"
+                                    >
+                                        <Download className="w-3.5 h-3.5" />
+                                        <span>Download</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setPreviewResource(null)}
+                                        className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-all border border-slate-700"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Preview Body */}
+                            <div className="flex-1 overflow-hidden bg-slate-950">
+                                {isImageFile(previewResource.url, previewResource.fileType) ? (
+                                    <div className="w-full h-full flex items-center justify-center p-8">
+                                        <img
+                                            src={previewResource.url}
+                                            alt={previewResource.name}
+                                            className="max-w-full max-h-full object-contain rounded-2xl"
+                                        />
+                                    </div>
+                                ) : (
+                                    <iframe
+                                        src={previewResource.url}
+                                        title={previewResource.name}
+                                        className="w-full h-full border-0"
+                                        allow="fullscreen"
+                                    />
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

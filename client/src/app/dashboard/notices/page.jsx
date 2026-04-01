@@ -220,8 +220,12 @@ export default function NoticeBoard() {
 
                             <div className="mt-auto pt-4 border-t border-slate-800/50 flex items-center justify-between">
                                 <div className="flex items-center space-x-3 text-slate-500">
-                                    <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-black text-xs">
-                                        {notice.author?.name?.charAt(0)}
+                                    <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-black text-xs overflow-hidden border border-slate-700/50">
+                                        {notice.author?.profileImage ? (
+                                            <img src={notice.author.profileImage} alt={notice.author.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            notice.author?.name?.charAt(0)
+                                        )}
                                     </div>
                                     <span className="text-xs font-bold text-slate-400">{notice.author?.name}</span>
                                 </div>

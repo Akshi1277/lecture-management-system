@@ -52,7 +52,7 @@ export const getPendingSubstitutions = asyncHandler(async (req, res) => {
     const pendingRequests = await Lecture.find({
         isSubstitutionRequested: true,
         status: 'Scheduled'
-    }).populate('teacher', 'name email').populate('batch', 'name');
+    }).populate('teacher', 'name email profileImage').populate('batch', 'name');
 
     res.json(pendingRequests);
 });

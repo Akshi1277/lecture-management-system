@@ -162,8 +162,12 @@ export default function SubstitutionsPage() {
                                             <h3 className="font-bold text-lg text-white leading-tight">{req.title}</h3>
                                             <p className="text-xs text-slate-400 mt-1">{req.course?.code || req.subject} • {req.batch?.name}</p>
                                         </div>
-                                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-black text-slate-400 shrink-0 border border-slate-700">
-                                            {req.teacher?.name?.charAt(0)}
+                                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-black text-slate-400 shrink-0 border border-slate-700 overflow-hidden">
+                                            {req.teacher?.profileImage ? (
+                                                <img src={req.teacher.profileImage} alt={req.teacher.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                req.teacher?.name?.charAt(0)
+                                            )}
                                         </div>
                                     </div>
 

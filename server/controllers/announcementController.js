@@ -58,7 +58,7 @@ export const getAnnouncements = asyncHandler(async (req, res) => {
     // Admin sees everything
 
     const announcements = await Announcement.find(query)
-        .populate('author', 'name')
+        .populate('author', 'name profileImage')
         .populate('targetBatch', 'name')
         .sort({ createdAt: -1 });
 

@@ -125,7 +125,7 @@ export const getLectures = asyncHandler(async (req, res) => {
     const filter = isAdmin ? {} : { department: { $in: req.user.department } };
     
     const lectures = await Lecture.find(filter)
-        .populate('teacher', 'name email')
+        .populate('teacher', 'name email profileImage')
         .populate('batch', 'name')
         .sort({ startTime: 1 });
     res.json(lectures);
@@ -146,7 +146,7 @@ export const getMyLectures = asyncHandler(async (req, res) => {
     // superadmin sees everything naturally if query remains {}
 
     const lectures = await Lecture.find(query)
-        .populate('teacher', 'name email')
+        .populate('teacher', 'name email profileImage')
         .populate('batch', 'name');
     res.json(lectures);
 });
@@ -156,7 +156,7 @@ export const getMyLectures = asyncHandler(async (req, res) => {
 // @access  Private
 export const getLectureById = asyncHandler(async (req, res) => {
     const lecture = await Lecture.findById(req.params.id)
-        .populate('teacher', 'name email')
+        .populate('teacher', 'name email profileImage')
         .populate('batch', 'name studentCount');
 
     if (lecture) {

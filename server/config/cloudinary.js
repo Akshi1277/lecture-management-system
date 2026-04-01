@@ -23,7 +23,7 @@ const storage = new CloudinaryStorage({
             resource_type: resourceType,
             type: 'upload',
             // Keep original filename in Cloudinary
-            public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_').replace(/\.[^/.]+$/, '')}`,
+            public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`,
             // Allow broad set of formats
             allowed_formats: ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt', 'xlsx', 'zip'],
         };
