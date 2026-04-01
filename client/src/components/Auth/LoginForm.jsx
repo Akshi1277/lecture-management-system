@@ -54,8 +54,8 @@ export default function LoginForm() {
         type: 'success',
         message: `Welcome back, ${userInfo?.name || 'User'}! Redirecting to dashboard...`
       }));
-      // Force redirect to ensure no stuck state
-      router.replace("/dashboard");
+      // Hard redirect to clear state and ensure session is picked up
+      window.location.href = "/dashboard";
     }
   }, [userInfo, router, dispatch, hasShownToast, searchParams]);
 

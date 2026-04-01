@@ -11,11 +11,17 @@ cloudinary.config({
 // Storage config – allows PDFs, PPTs, DOCx, images
 const storage = new CloudinaryStorage({
     cloudinary,
-    params: {
-        folder: 'raw_vault',
-        resource_type: 'raw',
-        type: 'upload',
-        // Preserve original extension and name logic
+    params: async (req, file) => {
+        // Extract filename without extension and clean it
+        const originalName = file.originalname.split('.')[0].replace(/\s+/g, '_');
+        const extension = file.originalname.split('.').pop();
+        
+        return {
+            folder: 'academic_vault',
+            resource_type: 'raw',
+            type: 'upload',
+            public_id: `${Date.now()}-${originalName}.${extension}`,
+        };
     },
 });
 

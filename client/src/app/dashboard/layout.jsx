@@ -44,13 +44,13 @@ export default function DashboardLayout({ children }) {
 
     useEffect(() => {
         if (hasMounted && !userInfo) {
-            router.replace("/login");
+            window.location.href = "/login";
         }
-    }, [userInfo, router, hasMounted]);
+    }, [userInfo, hasMounted]);
 
     const handleLogout = () => {
         dispatch(logout());
-        router.replace("/login");
+        window.location.href = "/login";
         setShowLogoutConfirm(false);
     };
 
