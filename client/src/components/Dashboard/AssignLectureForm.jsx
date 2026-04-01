@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Plus, Clock, Info, AlertTriangle, Coffee } from "lucide-react";
+import { X, Calendar, Plus, Clock, Info, AlertTriangle, Coffee, Loader2 } from "lucide-react";
 import { fetchTeachers } from "@/redux/slices/userSlice";
 import { fetchBatches } from "@/redux/slices/hierarchySlice";
 import { addToast } from "@/redux/slices/uiSlice";
@@ -25,6 +25,7 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
         startTime: "", endTime: "",
     });
     const [selectedSlots, setSelectedSlots] = useState([]);
+    const [loading, setLoading] = useState(false);
     
     useEffect(() => {
         if (lecture) {
@@ -239,29 +240,34 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
     };
 
     const handleSubmit = async () => {
-        if (selectedSlots.length === 0) return;
-        let allSuccess = true;
-        for (const slot of selectedSlots) {
-            const payload = {
-                title: slot.title || formData.title,
-                teacher: slot.teacher || formData.teacher,
-                subject: slot.subject,
-                batch: slot.batch,
-                type: slot.type,
-                division: 'A',
-                classroom: slot.classroom,
-                startTime: buildFullISOTime(slot.day, slot.startTime),
-                endTime: buildFullISOTime(slot.day, slot.endTime)
-            };
-            const resultAction = await dispatch(createLecture(payload));
-            if (!createLecture.fulfilled.match(resultAction)) {
-                dispatch(addToast({ type: 'error', message: resultAction.payload?.message || "Scheduling conflict" }));
-                allSuccess = false;
+        if (selectedSlots.length === 0 || loading) return;
+        setLoading(true);
+        try {
+            let allSuccess = true;
+            for (const slot of selectedSlots) {
+                const payload = {
+                    title: slot.title || formData.title,
+                    teacher: slot.teacher || formData.teacher,
+                    subject: slot.subject,
+                    batch: slot.batch,
+                    type: slot.type,
+                    division: 'A',
+                    classroom: slot.classroom,
+                    startTime: buildFullISOTime(slot.day, slot.startTime),
+                    endTime: buildFullISOTime(slot.day, slot.endTime)
+                };
+                const resultAction = await dispatch(createLecture(payload));
+                if (!createLecture.fulfilled.match(resultAction)) {
+                    dispatch(addToast({ type: 'error', message: resultAction.payload?.message || "Scheduling conflict" }));
+                    allSuccess = false;
+                }
             }
-        }
-        if (allSuccess) {
-            dispatch(addToast({ type: 'success', message: 'Academic schedule updated!' }));
-            if (onClose) onClose();
+            if (allSuccess) {
+                dispatch(addToast({ type: 'success', message: 'Academic schedule updated!' }));
+                if (onClose) onClose();
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -463,10 +469,17 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             </div>
                             <button
                                 onClick={handleSubmit}
-                                disabled={selectedSlots.length === 0}
-                                className={`px-12 py-5 font-black rounded-[24px] transition-all cursor-pointer text-sm uppercase tracking-widest ${selectedSlots.length > 0 ? 'bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-2xl shadow-teal-500/40 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'}`}
+                                disabled={selectedSlots.length === 0 || loading}
+                                className={`min-w-[240px] px-12 py-5 font-black rounded-[24px] transition-all cursor-pointer text-sm uppercase tracking-widest flex items-center justify-center space-x-3 ${selectedSlots.length > 0 && !loading ? 'bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-2xl shadow-teal-500/40 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'}`}
                             >
-                                Publish Timetable
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>Publishing...</span>
+                                    </>
+                                ) : (
+                                    <span>Publish Timetable</span>
+                                )}
                             </button>
                         </div>
                     </motion.div>
