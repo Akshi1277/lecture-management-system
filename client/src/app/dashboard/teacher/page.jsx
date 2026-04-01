@@ -51,13 +51,13 @@ export default function TeacherDashboard() {
                                 <p className="text-slate-500 italic text-sm">Fetching your timetable...</p>
                             ) : (() => {
                                 const now = new Date();
-                                const nextWeek = new Date();
-                                nextWeek.setDate(now.getDate() + 7);
+                                const startOfToday = new Date(now);
+                                startOfToday.setHours(0, 0, 0, 0);
                                 
                                 return [...lectures]
                                     .filter(l => {
                                         const d = new Date(l.startTime);
-                                        return d >= now && l.status !== 'Cancelled';
+                                        return d >= startOfToday && l.status !== 'Cancelled';
                                     })
                                     .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
                                     .slice(0, 7);
