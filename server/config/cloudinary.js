@@ -20,10 +20,10 @@ const storage = new CloudinaryStorage({
 
         return {
             folder: `edusync/lectures/${req.params.id}/resources`,
-            resource_type: resourceType,
+            resource_type: 'auto',
             type: 'upload',
             // Keep original filename in Cloudinary
-            public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`,
+            public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_').split('.')[0]}`,
             // Allow broad set of formats
             allowed_formats: ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt', 'xlsx', 'zip'],
         };

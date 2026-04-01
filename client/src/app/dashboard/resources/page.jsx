@@ -83,24 +83,14 @@ export default function ResourcesPage() {
         }
     };
 
-    const handleDownload = async (res) => {
-        const ext = getExtensionFromUrl(res.url);
-        const filename = res.name ? `${res.name}.${ext}` : `resource.${ext}`;
-        try {
-            const response = await fetch(res.url);
-            const blob = await response.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(blobUrl);
-        } catch (err) {
-            // Fallback: open in new tab
-            window.open(res.url, '_blank');
+    const handleDownload = (res) => {
+        // Cloudinary native download: add fl_attachment transformation to force download
+        let downloadUrl = res.url;
+        if (downloadUrl.includes('cloudinary.com')) {
+            // Insert fl_attachment after /upload/
+            downloadUrl = downloadUrl.replace('/upload/', '/upload/fl_attachment/');
         }
+        window.open(downloadUrl, '_blank');
     };
 
     // Grouping by Subject
@@ -301,7 +291,7 @@ export default function ResourcesPage() {
                                     </div>
                                 ) : (
                                     <iframe
-                                        src={previewResource.url}
+                                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewResource.url)}&embedded=true`}
                                         title={previewResource.name}
                                         className="w-full h-full border-0"
                                         allow="fullscreen"
