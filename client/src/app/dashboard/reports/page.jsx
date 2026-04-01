@@ -156,6 +156,107 @@ export default function ReportsPage() {
         );
     }
 
+    const exportSnapshot = () => {
+        const completionRate = stats.totalLectures ? Math.round((stats.completedLectures / stats.totalLectures) * 100) : 0;
+        const scheduledLectures = stats.totalLectures - stats.completedLectures - stats.cancelledLectures;
+        const totalPopulation = stats.totalUsers.students + stats.totalUsers.teachers;
+
+        const facultyRows = stats.facultyLoad.map(f => `
+            <tr>
+                <td style="padding:10px 16px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#111827;">${f.teacher}</td>
+                <td style="padding:10px 16px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:900;color:#0d9488;">${f.count}</td>
+                <td style="padding:10px 16px;border-bottom:1px solid #e5e7eb;">
+                    <div style="background:#e5e7eb;border-radius:99px;height:8px;overflow:hidden;">
+                        <div style="width:${Math.round((f.count / Math.max(...stats.facultyLoad.map(x => x.count))) * 100)}%;height:100%;background:linear-gradient(90deg,#0d9488,#14b8a6);border-radius:99px;"></div>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>EduSync — Institutional Report Snapshot</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#111827;padding:40px;}
+        .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #111827;}
+        .brand{font-size:22px;font-weight:900;letter-spacing:-0.5px;color:#111827;}
+        .brand span{color:#0d9488;}
+        .report-title{font-size:28px;font-weight:900;letter-spacing:-1px;text-transform:uppercase;font-style:italic;}
+        .meta{font-size:11px;color:#6b7280;margin-top:4px;text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+        .timestamp{font-size:11px;color:#6b7280;text-align:right;}
+        .section-title{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#6b7280;margin:28px 0 12px;}
+        .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+        .card{border:1.5px solid #e5e7eb;border-radius:16px;padding:20px;}
+        .card-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px;}
+        .card-value{font-size:32px;font-weight:900;color:#111827;line-height:1;}
+        .card-trend{display:inline-block;margin-top:8px;font-size:10px;font-weight:900;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:#f0fdf4;color:#0d9488;}
+        .card-trend.down{background:#fff1f2;color:#e11d48;}
+        table{width:100%;border-collapse:collapse;margin-bottom:32px;}
+        th{background:#f9fafb;padding:10px 16px;text-align:left;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#6b7280;border-bottom:2px solid #e5e7eb;}
+        .delivery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+        .delivery-card{border:1.5px solid #e5e7eb;border-radius:12px;padding:16px;text-align:center;}
+        .delivery-card-label{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#9ca3af;margin-bottom:6px;}
+        .delivery-card-value{font-size:28px;font-weight:900;}
+        .v-teal{color:#0d9488;} .v-rose{color:#e11d48;} .v-blue{color:#3b82f6;} .v-indigo{color:#6366f1;}
+        .anomaly{background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:16px;margin-top:20px;display:flex;gap:12px;align-items:flex-start;}
+        .anomaly-stable{background:#f0fdf4;border:1.5px solid #d1fae5;border-radius:14px;padding:16px;margin-top:20px;display:flex;gap:12px;align-items:flex-start;}
+        .anomaly-title{font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;}
+        .stable-title{font-size:12px;font-weight:700;color:#065f46;margin-bottom:4px;}
+        .anomaly-body{font-size:11px;color:#b45309;line-height:1.6;}
+        .footer{margin-top:40px;padding-top:16px;border-top:1.5px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+        @media print{body{padding:24px;}@page{margin:12mm;}}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="brand">Edu<span>Sync</span></div>
+            <div class="report-title">Institutional Report</div>
+            <div class="meta">Deep analytics on academic delivery &amp; behavioral trends</div>
+        </div>
+        <div class="timestamp">
+            <div style="font-weight:900;font-size:13px;color:#111827;">SNAPSHOT</div>
+            <div>${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+            <div>${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div style="margin-top:6px;">Generated by: ${userInfo?.name || 'Admin'}</div>
+        </div>
+    </div>
+    <div class="section-title">High-Level Metrics</div>
+    <div class="grid">
+        <div class="card"><div class="card-label">Completion Rate</div><div class="card-value">${completionRate}%</div><div class="card-trend">+2.4% ↑</div></div>
+        <div class="card"><div class="card-label">Avg. Student Presence</div><div class="card-value">${stats.averageAttendance}%</div><div class="card-trend down">-0.8% ↓</div></div>
+        <div class="card"><div class="card-label">Faculty Utilization</div><div class="card-value" style="font-size:22px;padding-top:4px;">${stats.facultyLoad.length > 0 ? 'High' : 'Low'}</div><div class="card-trend">Steady ↑</div></div>
+        <div class="card"><div class="card-label">Security Lockdowns</div><div class="card-value">${String(stats.securityLockdowns).padStart(2, '0')}</div><div class="card-trend">Active ↑</div></div>
+    </div>
+    <div class="section-title">Faculty Execution Load</div>
+    ${stats.facultyLoad.length > 0 ? `<table><thead><tr><th>Faculty Member</th><th style="text-align:center;">Sessions</th><th>Execution Ratio</th></tr></thead><tbody>${facultyRows}</tbody></table>` : `<p style="color:#9ca3af;font-size:12px;font-style:italic;margin-bottom:28px;">No faculty load data available.</p>`}
+    <div class="section-title">Delivery Summary</div>
+    <div class="delivery-grid">
+        <div class="delivery-card"><div class="delivery-card-label">Completed</div><div class="delivery-card-value v-teal">${stats.completedLectures}</div></div>
+        <div class="delivery-card"><div class="delivery-card-label">Cancelled</div><div class="delivery-card-value v-rose">${stats.cancelledLectures}</div></div>
+        <div class="delivery-card"><div class="delivery-card-label">Scheduled</div><div class="delivery-card-value v-blue">${scheduledLectures}</div></div>
+        <div class="delivery-card"><div class="delivery-card-label">Total Population</div><div class="delivery-card-value v-indigo">${totalPopulation}</div></div>
+    </div>
+    <div class="${stats.cancelledLectures > 0 ? 'anomaly' : 'anomaly-stable'}">
+        <div style="font-size:20px;">${stats.cancelledLectures > 0 ? '⚠️' : '🛡️'}</div>
+        <div>
+            <div class="${stats.cancelledLectures > 0 ? 'anomaly-title' : 'stable-title'}">${stats.cancelledLectures > 0 ? 'Operational Anomaly Detected' : 'Institutional Protocols Stabilized'}</div>
+            <div class="anomaly-body">${stats.cancelledLectures > 0 ? 'Cancellation rate is higher than the institutional baseline. Review room blocking protocols.' : 'No logistical deviations detected. Operational integrity is maintained at maximum efficiency.'}</div>
+        </div>
+    </div>
+    <div class="footer"><span>EduSync Institutional Management Platform</span><span>Confidential — Internal Use Only</span></div>
+    <script>window.onload=()=>{window.print();}<\/script>
+</body>
+</html>`;
+
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
+    };
+
     return (
         <div className="space-y-8 pb-12">
             <div className="flex items-center justify-between">
@@ -170,7 +271,7 @@ export default function ReportsPage() {
                     </p>
                 </div>
                 <button 
-                    onClick={() => window.print()}
+                    onClick={exportSnapshot}
                     className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-black transition-all border border-slate-700 flex items-center shadow-xl shadow-slate-950/20"
                 >
                     <Download className="w-4 h-4 mr-2" /> Export Snapshot
@@ -273,11 +374,21 @@ export default function ReportsPage() {
                         ))}
                     </div>
 
-                    <div className="mt-8 p-6 bg-slate-800/20 rounded-3xl border border-slate-800 flex items-center space-x-4">
-                        <AlertTriangle className="w-10 h-10 text-orange-500/50 shrink-0" />
+                    <div className={`mt-8 p-6 ${stats.cancelledLectures > 0 ? 'bg-rose-500/5 border-rose-500/20' : 'bg-teal-500/5 border-teal-500/20'} rounded-3xl border flex items-center space-x-4 transition-all duration-500`}>
+                        {stats.cancelledLectures > 0 ? (
+                            <AlertTriangle className="w-10 h-10 text-rose-500/50 shrink-0" />
+                        ) : (
+                            <ShieldCheck className="w-10 h-10 text-teal-500/50 shrink-0" />
+                        )}
                         <div>
-                            <p className="text-sm font-bold text-slate-300">Operational Anomaly Detected</p>
-                            <p className="text-xs text-slate-500 leading-relaxed mt-1">Cancellation rate is 12% higher than the previous semester baseline. Review room blocking protocols.</p>
+                            <p className={`text-sm font-bold ${stats.cancelledLectures > 0 ? 'text-rose-400' : 'text-teal-400'}`}>
+                                {stats.cancelledLectures > 0 ? 'Operational Anomaly Detected' : 'Institutional Protocols Stabilized'}
+                            </p>
+                            <p className="text-xs text-slate-500 leading-relaxed mt-1">
+                                {stats.cancelledLectures > 0 
+                                    ? 'Cancellation rate has exceeded the institutional baseline. Review room blocking protocols immediately.'
+                                    : 'No logistical deviations detected in the current academic cycle. Operational integrity is maintained at 100% efficiency.'}
+                            </p>
                         </div>
                     </div>
                 </div>
