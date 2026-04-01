@@ -156,8 +156,18 @@ export default function DashboardLayout({ children }) {
                                 <p className="text-sm font-bold text-white mb-0 leading-none">{userInfo.name}</p>
                                 <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">{userInfo.role}</p>
                             </div>
-                            <div className="w-10 h-10 bg-slate-800 rounded-xl border border-slate-700 flex items-center justify-center font-bold text-teal-400">
-                                {userInfo?.name ? userInfo.name[0].toUpperCase() : userInfo?.email ? userInfo.email[0].toUpperCase() : '?'}
+                            <div className="w-10 h-10 bg-slate-800 rounded-xl border border-slate-700 flex items-center justify-center font-bold text-teal-400 overflow-hidden shrink-0">
+                                {userInfo?.profileImage ? (
+                                    <img 
+                                        src={userInfo.profileImage} 
+                                        alt={userInfo.name} 
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <span>
+                                        {userInfo?.name ? userInfo.name[0].toUpperCase() : userInfo?.email ? userInfo.email[0].toUpperCase() : '?'}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>

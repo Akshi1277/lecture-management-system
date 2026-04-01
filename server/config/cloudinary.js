@@ -12,19 +12,18 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary,
     params: async (req, file) => {
-        // Detect resource type based on mimetype
-        let resourceType = 'raw'; // for PDFs, docs, pptx etc.
-        if (file.mimetype.startsWith('image/')) {
-            resourceType = 'image';
-        }
+        // Cloudinary 'raw' resource_type always requires signed/authenticated URLs
+        // even with access_mode:'public'. To serve PDFs and docs publicly without
+        // a 401 error, we must use resource_type:'image' — Cloudinary supports
+        // delivering non-image files (PDF, DOCX, etc.) this way on its public CDN.
+        let resourceType = 'image'; // Use 'image' for all types to enable public delivery
 
         return {
             folder: `edusync/lectures/${req.params.id}/resources`,
             resource_type: resourceType,
-            type: 'upload',           // Explicitly public delivery (fixes 401)
-            access_mode: 'public',    // Ensure publicly accessible without auth
+            type: 'upload',
             // Keep original filename in Cloudinary
-            public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`,
+            public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_').replace(/\.[^/.]+$/, '')}`,
             // Allow broad set of formats
             allowed_formats: ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt', 'xlsx', 'zip'],
         };

@@ -171,13 +171,27 @@ export default function ResourcesPage() {
                                             </div>
                                             {/* Download only shown for actual files, not links */}
                                             {res.type !== 'Link' && (
-                                                <a 
-                                                    href={res.url} 
-                                                    download 
+                                                <button 
+                                                    onClick={async () => {
+                                                        try {
+                                                            const response = await fetch(res.url);
+                                                            const blob = await response.blob();
+                                                            const blobUrl = URL.createObjectURL(blob);
+                                                            const a = document.createElement('a');
+                                                            a.href = blobUrl;
+                                                            a.download = res.name || 'resource';
+                                                            document.body.appendChild(a);
+                                                            a.click();
+                                                            document.body.removeChild(a);
+                                                            URL.revokeObjectURL(blobUrl);
+                                                        } catch (err) {
+                                                            window.open(res.url, '_blank');
+                                                        }
+                                                    }}
                                                     className="text-[10px] font-black text-teal-500 uppercase tracking-widest hover:underline flex items-center"
                                                 >
                                                     Download <Download className="w-3 h-3 ml-2" />
-                                                </a>
+                                                </button>
                                             )}
                                         </div>
                                     </motion.div>
