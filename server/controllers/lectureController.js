@@ -325,7 +325,7 @@ export const deleteResource = asyncHandler(async (req, res) => {
         }
     }
 
-    resource.remove();
+    lecture.resources.pull(req.params.resourceId);
     await lecture.save();
 
     res.json({ message: 'Resource deleted successfully' });

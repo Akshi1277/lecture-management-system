@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     BookOpen, Search, Download, FileText, 
-    ExternalLink, Eye, FolderKanban, Clock, Trash2, X
+    ExternalLink, Eye, FolderKanban, Clock, Trash2, X, AlertTriangle
 } from "lucide-react";
 import { fetchLectures, deleteResource } from "@/redux/slices/lectureSlice";
 import { addToast } from "@/redux/slices/uiSlice";
@@ -13,7 +13,6 @@ import { addToast } from "@/redux/slices/uiSlice";
 function getExtensionFromUrl(url) {
     if (!url) return 'file';
     try {
-        // Get the last path segment before any query params
         const path = url.split('?')[0];
         const lastSegment = path.split('/').pop();
         const parts = lastSegment.split('.');
@@ -22,7 +21,7 @@ function getExtensionFromUrl(url) {
     return 'file';
 }
 
-// Determines if a file can be previewed natively in the browser
+// Determines if a file can be previewed natively or via Google Docs
 function canPreview(url, fileType) {
     const ext = getExtensionFromUrl(url);
     const previewable = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'txt'];
@@ -42,6 +41,7 @@ export default function ResourcesPage() {
     const dispatch = useDispatch();
     const [searchTerm, setSearchTerm] = useState("");
     const [previewResource, setPreviewResource] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
     useEffect(() => {
         dispatch(fetchLectures());
@@ -72,19 +72,20 @@ export default function ResourcesPage() {
         (res.teacher?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     );
 
-    const handleDelete = async (lectureId, resourceId) => {
-        if (window.confirm("Are you sure you want to remove this academic resource? This action cannot be undone.")) {
-            const resultAction = await dispatch(deleteResource({ lectureId, resourceId }));
-            if (deleteResource.fulfilled.match(resultAction)) {
-                dispatch(addToast({ type: 'success', message: 'Resource permanently removed from the vault.' }));
-            } else {
-                dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to delete resource' }));
-            }
+    const handleDelete = async () => {
+        if (!deleteTarget) return;
+        const { lectureId, resourceId } = deleteTarget;
+        const resultAction = await dispatch(deleteResource({ lectureId, resourceId }));
+        if (deleteResource.fulfilled.match(resultAction)) {
+            dispatch(addToast({ type: 'success', message: 'Resource permanently removed from the vault.' }));
+            setDeleteTarget(null);
+        } else {
+            dispatch(addToast({ type: 'error', message: resultAction.payload || 'Failed to delete resource' }));
+            setDeleteTarget(null);
         }
     };
 
     const handleDownload = (res) => {
-        // Direct link is now the most stable after simplifying Cloudinary config
         window.open(res.url, '_blank');
     };
 
@@ -191,8 +192,8 @@ export default function ResourcesPage() {
 
                                                     {(userInfo?.role === 'admin' || userInfo?._id === res.teacherId) && (
                                                         <button
-                                                            onClick={() => handleDelete(res.lectureId, res.resourceId)}
-                                                            className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-red-400 transition-colors border border-slate-800"
+                                                            onClick={() => setDeleteTarget({ lectureId: res.lectureId, resourceId: res.resourceId, name: res.name })}
+                                                            className="p-3 bg-slate-950 rounded-xl text-slate-500 hover:text-red-400 transition-colors border border-slate-800 shadow-lg"
                                                             title="Delete Resource"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
@@ -249,7 +250,6 @@ export default function ResourcesPage() {
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             className="relative w-full max-w-5xl h-[85vh] bg-slate-900 border border-slate-700 rounded-[32px] overflow-hidden shadow-2xl flex flex-col"
                         >
-                            {/* Modal Header */}
                             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 shrink-0">
                                 <div>
                                     <p className="text-white font-black text-sm uppercase italic tracking-tight">{previewResource.name}</p>
@@ -274,8 +274,7 @@ export default function ResourcesPage() {
                                 </div>
                             </div>
 
-                            {/* Preview Body */}
-                            <div className="flex-1 overflow-hidden bg-slate-950">
+                            <div className="flex-1 overflow-hidden bg-slate-950 flex flex-col">
                                 {isImageFile(previewResource.url, previewResource.fileType) ? (
                                     <div className="w-full h-full flex items-center justify-center p-8">
                                         <img
@@ -285,13 +284,66 @@ export default function ResourcesPage() {
                                         />
                                     </div>
                                 ) : (
-                                    <iframe
-                                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewResource.url)}&embedded=true`}
-                                        title={previewResource.name}
-                                        className="w-full h-full border-0"
-                                        allow="fullscreen"
-                                    />
+                                    <>
+                                        <div className="bg-slate-900 px-6 py-2 border-b border-slate-800 text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center space-x-2">
+                                            <span>Trouble viewing the document inline?</span>
+                                            <a 
+                                                href={previewResource.url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-teal-500 hover:underline flex items-center"
+                                            >
+                                                Open in New Tab <ExternalLink className="w-2.5 h-2.5 ml-1" />
+                                            </a>
+                                        </div>
+                                        <iframe
+                                            src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewResource.url)}&embedded=true`}
+                                            title={previewResource.name}
+                                            className="flex-1 w-full border-0"
+                                            allow="fullscreen"
+                                        />
+                                    </>
                                 )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Custom Confirmation Modal */}
+            <AnimatePresence>
+                {deleteTarget && (
+                    <div className="fixed inset-0 z-[2001] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-slate-900 border border-slate-800 rounded-[32px] p-8 max-w-sm w-full text-center space-y-6 shadow-2xl relative"
+                        >
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
+                                <AlertTriangle className="w-8 h-8" />
+                            </div>
+                            
+                            <div>
+                                <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Confirm Deletion</h3>
+                                <p className="text-slate-400 text-xs mt-2 leading-relaxed">
+                                    Are you sure you want to permanently remove <span className="text-white font-bold">"{deleteTarget.name}"</span>? This action cannot be reversed.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col space-y-3 pt-2">
+                                <button
+                                    onClick={handleDelete}
+                                    className="w-full py-4 bg-red-500 hover:bg-red-400 text-white font-black rounded-2xl shadow-xl shadow-red-500/20 transition-all uppercase tracking-widest text-[10px]"
+                                >
+                                    Permanently Delete
+                                </button>
+                                <button
+                                    onClick={() => setDeleteTarget(null)}
+                                    className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold rounded-2xl transition-all uppercase tracking-widest text-[10px]"
+                                >
+                                    Cancel & Retain
+                                </button>
                             </div>
                         </motion.div>
                     </div>

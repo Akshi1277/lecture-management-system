@@ -12,8 +12,8 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary,
     params: {
-        folder: 'edusync/resources',
-        allowed_formats: ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt', 'xlsx', 'zip'],
+        folder: 'academic_vault',
+        resource_type: 'auto',
         // Multer-storage-cloudinary automatically handles public_id and extensions
     },
 });
