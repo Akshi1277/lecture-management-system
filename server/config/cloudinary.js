@@ -11,22 +11,10 @@ cloudinary.config({
 // Storage config – allows PDFs, PPTs, DOCx, images
 const storage = new CloudinaryStorage({
     cloudinary,
-    params: async (req, file) => {
-        // Cloudinary 'raw' resource_type always requires signed/authenticated URLs
-        // even with access_mode:'public'. To serve PDFs and docs publicly without
-        // a 401 error, we must use resource_type:'image' — Cloudinary supports
-        // delivering non-image files (PDF, DOCX, etc.) this way on its public CDN.
-        let resourceType = 'image'; // Use 'image' for all types to enable public delivery
-
-        return {
-            folder: `edusync/lectures/${req.params.id}/resources`,
-            resource_type: 'auto',
-            type: 'upload',
-            // Keep original filename in Cloudinary
-            public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_').split('.')[0]}`,
-            // Allow broad set of formats
-            allowed_formats: ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt', 'xlsx', 'zip'],
-        };
+    params: {
+        folder: 'edusync/resources',
+        allowed_formats: ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt', 'xlsx', 'zip'],
+        // Multer-storage-cloudinary automatically handles public_id and extensions
     },
 });
 

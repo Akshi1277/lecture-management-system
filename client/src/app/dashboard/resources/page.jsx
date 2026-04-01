@@ -84,13 +84,8 @@ export default function ResourcesPage() {
     };
 
     const handleDownload = (res) => {
-        // Cloudinary native download: add fl_attachment transformation to force download
-        let downloadUrl = res.url;
-        if (downloadUrl.includes('cloudinary.com')) {
-            // Insert fl_attachment after /upload/
-            downloadUrl = downloadUrl.replace('/upload/', '/upload/fl_attachment/');
-        }
-        window.open(downloadUrl, '_blank');
+        // Direct link is now the most stable after simplifying Cloudinary config
+        window.open(res.url, '_blank');
     };
 
     // Grouping by Subject
