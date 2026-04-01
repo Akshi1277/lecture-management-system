@@ -12,6 +12,9 @@ const uiSlice = createSlice({
         toggleSidebar: (state) => {
             state.isSidebarOpen = !state.isSidebarOpen;
         },
+        closeSidebar: (state) => {
+            state.isSidebarOpen = false;
+        },
         setActiveModal: (state, action) => {
             if (typeof action.payload === 'object' && action.payload !== null) {
                 state.activeModal = action.payload.type;
@@ -37,5 +40,5 @@ const uiSlice = createSlice({
     },
 });
 
-export const { toggleSidebar, setActiveModal, addToast, removeToast, clearToasts } = uiSlice.actions;
+export const { toggleSidebar, closeSidebar, setActiveModal, addToast, removeToast, clearToasts } = uiSlice.actions;
 export default uiSlice.reducer;

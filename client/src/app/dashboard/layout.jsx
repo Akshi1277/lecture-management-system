@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { closeSidebar } from "@/redux/slices/uiSlice";
 import {
     LayoutDashboard,
     Users,
@@ -38,9 +39,20 @@ export default function DashboardLayout({ children }) {
 
     useEffect(() => {
         setHasMounted(true);
+        // Close sidebar by default on mobile screens
+        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            dispatch(closeSidebar());
+        }
         // Wake up server in background if not already awake
         api.get('/users/ping').catch(() => {});
     }, []);
+
+    // Auto-close sidebar on route change for mobile
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            dispatch(closeSidebar());
+        }
+    }, [pathname]);
 
     useEffect(() => {
         if (hasMounted && !userInfo) {
@@ -120,7 +132,13 @@ export default function DashboardLayout({ children }) {
                             {menuItems.map((item, idx) => (
                                 <button
                                     key={idx}
-                                    onClick={() => router.push(item.path)}
+                                    onClick={() => {
+                                        router.push(item.path);
+                                        // Close sidebar on mobile after navigation
+                                        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                                            dispatch(closeSidebar());
+                                        }
+                                    }}
                                     className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-all group ${pathname === item.path ? 'bg-slate-800 text-white border border-slate-700/50' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
                                 >
                                     <span className={`${pathname === item.path ? 'text-teal-400' : 'text-slate-500 group-hover:text-teal-400'} transition-colors`}>{item.icon}</span>

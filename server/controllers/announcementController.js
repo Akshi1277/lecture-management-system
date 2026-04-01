@@ -42,17 +42,23 @@ export const getAnnouncements = asyncHandler(async (req, res) => {
     const user = req.user;
     let query = {};
 
-    // Logic to filter based on role/batch
+    // Logic to filter based on role/batch/private
     if (user.role === 'student') {
         query = {
-            $and: [
-                { $or: [{ targetAudience: 'all' }, { targetAudience: 'students' }] },
-                { $or: [{ targetBatch: null }, { targetBatch: user.batch }] }
+            $or: [
+                { $and: [{ targetAudience: 'all' }, { targetBatch: null }] },
+                { $and: [{ targetAudience: 'students' }, { targetBatch: null }] },
+                { $and: [{ targetAudience: 'students' }, { targetBatch: user.batch }] },
+                { $and: [{ targetAudience: 'private' }, { targetUser: user._id }] },
+                { targetAudience: 'all', targetBatch: user.batch }
             ]
         };
     } else if (user.role === 'teacher') {
         query = {
-            targetAudience: { $in: ['all', 'teachers'] }
+            $or: [
+                { targetAudience: { $in: ['all', 'teachers'] } },
+                { $and: [{ targetAudience: 'private' }, { targetUser: user._id }] }
+            ]
         };
     }
     // Admin sees everything

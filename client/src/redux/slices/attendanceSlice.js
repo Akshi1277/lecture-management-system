@@ -74,6 +74,18 @@ export const markAttendance = createAsyncThunk(
     }
 );
 
+export const warnStudent = createAsyncThunk(
+    'attendance/warnStudent',
+    async (payload, { rejectWithValue }) => {
+        try {
+            const { data } = await api.post(`/attendance/warn-student`, payload);
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message);
+        }
+    }
+);
+
 const attendanceSlice = createSlice({
     name: 'attendance',
     initialState: {

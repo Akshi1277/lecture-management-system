@@ -6,6 +6,7 @@ import User from '../models/userModel.js';
 import Settings from '../models/settingsModel.js';
 import AuditLog from '../models/auditLogModel.js';
 import { sendAttendanceWarningEmail } from '../utils/emailService.js';
+import Announcement from '../models/announcementModel.js';
 
 // @desc    Mark attendance for a lecture (Teacher only)
 // @route   POST /api/attendance
@@ -522,6 +523,58 @@ export const sendAttendanceWarning = asyncHandler(async (req, res) => {
         sentCount,
         failedCount,
         noEmailCount
+    });
+});
+
+// @desc    Send attendance warning to an individual student
+// @route   POST /api/attendance/warn-student
+// @access  Private/Teacher/Admin
+export const warnIndividualStudent = asyncHandler(async (req, res) => {
+    const { studentId, subject, percentage } = req.body;
+
+    const student = await User.findById(studentId);
+    if (!student) {
+        res.status(404);
+        throw new Error('Student identity not found');
+    }
+
+    // 1. Create a private announcement for the student
+    const announcement = await Announcement.create({
+        title: `⚠️ Attendance Warning: ${subject || 'General'}`,
+        content: `Your current attendance compliance for ${subject || 'the course'} is ${percentage?.toFixed(1) || 'below 75'}%. Please ensure regular participation to maintain operational eligibility.`,
+        author: req.user._id,
+        targetUser: studentId,
+        targetAudience: 'private',
+        priority: 'high'
+    });
+
+    // 2. Log the disciplinary action
+    await AuditLog.create({
+        user: req.user._id,
+        action: 'ISSUE_DIRECT_WARNING',
+        entity: 'User',
+        entityId: studentId,
+        details: { subject, percentage, announcementId: announcement._id },
+        ipAddress: req.ip
+    });
+
+    // 3. Optional: Send Email if parent email exists
+    if (student.parentEmail) {
+        try {
+            await sendAttendanceWarningEmail(
+                student.parentEmail,
+                student.name,
+                percentage || 0,
+                75
+            );
+        } catch (error) {
+            console.error(`Failed to send disciplinary email: ${error.message}`);
+        }
+    }
+
+    res.status(201).json({
+        message: `Warning successfully issued to ${student.name}.`,
+        announcement
     });
 });
 

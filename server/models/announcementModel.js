@@ -18,9 +18,13 @@ const advertisementSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Batch', // If null, it's global
     },
+    targetUser: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // For individual warnings/notifications
+    },
     targetAudience: {
         type: String,
-        enum: ['all', 'teachers', 'students'],
+        enum: ['all', 'teachers', 'students', 'private'],
         default: 'all'
     },
     priority: {

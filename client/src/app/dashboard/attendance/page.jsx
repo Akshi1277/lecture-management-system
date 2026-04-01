@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { fetchBatches } from "@/redux/slices/hierarchySlice";
 import { fetchLectures } from "@/redux/slices/lectureSlice";
-import { fetchDefaulters, fetchAttendanceStats, fetchSubjectWiseAttendance } from "@/redux/slices/attendanceSlice";
+import { fetchDefaulters, fetchAttendanceStats, fetchSubjectWiseAttendance, warnStudent } from "@/redux/slices/attendanceSlice";
 import { addToast } from "@/redux/slices/uiSlice";
 
 export default function AttendancePage() {
@@ -91,6 +91,27 @@ export default function AttendancePage() {
         link.href = URL.createObjectURL(blob);
         link.download = `Global_Defaulters_Report_${new Date().toISOString().split('T')[0]}.csv`;
         link.click();
+    };
+
+    const handleWarnStudent = (studentId, studentName, percentage) => {
+        dispatch(warnStudent({
+            studentId,
+            subject: selectedSubject || 'General Attendance',
+            percentage
+        }))
+        .unwrap()
+        .then(() => {
+            dispatch(addToast({
+                type: 'success',
+                message: `Disciplinary warning issued to ${studentName}.`
+            }));
+        })
+        .catch((err) => {
+            dispatch(addToast({
+                type: 'error',
+                message: err || 'Failed to issue warning.'
+            }));
+        });
     };
 
     if (!hasMounted || !userInfo) return null;
@@ -364,6 +385,7 @@ export default function AttendancePage() {
 
                                     <div className="flex justify-end pr-2">
                                         <button
+                                            onClick={() => handleWarnStudent(defaulter.student._id, defaulter.student.name, defaulter.percentage)}
                                             title="Issue Warning Notification"
                                             className="px-3 py-1.5 bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-lg transition-colors border border-transparent hover:border-rose-500/20 text-[10px] font-bold uppercase tracking-wider flex items-center"
                                         >

@@ -12,7 +12,8 @@ import {
     getMyAttendanceStats,
     getSubjectWiseAttendance,
     getGlobalDefaulters,
-    sendAttendanceWarning
+    sendAttendanceWarning,
+    warnIndividualStudent
 } from '../controllers/attendanceController.js';
 import { getSettings, updateSettings } from '../controllers/settingsController.js';
 import { createAnnouncement, getAnnouncements, deleteAnnouncement } from '../controllers/announcementController.js';
@@ -49,6 +50,7 @@ router.get('/attendance/my-stats', protect, getMyAttendanceStats);
 router.get('/attendance/subject-wise', protect, getSubjectWiseAttendance);
 router.get('/attendance/stats/:subject/:batchId', protect, teacher, getAttendanceStats);
 router.post('/attendance/send-warnings', protect, admin, sendAttendanceWarning);
+router.post('/attendance/warn-student', protect, teacher, warnIndividualStudent);
 router.get('/attendance/:lectureId', protect, getAttendanceByLecture);
 
 // Settings Routes
