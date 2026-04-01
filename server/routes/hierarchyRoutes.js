@@ -3,7 +3,9 @@ import {
     createDepartment,
     getDepartments,
     createBatch,
-    getBatches
+    getBatches,
+    updateBatch,
+    deleteBatch
 } from '../controllers/hierarchyController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -18,5 +20,9 @@ router.route('/departments')
 router.route('/batches')
     .post(protect, admin, createBatch)
     .get(protect, getBatches);
+
+router.route('/batches/:id')
+    .put(protect, admin, updateBatch)
+    .delete(protect, admin, deleteBatch);
 
 export default router;

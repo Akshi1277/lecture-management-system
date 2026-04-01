@@ -44,12 +44,114 @@ export default function ReportsPage() {
     };
 
     if (userInfo?.role === 'student') {
+        // Filter lectures for student's batch that are completed
+        const studentBatchId = typeof userInfo.batch === 'object' ? userInfo.batch?._id : userInfo.batch;
+        const relevantLectures = lectures.filter(l => 
+            l.status === 'Completed' && 
+            (typeof l.batch === 'object' ? l.batch?._id === studentBatchId : l.batch === studentBatchId)
+        );
+
+        // Calculate Subject-wise stats
+        const subjectStats = {};
+        let totalAttended = 0;
+
+        relevantLectures.forEach(l => {
+            if (!subjectStats[l.subject]) {
+                subjectStats[l.subject] = { total: 0, attended: 0 };
+            }
+            subjectStats[l.subject].total += 1;
+            const isPresent = l.attendance?.includes(userInfo._id);
+            if (isPresent) {
+                subjectStats[l.subject].attended += 1;
+                totalAttended += 1;
+            }
+        });
+
+        const overallPercentage = relevantLectures.length > 0 
+            ? Math.round((totalAttended / relevantLectures.length) * 100) 
+            : 0;
+
         return (
-            <div className="flex items-center justify-center h-[70vh]">
-                <div className="text-center space-y-4">
-                    <BarChart3 className="w-16 h-16 text-slate-700 mx-auto" />
-                    <p className="text-slate-400 font-bold tracking-widest uppercase">Student view coming soon</p>
+            <div className="space-y-10 pb-20">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h1 className="text-4xl font-black text-white italic tracking-tight uppercase">Presence Report</h1>
+                        <p className="text-slate-400 mt-1 uppercase text-[10px] font-black tracking-widest leading-none">Subject-Wise Performance & Compliance</p>
+                    </div>
+                    <div className="px-6 py-4 bg-slate-900 border border-slate-800 rounded-3xl shadow-xl flex items-center space-x-6">
+                        <div className="text-right">
+                            <p className="text-[10px] text-slate-500 font-black uppercase mb-1">Overall Attendance</p>
+                            <p className={`text-3xl font-black ${overallPercentage >= 75 ? 'text-teal-400' : 'text-rose-500'}`}>{overallPercentage}%</p>
+                        </div>
+                        <div className={`p-4 rounded-2xl ${overallPercentage >= 75 ? 'bg-teal-500/10' : 'bg-rose-500/10'}`}>
+                            {overallPercentage >= 75 ? <ShieldCheck className="w-8 h-8 text-teal-500" /> : <AlertTriangle className="w-8 h-8 text-rose-500" />}
+                        </div>
+                    </div>
                 </div>
+
+                {/* Subject Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Object.entries(subjectStats).map(([subject, data], idx) => {
+                        const percentage = Math.round((data.attended / data.total) * 100);
+                        return (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                key={subject}
+                                className="p-8 bg-slate-900 border border-slate-800 rounded-[32px] group hover:border-teal-500/30 transition-all shadow-2xl relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Activity className="w-24 h-24 text-teal-400" />
+                                </div>
+                                <div className="space-y-6 relative z-10">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <h3 className="text-xl font-black text-white italic uppercase tracking-tight">{subject}</h3>
+                                            <p className="text-slate-500 text-[10px] font-black uppercase mt-1 tracking-widest">Academic Module</p>
+                                        </div>
+                                        <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${percentage >= 75 ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
+                                            {percentage >= 75 ? 'Compliant' : 'Shortage'}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-xs font-black uppercase tracking-widest">
+                                            <span className="text-slate-500">Attendance</span>
+                                            <span className="text-white">{percentage}%</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                                            <motion.div 
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${percentage}%` }}
+                                                transition={{ duration: 1, ease: 'circOut' }}
+                                                className={`h-full rounded-full ${percentage >= 75 ? 'bg-gradient-to-r from-teal-600 to-teal-400' : 'bg-gradient-to-r from-rose-600 to-rose-400'}`}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3 pt-2">
+                                        <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 text-center">
+                                            <p className="text-[8px] text-slate-500 font-black uppercase mb-1">Attended</p>
+                                            <p className="text-lg font-black text-white">{data.attended}</p>
+                                        </div>
+                                        <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 text-center">
+                                            <p className="text-[8px] text-slate-500 font-black uppercase mb-1">Total</p>
+                                            <p className="text-lg font-black text-white">{data.total}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                </div>
+
+                {relevantLectures.length === 0 && (
+                    <div className="py-20 text-center bg-slate-900/40 border border-slate-800 rounded-[40px] border-dashed">
+                        <Activity className="w-16 h-16 text-slate-800 mx-auto mb-4" />
+                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No attendance data recorded yet.</p>
+                    </div>
+                )}
             </div>
         );
     }

@@ -45,4 +45,37 @@ export const getBatches = asyncHandler(async (req, res) => {
     const filter = isAdmin ? {} : { department: { $in: req.user.department } };
     const batches = await Batch.find(filter).sort({ year: -1, name: 1 });
     res.json(batches);
+});// @desc    Update batch
+// @route   PUT /api/batches/:id
+// @access  Private/Admin
+export const updateBatch = asyncHandler(async (req, res) => {
+    const { name, department, year, studentCount } = req.body;
+    const batch = await Batch.findById(req.params.id);
+
+    if (batch) {
+        batch.name = name || batch.name;
+        batch.department = department || batch.department;
+        batch.year = year || batch.year;
+        batch.studentCount = studentCount !== undefined ? studentCount : batch.studentCount;
+
+        const updatedBatch = await batch.save();
+        res.json(updatedBatch);
+    } else {
+        res.status(404);
+        throw new Error('Batch not found');
+    }
+});
+
+// @desc    Delete batch
+// @route   DELETE /api/batches/:id
+// @access  Private/Admin
+export const deleteBatch = asyncHandler(async (req, res) => {
+    const batch = await Batch.findById(req.params.id);
+    if (batch) {
+        await batch.deleteOne();
+        res.json({ message: 'Batch removed successfully' });
+    } else {
+        res.status(404);
+        throw new Error('Batch not found');
+    }
 });

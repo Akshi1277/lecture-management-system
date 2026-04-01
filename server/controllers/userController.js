@@ -102,6 +102,18 @@ export const registerUser = asyncHandler(async (req, res) => {
     const generatedPassword = generateRandomPassword(name);
     password = password || generatedPassword;
 
+    // Batch Capacity Check
+    if (role === 'student' && batch) {
+        const targetBatch = await Batch.findById(batch);
+        if (targetBatch) {
+            const currentStudentCount = await User.countDocuments({ batch, role: 'student' });
+            if (currentStudentCount >= targetBatch.studentCount) {
+                res.status(400);
+                throw new Error(`CRITICAL: Batch ${targetBatch.name} has reached its maximum capacity of ${targetBatch.studentCount} students.`);
+            }
+        }
+    }
+
     const user = await User.create({
         name,
         email,
@@ -190,6 +202,14 @@ export const bulkRegisterUsers = asyncHandler(async (req, res) => {
         throw new Error('Batch not found');
     }
     const department = [batch.department];
+
+    const currentStudentCount = await User.countDocuments({ batch: batchId, role: 'student' });
+    const availableSlots = batch.studentCount - currentStudentCount;
+
+    if (studentsData.length > availableSlots) {
+        res.status(400);
+        throw new Error(`CRITICAL: Insufficient capacity in ${batch.name}. Requested: ${studentsData.length} seats, Available: ${availableSlots} seats (Current: ${currentStudentCount}/${batch.studentCount}).`);
+    }
 
     if (studentsData.length > 200) {
         res.status(400);

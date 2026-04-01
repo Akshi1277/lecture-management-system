@@ -24,21 +24,22 @@ export default function LecturesPage() {
     const [typeFilter, setTypeFilter] = useState("All");
     const [selectedDay, setSelectedDay] = useState(new Date().getDay()); // 0-6
     const [activeDropdown, setActiveDropdown] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ type: null, id: null }); // 'cancel' or 'delete'
 
     const { batches } = useSelector((state) => state.hierarchy);
 
-    const handleCancel = async (id) => {
-        if (window.confirm("Are you sure you want to cancel this lecture?")) {
-            await dispatch(updateLecture({ id, lectureData: { status: 'Cancelled' } }));
-            setActiveDropdown(null);
-        }
-    };
+    const handleConfirmAction = async () => {
+        const { type, id } = confirmModal;
+        if (!id) return;
 
-    const handleDelete = async (id) => {
-        if (window.confirm("CRITICAL: This will permanently remove this record from the grid. Proceed?")) {
+        if (type === 'cancel') {
+            await dispatch(updateLecture({ id, lectureData: { status: 'Cancelled' } }));
+        } else if (type === 'delete') {
             await dispatch(deleteLecture(id));
-            setActiveDropdown(null);
         }
+        
+        setConfirmModal({ type: null, id: null });
+        setActiveDropdown(null);
     };
 
     useEffect(() => {
@@ -234,7 +235,50 @@ export default function LecturesPage() {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 relative">
+            {/* Action Confirmation Modal */}
+            <AnimatePresence>
+                {confirmModal.type && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => setConfirmModal({ type: null, id: null })}
+                            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" 
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-slate-900 border border-slate-800 p-8 rounded-[32px] max-w-sm w-full relative z-10 shadow-2xl text-center space-y-6"
+                        >
+                            <div className={`w-16 h-16 ${confirmModal.type === 'delete' ? 'bg-red-500/10' : 'bg-amber-500/10'} rounded-full flex items-center justify-center mx-auto`}>
+                                {confirmModal.type === 'delete' ? <AlertTriangle className="w-8 h-8 text-red-500" /> : <XCircle className="w-8 h-8 text-amber-500" />}
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-black text-white italic uppercase tracking-tight">System Confirmation</h3>
+                                <p className="text-xs text-slate-500 font-bold leading-relaxed">
+                                    {confirmModal.type === 'delete' 
+                                        ? "This will permanently purge this record from the institutional grid. This action cannot be reversed."
+                                        : "Are you sure you want to officially cancel this scheduled session? This will notify all enrolled students."}
+                                </p>
+                            </div>
+                            <div className="flex space-x-3 pt-2">
+                                <button 
+                                    onClick={() => setConfirmModal({ type: null, id: null })}
+                                    className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all"
+                                >
+                                    Abort Action
+                                </button>
+                                <button 
+                                    onClick={handleConfirmAction}
+                                    className={`flex-1 py-3 ${confirmModal.type === 'delete' ? 'bg-red-500 hover:bg-red-400 shadow-red-500/20' : 'bg-amber-500 hover:bg-amber-400 shadow-amber-500/20'} text-slate-950 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-lg`}
+                                >
+                                    {confirmModal.type === 'delete' ? 'Confirm Purge' : 'Confirm Cancel'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-black text-white italic tracking-tight">
@@ -472,23 +516,23 @@ export default function LecturesPage() {
                                                                 </button>
                                                             )}
                                                             {lecture.status !== 'Cancelled' && (
-                                                                <button 
-                                                                    onClick={() => handleCancel(lecture._id)}
-                                                                    className="w-full flex items-center space-x-3 px-4 py-3 text-xs font-bold text-slate-300 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all"
-                                                                >
-                                                                    <XCircle className="w-4 h-4 text-red-500" />
-                                                                    <span>Cancel Session</span>
-                                                                </button>
-                                                            )}
-                                                            {userInfo.role === 'admin' && (
-                                                                <button 
-                                                                    onClick={() => handleDelete(lecture._id)}
-                                                                    className="w-full flex items-center space-x-3 px-4 py-3 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
-                                                                >
-                                                                    <AlertTriangle className="w-4 h-4" />
-                                                                    <span>Purge Record</span>
-                                                                </button>
-                                                            )}
+                                                                 <button 
+                                                                     onClick={() => setConfirmModal({ type: 'cancel', id: lecture._id })}
+                                                                     className="w-full flex items-center space-x-3 px-4 py-3 text-xs font-bold text-slate-300 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all"
+                                                                 >
+                                                                     <XCircle className="w-4 h-4 text-red-500" />
+                                                                     <span>Cancel Session</span>
+                                                                 </button>
+                                                             )}
+                                                             {userInfo.role === 'admin' && (
+                                                                 <button 
+                                                                     onClick={() => setConfirmModal({ type: 'delete', id: lecture._id })}
+                                                                     className="w-full flex items-center space-x-3 px-4 py-3 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                                                                 >
+                                                                     <AlertTriangle className="w-4 h-4" />
+                                                                     <span>Purge Record</span>
+                                                                 </button>
+                                                             )}
                                                         </div>
                                                     </motion.div>
                                                 </>

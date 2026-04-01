@@ -464,7 +464,7 @@ export default function AssignLectureForm({ lecture, onClose, isFullscreen = fal
                             <button
                                 onClick={handleSubmit}
                                 disabled={selectedSlots.length === 0}
-                                className={`px-12 py-5 font-black rounded-[24px] transition-all text-sm uppercase tracking-widest ${selectedSlots.length > 0 ? 'bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-2xl shadow-teal-500/40 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'}`}
+                                className={`px-12 py-5 font-black rounded-[24px] transition-all cursor-pointer text-sm uppercase tracking-widest ${selectedSlots.length > 0 ? 'bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-2xl shadow-teal-500/40 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'}`}
                             >
                                 Publish Timetable
                             </button>

@@ -29,6 +29,18 @@ export const createBatch = createAsyncThunk(
     }
 );
 
+export const updateBatch = createAsyncThunk(
+    'hierarchy/updateBatch',
+    async ({ id, batchData }, { getState, rejectWithValue }) => {
+        try {
+            const { data } = await api.put(`/hierarchy/batches/${id}`, batchData, getAuthOptions(getState));
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message);
+        }
+    }
+);
+
 export const deleteBatch = createAsyncThunk(
     'hierarchy/deleteBatch',
     async (id, { getState, rejectWithValue }) => {
@@ -95,6 +107,9 @@ const hierarchySlice = createSlice({
             })
             .addCase(createBatch.fulfilled, (state, action) => {
                 state.batches.push(action.payload);
+            })
+            .addCase(updateBatch.fulfilled, (state, action) => {
+                state.batches = state.batches.map(b => b._id === action.payload._id ? action.payload : b);
             })
             .addCase(deleteBatch.fulfilled, (state, action) => {
                 state.batches = state.batches.filter(b => b._id !== action.payload);
