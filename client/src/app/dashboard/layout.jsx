@@ -116,7 +116,7 @@ export default function DashboardLayout({ children }) {
                         animate={{ x: 0 }}
                         exit={{ x: -260 }}
                         transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                        className="fixed lg:relative z-50 w-64 h-screen bg-slate-900 border-r border-slate-800 flex flex-col pt-8 shrink-0"
+                        className="fixed lg:relative z-50 w-64 h-[100dvh] bg-slate-900 border-r border-slate-800 flex flex-col pt-8 shrink-0"
                     >
                         <div className="px-6 mb-8 flex items-center justify-between shrink-0">
                             <div className="flex items-center space-x-3">
