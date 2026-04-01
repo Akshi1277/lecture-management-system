@@ -44,7 +44,6 @@ export default function LoginForm() {
         type: 'warning',
         message: 'Security protocol: Authentication is mandatory to access institutional nodes. Please login to continue.'
       }));
-      // Remove query param from URL
       router.replace('/login');
     }
 
@@ -55,10 +54,14 @@ export default function LoginForm() {
         type: 'success',
         message: `Welcome back, ${userInfo?.name || 'User'}! Redirecting to dashboard...`
       }));
-      router.push("/dashboard");
+      // Force redirect to ensure no stuck state
+      router.replace("/dashboard");
     }
-    return () => dispatch(clearError());
   }, [userInfo, router, dispatch, hasShownToast, searchParams]);
+
+  useEffect(() => {
+    return () => dispatch(clearError());
+  }, [dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

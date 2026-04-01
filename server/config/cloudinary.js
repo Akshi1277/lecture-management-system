@@ -12,9 +12,10 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary,
     params: {
-        folder: 'academic_vault',
-        resource_type: 'auto',
-        // Multer-storage-cloudinary automatically handles public_id and extensions
+        folder: 'raw_vault',
+        resource_type: 'raw',
+        type: 'upload',
+        // Preserve original extension and name logic
     },
 });
 

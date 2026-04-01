@@ -44,17 +44,23 @@ export default function DashboardLayout({ children }) {
 
     useEffect(() => {
         if (hasMounted && !userInfo) {
-            router.push("/login");
+            router.replace("/login");
         }
     }, [userInfo, router, hasMounted]);
 
     const handleLogout = () => {
         dispatch(logout());
-        router.push("/login");
+        router.replace("/login");
         setShowLogoutConfirm(false);
     };
 
-    if (!hasMounted || !userInfo) return null;
+    if (!hasMounted || !userInfo) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-black uppercase tracking-widest text-[10px]">
+                Initializing Auth Protocol...
+            </div>
+        );
+    }
 
     // Direct return for full-screen pages like the scheduler
     if (isFullPage) {

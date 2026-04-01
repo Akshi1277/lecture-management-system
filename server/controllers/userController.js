@@ -44,6 +44,7 @@ export const authUser = asyncHandler(async (req, res) => {
             department: user.department,
             subjects: user.subjects,
             isMentor: user.isMentor,
+            profileImage: user.profileImage,
             token,
         });
     } else {
